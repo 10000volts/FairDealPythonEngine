@@ -1,0 +1,2 @@
+class CardData:
+    pass

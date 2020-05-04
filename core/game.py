@@ -3,22 +3,21 @@ from models.player import Player
 
 
 class GameCard:
-    pass
+    def __init__(self, ori_o, ty):
+        self.ori_owner = ori_o
+        self.type = ty
 
 
 class LeaderCard(GameCard):
     """
     领袖卡。
     """
-    pass
 
 
 class DeckCard(GameCard):
     """
     可以放在卡组中的卡（雇员/策略卡）。
     """
-
-    pass
 
 
 class Match:
@@ -39,13 +38,24 @@ class Match:
         self.players = [p1, p2]
         self.decks = {p1: p1deck, p2: p2deck}
         self.sides = {p1: p1side, p2: p2side}
+        self.valid = self.deck_check(match_config['card_table'])
         self.match_config = match_config
         self.game_now = Game(self.players, self.decks, self.sides,
                              match_config["game_config"])
 
         self.wins = {p1: 0, p2: 0}
 
+    def deck_check(self, card_table):
+        """
+        检查双方卡组是否有效。
+        :param card_table: 比赛用卡表。
+        :return:
+        """
+        return True
+
     def start(self):
+        if not self.valid:
+            raise Exception('invalid deck.')
         self.match_config["match_init"](self)
         while True:
             self.game_now = Game(self.players, self.decks, self.sides,
@@ -58,6 +68,10 @@ class Match:
             self.match_config['match_break'](self)
 
     def end_check(self):
+        """
+        比赛是否结束。
+        :return: 比赛胜者。
+        """
         for p in self.players:
             if self.wins[p] >= self.match_config['wins_need']:
                 return p
@@ -76,6 +90,7 @@ class Game:
     一个单局对局。特殊规则可由领袖卡的隐藏效果引入。
     """
     def __init__(self, players, decks, sides, game_config):
+        self.event_stack = list()
         pass
 
     def start(self):
@@ -83,7 +98,4 @@ class Game:
         双方都已准备好。开始进行游戏。
         :return: 获胜的玩家。
         """
-
-        pass
-
-    pass
+        # sp: starting player
