@@ -6,16 +6,33 @@ class EffectObj:
     单个卡片效果的抽象。
     """
 
-    def __init__(self, secret, sec_arg):
+    def __init__(self, active_phase, active_location, owner, host, host_id,
+                 secret, scr_arg, no_src, force_exec, ttl):
         """
 
         :param secret: 是否为秘密效果(发动对玩家不可见)。
-        :param sec_arg: 秘密参数。
+        :param scr_arg: 秘密参数。
         """
-        # cost将触发的时点。如：丢弃手牌、选择1张卡为对象
-        self.cost_tp_list = list()
+        # 该效果能发动的阶段
+        self.active_phase = active_phase
+        self.active_location = active_location
+
+        # 持有玩家
+        self.owner = owner
+        # 宿主(卡片)。
+        self.host = host
+        # 宿主卡片id。该效果为无源效果时，host为None所以需要用host_id判断。
+        self.host_id = host_id
         self.secret = secret
-        self.sec_arg = sec_arg
+        self.sec_arg = scr_arg
+        # 是否为无源效果(如：延时几回合自动发动的效果，这时，发动的位置与其所属的卡目前所在地无关)。
+        self.no_source = no_src
+        # 满足条件时是否强制发动。
+        self.force_exec = force_exec
+        # cost及成功适用效果时将触发的时点。如：丢弃手牌、选择1张卡为对象
+        self.trigger_tp_list = ttl
+        # 效果是否成功发动。
+        self.succ_activate = True
 
     def condition(self):
         """

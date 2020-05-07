@@ -25,17 +25,30 @@ class EGamePhase(Enum):
 
 
 class ELocation(Enum):
-    UNKNOWN = 0
     ON_FIELD = 1
     HAND = 2
-    GRAVE = 3
-    EXILED = 4
-    DECK = 5
-    SIDE = 6
-    ANY = 7
+    GRAVE = 4
+    EXILED = 8
+    DECK = 16
+    SIDE = 32
+    UNKNOWN = 64
+    ANY = 127
+
+
+class EOperation(Enum):
+    CHOOSE_CARDS = 1
+    # 强制选择。
+    CHOOSE_CARDS_FORCE = 2
+    # 选择数字。
+    CHOOSE_NUMBER = 3
 
 
 class ETimePoint(Enum):
+    """
+    时点枚举。
+    PH_XXX: 阶段的开始/结束时点。
+    TRY_XXX: 尝试……的隐藏时点，只用来判断该效果是否不能发动(因为被封锁)。
+    """
     # 游戏开始时 在此时点发动效果的卡：
     # 一些特殊模式下，需要为领袖添加一些隐藏效果。
     PH_GAME_START=0
@@ -107,7 +120,7 @@ class ETimePoint(Enum):
     # FAIL_SUMMON_EM_CARD=123
     # 尝试发动策略 在此时点发动效果的卡：
     #
-    TRY_ACTIVATE_STRATEGY=124
+    # TRY_ACTIVATE_STRATEGY=124
     # 尝试发动效果 在此时点发动效果的卡：
     # 鲁莽的开发者
     TRY_ACTIVATE_EFFECT=125
@@ -288,3 +301,15 @@ class ETimePoint(Enum):
     # 抽卡后 在此时点发动效果的卡：
     #
     DRAWN=171
+    # 使用阶段将结束时 在此时点发动效果的卡：
+    # 蓝图设计者
+    PH_PLAY_CARD_ENDING=172
+    # 尝试将效果无效 在此时点发动效果的卡：
+    # 各种发动不会被无效的效果
+    TRY_EFF_NEGATE=174
+    # 效果将被无效时 在此时点发动效果的卡：
+    #
+    EFF_NEGATING=175
+    # 效果被无效后 在此时点发动效果的卡：
+    #
+    EFF_NEGATED=176
