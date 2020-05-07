@@ -35,12 +35,19 @@ class ELocation(Enum):
     ANY = 127
 
 
-class EOperation(Enum):
+class EInOperation(Enum):
     CHOOSE_CARDS = 1
     # 强制选择。
     CHOOSE_CARDS_FORCE = 2
     # 选择数字。
     CHOOSE_NUMBER = 3
+
+
+class EOutOperation(Enum):
+    # 说明先后手
+    SP_DECIDED = 1
+    # 展示手牌
+    SHOW_CARDS = 2
 
 
 class ETimePoint(Enum):

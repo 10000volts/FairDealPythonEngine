@@ -1,8 +1,9 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
-    EGamePhase, EOperation
+    EGamePhase, EInOperation, EOutOperation
 from models.player import Player
 from core.input import wait_4_response_from_socket, wait_4_response,\
     wait_4_response_from_ai
+from core.output import send_2_socket, send_msg, send_2_ai
 import random
 
 
@@ -11,18 +12,20 @@ class GamePlayer:
     游戏中的玩家。
     """
     def __init__(self, p: Player, deck: list, side: list, leader_card_id: int):
-        def op_method_convert(om):
+        def method_convert(om):
             if om == 'local':
-                return wait_4_response
+                return wait_4_response, send_msg
             elif om == 'from_network':
-                return wait_4_response_from_socket
+                return wait_4_response_from_socket, send_2_socket
             else:
-                return wait_4_response_from_ai
+                return wait_4_response_from_ai, send_2_ai
         self.player = p
         self.name = p.name
         # op_method的acceptor
-        self.input = p.input
-        self.op_method = op_method_convert(p.op_method)
+        self.terminal = p.terminal
+        m = method_convert(p.op_method)
+        self.in_method = m[0]
+        self.out_method = m[1]
         self.ori_deck = deck
         self.deck = list()
         self.ori_side = side
@@ -93,7 +96,7 @@ class Match:
         self.match_config = match_config
         self.game_now = None
 
-        self.wins = {p1: 0, p2: 0}
+        self.wins = {gp1: 0, gp2: 0}
 
     def deck_check(self, card_table):
         """
@@ -212,6 +215,10 @@ class Game:
         else:
             self.p1 = self.players[1]
             self.p2 = self.players[0]
+        # 输出
+        for p in self.players:
+            msg = {'operation': EOutOperation.SP_DECIDED, 'result': int(self.p1 == p)}
+            p.out_method(p.terminal, msg)
 
     def __ph_show_card(self):
         def show_one(p: GamePlayer, rank: ECardRank):
@@ -219,9 +226,11 @@ class Game:
             for i in range(0, len(p.hand)):
                 if p.hand[i] == rank:
                     cards_index.append(p.hand[i])
-            msg = {'operation': EOperation.CHOOSE_CARDS_FORCE, 'alternative': cards_index,
+            msg = {'operation': EInOperation.CHOOSE_CARDS_FORCE, 'alternative': cards_index,
                    'num': 1}
-            shown_card_index = self.p1.op_method(self.op_player.input, msg)
+            shown_card_index = p.in_method(p.terminal, msg)
+            msg = {'operation': EOutOperation.SHOW_CARDS, 'result': [shown_card_index]}
+            p.out_method(p.terminal, msg)
 
         show_one(self.p1, ECardRank.TRUMP)
         show_one(self.p2, ECardRank.TRUMP)
@@ -259,12 +268,12 @@ class Game:
                     op_react_list.append(ef)
                 else:
                     tr_react_list.append(ef)
-        op_msg = {'operation': EOperation.CHOOSE_CARDS, 'alternative': op_react_list,
+        op_msg = {'operation': EInOperation.CHOOSE_CARDS, 'alternative': op_react_list,
                   'num': 1}
-        tr_msg = {'operation': EOperation.CHOOSE_CARDS, 'alternative': tr_react_list,
+        tr_msg = {'operation': EInOperation.CHOOSE_CARDS, 'alternative': tr_react_list,
                   'num': 1}
-        op_react_card = self.op_player.op_method(self.op_player.input, op_msg)
-        tr_react_card = self.turn_player.op_method(self.turn_player.input, tr_msg)
+        op_react_card = self.op_player.in_method(self.op_player.terminal, op_msg)
+        tr_react_card = self.turn_player.in_method(self.turn_player.terminal, tr_msg)
         if op_react_card is not None:
             # 对方响应了效果。
             self.activate_effect(op_react_card)
