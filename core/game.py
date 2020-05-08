@@ -146,6 +146,9 @@ class Game:
 
     def __init__(self, players: list, game_config, last_loser: GamePlayer):
         self.tp_stack = list()
+        # 事件栈帧，用来记录/保存对局，
+        # 以及辅助实现一些卡的向前查询功能(比如人文主义者的：上回合我方进行过阻挡时...)。
+        self.event_stack = list()
         # 临时时点调用栈，每个时点都询问一次对玩家打扰率比较高，所以可以合并一些时点的处理。
         self.temp_tp_stack = list()
         self.players = players
