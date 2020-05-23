@@ -44,10 +44,28 @@ class EInOperation(Enum):
 
 
 class EOutOperation(Enum):
+    # 比赛开始
+    MATCH_START = 0
+    # 对局开始
+    GAME_START = 0
+    # 进入阶段
+    ENTER_PHASE = 2
+    # 阶段结束
+    END_PHASE = 3
+    # 单局游戏结束
+    END_GAME = 4
+    # 比赛结束
+    END_MATCH = 5
+    # 进入时点
+    ENTER_TIME_POINT = 6
     # 说明先后手
-    SP_DECIDED = 1
+    SP_DECIDED = 7
     # 展示手牌
-    SHOW_CARDS = 2
+    SHOW_A_CARD = 8
+    # 选择目标
+    CHOOSE_TARGET = 9
+    # 公示选择结果
+    ANNOUNCE_TARGET = 10
 
 
 class ETimePoint(Enum):

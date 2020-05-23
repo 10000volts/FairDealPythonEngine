@@ -113,6 +113,9 @@ class Match:
             raise Exception('invalid deck.')
         self.match_config["match_init"](self)
         last_loser = None
+        for p in self.players:
+            msg = {'op': EOutOperation.MATCH_START}
+            p.out_method(p.terminal, msg)
         while True:
             self.game_now = Game(self.players, self.match_config["game_config"], last_loser)
             pl = self.game_now.start()
@@ -176,6 +179,10 @@ class Game:
         """
         # sp: starting player
         self.enter_phase(EGamePhase.GAME_START)
+        for p in self.players:
+            msg = {'op': EOutOperation.GAME_START}
+            p.out_method(p.terminal, msg)
+
         # 游戏流程
         process = self.game_config['process']
         for ph in process:
@@ -188,27 +195,39 @@ class Game:
         if ph == EGamePhase.GAME_START:
             self.enter_time_point(TimePoint.generate(ETimePoint.PH_GAME_START))
         elif ph == EGamePhase.SP_DECIDE:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_SP_DECIDE))
+            self.__enter_phase(ETimePoint.PH_SP_DECIDE)
             self.__ph_sp_decide()
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_SP_DECIDE_END))
+            self.__end_phase(ETimePoint.PH_SP_DECIDE_END)
         elif ph == EGamePhase.SHOW_CARD:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_SHOWED_CARD))
+            self.__enter_phase(ETimePoint.PH_SHOWED_CARD)
             self.__ph_show_card()
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_SHOWED_CARD_END))
+            self.__end_phase(ETimePoint.PH_SHOWED_CARD_END)
         elif ph == EGamePhase.EXTRA_DATA:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_EXTRA_DATA))
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_EXTRA_DATA_END))
+            self.__enter_phase(ETimePoint.PH_EXTRA_DATA)
+            self.__end_phase(ETimePoint.PH_EXTRA_DATA_END)
         elif ph == EGamePhase.PUT_CARD:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_PUT_CARD))
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_PUT_CARD_END))
+            self.__enter_phase(ETimePoint.PH_PUT_CARD)
+            self.__end_phase(ETimePoint.PH_PUT_CARD_END)
         elif ph == EGamePhase.TAKE_CARD:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_TAKE_CARD))
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_TAKE_CARD_END))
+            self.__enter_phase(ETimePoint.PH_TAKE_CARD)
+            self.__end_phase(ETimePoint.PH_TAKE_CARD_END)
         elif ph == EGamePhase.MULLIGAN:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_MULLIGAN))
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_MULLIGAN_END))
+            self.__enter_phase(ETimePoint.PH_MULLIGAN)
+            self.__end_phase(ETimePoint.PH_MULLIGAN_END)
         elif ph == EGamePhase.PLAY_CARD:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_PLAY_CARD))
+            self.__enter_phase(ETimePoint.PH_PLAY_CARD)
+
+    def __enter_phase(self, tp: ETimePoint):
+        self.enter_time_point(TimePoint.generate(tp))
+        for p in self.players:
+            msg = {'op': EOutOperation.ENTER_PHASE, 'result': tp}
+            p.out_method(p.terminal, msg)
+
+    def __end_phase(self, tp):
+        self.enter_time_point(TimePoint.generate(tp))
+        for p in self.players:
+            msg = {'op': EOutOperation.END_PHASE, 'result': tp}
+            p.out_method(p.terminal, msg)
 
     def __ph_sp_decide(self):
         a = random.randint(1, 10)
@@ -220,7 +239,7 @@ class Game:
             self.p2 = self.players[0]
         # 输出
         for p in self.players:
-            msg = {'operation': EOutOperation.SP_DECIDED, 'result': int(self.p1 == p)}
+            msg = {'op': EOutOperation.SP_DECIDED, 'result': int(self.p1 == p)}
             p.out_method(p.terminal, msg)
 
     def __ph_show_card(self):
@@ -229,10 +248,10 @@ class Game:
             for i in range(0, len(p.hand)):
                 if p.hand[i] == rank:
                     cards_index.append(p.hand[i])
-            msg = {'operation': EInOperation.CHOOSE_CARDS_FORCE, 'alternative': cards_index,
+            msg = {'op': EInOperation.CHOOSE_CARDS_FORCE, 'alter': cards_index,
                    'num': 1}
             shown_card_index = p.in_method(p.terminal, msg)
-            msg = {'operation': EOutOperation.SHOW_CARDS, 'result': [shown_card_index]}
+            msg = {'op': EOutOperation.SHOW_CARDS, 'result': [shown_card_index]}
             p.out_method(p.terminal, msg)
 
         show_one(self.p1, ECardRank.TRUMP)
@@ -271,9 +290,9 @@ class Game:
                     op_react_list.append(ef)
                 else:
                     tr_react_list.append(ef)
-        op_msg = {'operation': EInOperation.CHOOSE_CARDS, 'alternative': op_react_list,
+        op_msg = {'op': EInOperation.CHOOSE_CARDS, 'alter': op_react_list,
                   'num': 1}
-        tr_msg = {'operation': EInOperation.CHOOSE_CARDS, 'alternative': tr_react_list,
+        tr_msg = {'op': EInOperation.CHOOSE_CARDS, 'alter': tr_react_list,
                   'num': 1}
         op_react_card = self.op_player.in_method(self.op_player.terminal, op_msg)
         tr_react_card = self.turn_player.in_method(self.turn_player.terminal, tr_msg)
