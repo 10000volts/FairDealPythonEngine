@@ -36,18 +36,25 @@ class ELocation(Enum):
 
 
 class EInOperation(Enum):
+    # 选择是或否。
+    CHOOSE_YES_NO = 0
+    #
     CHOOSE_CARDS = 1
-    # 强制选择。
-    CHOOSE_CARDS_FORCE = 2
     # 选择数字。
-    CHOOSE_NUMBER = 3
+    CHOOSE_NUMBER = 2
+    # 强制选择。
+    CHOOSE_YES_NO_FORCE = 3
+    # 强制选择。
+    CHOOSE_CARDS_FORCE = 4
+    # 选择数字。
+    CHOOSE_NUMBER_FORCE = 5
 
 
 class EOutOperation(Enum):
     # 比赛开始
     MATCH_START = 0
     # 对局开始
-    GAME_START = 0
+    GAME_START = 1
     # 进入阶段
     ENTER_PHASE = 2
     # 阶段结束
@@ -66,6 +73,10 @@ class EOutOperation(Enum):
     CHOOSE_TARGET = 9
     # 公示选择结果
     ANNOUNCE_TARGET = 10
+    # 询问是否响应
+    QUERY_FOR_REACT = 11
+    # 公示选择结果(是/否或数字等纯文本信息)
+    ANNOUNCE_DECISION = 12
 
 
 class ETimePoint(Enum):
