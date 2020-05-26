@@ -67,7 +67,7 @@ class DeckCard(GameCard):
 
 class TimePoint:
     def __init__(self, tp_id, sender, location, args):
-        self.tp_id = tp_id
+        self.value = tp_id
         self.sender = sender
         self.location = location
         self.args = args
@@ -120,7 +120,7 @@ class Match:
         self.match_config["match_init"](self)
         last_loser = None
         for p in self.players:
-            msg = {'op': EOutOperation.MATCH_START}
+            msg = {'op': EOutOperation.MATCH_START.value}
             p.output(msg)
         while True:
             self.game_now = Game(self.players, self.match_config["game_config"], last_loser)
@@ -186,7 +186,7 @@ class Game:
         # sp: starting player
         self.enter_phase(EGamePhase.GAME_START)
         for p in self.players:
-            msg = {'op': EOutOperation.GAME_START}
+            msg = {'op': EOutOperation.GAME_START.value}
             p.output(msg)
 
         # 游戏流程
@@ -225,11 +225,11 @@ class Game:
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending(msg={'op': EOutOperation.ENTER_PHASE, 'result': [tp]})
+        self.__batch_sending(msg={'op': EOutOperation.ENTER_PHASE.value, 'result': [tp.value]})
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending(msg={'op': EOutOperation.END_PHASE, 'result': [tp]})
+        self.__batch_sending(msg={'op': EOutOperation.END_PHASE.value, 'result': [tp.value]})
 
     def __ph_sp_decide(self):
         a = random.randint(1, 10)
@@ -241,24 +241,24 @@ class Game:
             self.p2 = self.players[0]
         # 输出
         for p in self.players:
-            msg = {'op': EOutOperation.SP_DECIDED, 'result': [int(self.p1 == p)]}
+            msg = {'op': EOutOperation.SP_DECIDED.value, 'result': [int(self.p1 == p)]}
             p.output(msg)
 
     def __ph_show_card(self):
         def show_one(p: GamePlayer, rank: ECardRank):
-            msg = {'op': EOutOperation.SHOW_A_CARD, 'result': [p, ECardRank]}
+            msg = {'op': EOutOperation.SHOW_A_CARD.value, 'result': [p, rank.value]}
             p.output(msg)
 
             cards_index = list()
             for i in range(0, len(p.hand)):
-                if p.hand[i] == rank:
+                if p.hand[i].rank == rank.value:
                     cards_index.append(p.hand[i])
-            msg = {'op': EOutOperation.CHOOSE_TARGET, 'result': [1]}
+            msg = {'op': EOutOperation.CHOOSE_TARGET.value, 'result': [1]}
             p.output(msg)
-            msg = {'op': EInOperation.CHOOSE_CARDS_FORCE, 'alter': cards_index,
+            msg = {'op': EInOperation.CHOOSE_CARDS_FORCE.value, 'alter': cards_index,
                    'num': 1}
             shown_card_index = p.input(msg)
-            msg = {'op': EOutOperation.ANNOUNCE_TARGET, 'result': [shown_card_index]}
+            msg = {'op': EOutOperation.ANNOUNCE_TARGET.value, 'result': [shown_card_index]}
             p.output(msg)
 
         show_one(self.p1, ECardRank.TRUMP)
@@ -271,17 +271,19 @@ class Game:
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
         if out:
-            self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT, 'result': [tp]})
+            self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT.value, 'result': [tp.value]})
         self.react()
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
         tts = list()
+        mtts = list()
         for t in self.temp_tp_stack:
             self.tp_stack.append(t)
             tts.append(t)
+            mtts.append(t.value)
 
-        self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT, 'result': [*tts]})
+        self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT.value, 'result': [*mtts]})
 
         self.temp_tp_stack.clear()
         self.react()
@@ -294,7 +296,7 @@ class Game:
         询问连锁。先询问对手。
         :return:
         """
-        self.__batch_sending(msg={'op': EOutOperation.QUERY_FOR_REACT})
+        self.__batch_sending(msg={'op': EOutOperation.QUERY_FOR_REACT.value})
 
         op_react_list = list()
         tr_react_list = list()
@@ -305,16 +307,16 @@ class Game:
                 else:
                     tr_react_list.append(ef)
 
-        msg = {'op': EInOperation.CHOOSE_YES_NO}
+        msg = {'op': EInOperation.CHOOSE_YES_NO.value}
         if self.op_player.input(msg):
-            op_msg = {'op': EInOperation.CHOOSE_CARDS, 'alter': op_react_list,
+            op_msg = {'op': EInOperation.CHOOSE_CARDS.value, 'alter': op_react_list,
                       'num': 1}
             op_react_card = self.op_player.input(op_msg)
             if op_react_card is not None:
                 # 对方响应了效果。
                 self.activate_effect(op_react_card)
         if self.turn_player.input(msg):
-            tr_msg = {'op': EInOperation.CHOOSE_CARDS, 'alter': tr_react_list,
+            tr_msg = {'op': EInOperation.CHOOSE_CARDS.value, 'alter': tr_react_list,
                       'num': 1}
             tr_react_card = self.turn_player.input(tr_msg)
             if tr_react_card is not None:
