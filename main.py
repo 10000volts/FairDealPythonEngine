@@ -9,6 +9,8 @@ main_match: Match = None
 if __name__ == '__main__':
     p_json = json.loads(sys.argv[1])
     p1 = Player(p_json['name'])
+    p_json = json.loads(sys.argv[2])
+    p2 = Player(p_json['name'])
 
     global main_match
     main_match = Match(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
