@@ -77,6 +77,8 @@ class EOutOperation(Enum):
     QUERY_FOR_REACT = 11
     # 公示选择结果(是/否或数字等纯文本信息)
     ANNOUNCE_DECISION = 12
+    # 比赛间歇
+    MATCH_BREAK = 13
 
 
 class ETimePoint(Enum):

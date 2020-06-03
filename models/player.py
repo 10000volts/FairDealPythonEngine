@@ -1,6 +1,5 @@
 class Player:
-    def __init__(self, name, name_in_game, op_method, ipt):
-        self.name = name
-        self.name_in_game = name_in_game
+    def __init__(self, pid, op_method, us):
+        self.id = pid
         self.op_method = op_method
-        self.terminal = ipt
+        self.upstream = us

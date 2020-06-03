@@ -11,7 +11,7 @@ class GamePlayer:
     """
     游戏中的玩家。
     """
-    def __init__(self, p: Player, deck: list, side: list, leader_card_id: int):
+    def __init__(self, p: Player, deck: list, leader_card_id: int):
         def method_convert(om):
             if om == 'local':
                 return wait_4_response, send_msg
@@ -22,7 +22,7 @@ class GamePlayer:
         self.player = p
         self.name = p.name
         # op_method的acceptor
-        self.terminal = p.terminal
+        self.upstream = p.upstream
         m = method_convert(p.op_method)
         self.in_method = m[0]
         self.out_method = m[1]
@@ -42,10 +42,10 @@ class GamePlayer:
         self.leader = leader_card_id
 
     def input(self, msg):
-        return self.in_method(self.terminal, msg)
+        return self.in_method(self.upstream, msg)
 
     def output(self, msg):
-        self.out_method(self.terminal, msg)
+        self.out_method(self.upstream, msg)
 
 
 class GameCard:
@@ -81,22 +81,20 @@ class Match:
     """
     一次比赛（三局两胜）。
     """
-    def __init__(self, p1: Player, p1deck, p1side, p1leader_id,
-                 p2: Player, p2deck, p2side, p2leader_id, match_config):
+    def __init__(self, p1: Player, p1deck, p1leader_id,
+                 p2: Player, p2deck, p2leader_id, match_config):
         """
 
         :param p1: 玩家1
-        :param p1deck: 玩家1的主卡组
-        :param p1side: 玩家1的备选卡组
+        :param p1deck: 玩家1的主卡组&备选卡组
         :param p1leader_id: 玩家1的领袖卡ID
         :param p2:
         :param p2deck:
-        :param p2side:
         :param p2leader_id:
         :param match_config: 比赛的额外配置
         """
-        gp1 = GamePlayer(p1, p1deck, p1side, p1leader_id)
-        gp2 = GamePlayer(p2, p2deck, p2side, p2leader_id)
+        gp1 = GamePlayer(p1, p1deck, p1leader_id)
+        gp2 = GamePlayer(p2, p2deck, p2leader_id)
         self.players = [gp1, gp2]
         self.match_config = match_config
         self.game_now = None
@@ -114,11 +112,11 @@ class Match:
         return True
 
     def start(self):
-        exec(self.match_config["match_init"])
-        last_loser = None
         for p in self.players:
             msg = {'op': EOutOperation.MATCH_START.value}
             p.output(msg)
+        exec(self.match_config["match_init"])
+        last_loser = None
         while True:
             self.game_now = Game(self.players, self.match_config["game_config"], last_loser)
             pl = self.game_now.start()
@@ -126,9 +124,15 @@ class Match:
             last_loser = pl[1]
             winner = self.end_check()
             if winner is not None:
-                exec(self.match_config['match_end'] )
+                for p in self.players:
+                    msg = {'op': EOutOperation.END_MATCH.value}
+                    p.output(msg)
+                exec(self.match_config['match_end'])
                 return winner
-            exec(self.match_config['match_break'] )
+            for p in self.players:
+                msg = {'op': EOutOperation.MATCH_BREAK.value}
+                p.output(msg)
+            exec(self.match_config['match_break'])
 
     def end_check(self):
         """
