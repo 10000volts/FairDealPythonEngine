@@ -98,7 +98,6 @@ class Match:
         gp1 = GamePlayer(p1, p1deck, p1side, p1leader_id)
         gp2 = GamePlayer(p2, p2deck, p2side, p2leader_id)
         self.players = [gp1, gp2]
-        self.valid = self.deck_check(match_config['card_table'])
         self.match_config = match_config
         self.game_now = None
 
@@ -115,9 +114,7 @@ class Match:
         return True
 
     def start(self):
-        if not self.valid:
-            raise Exception('invalid deck.')
-        self.match_config["match_init"](self)
+        exec(self.match_config["match_init"])
         last_loser = None
         for p in self.players:
             msg = {'op': EOutOperation.MATCH_START.value}
@@ -129,9 +126,9 @@ class Match:
             last_loser = pl[1]
             winner = self.end_check()
             if winner is not None:
-                self.match_config['match_end'](self)
+                exec(self.match_config['match_end'] )
                 return winner
-            self.match_config['match_break'](self)
+            exec(self.match_config['match_break'] )
 
     def end_check(self):
         """
@@ -225,11 +222,11 @@ class Game:
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending(msg={'op': EOutOperation.ENTER_PHASE.value, 'result': [tp.value]})
+        self.__batch_sending(msg={'op': EOutOperation.ENTER_PHASE.value, 'args': [tp.value]})
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending(msg={'op': EOutOperation.END_PHASE.value, 'result': [tp.value]})
+        self.__batch_sending(msg={'op': EOutOperation.END_PHASE.value, 'args': [tp.value]})
 
     def __ph_sp_decide(self):
         a = random.randint(1, 10)
@@ -241,24 +238,24 @@ class Game:
             self.p2 = self.players[0]
         # 输出
         for p in self.players:
-            msg = {'op': EOutOperation.SP_DECIDED.value, 'result': [int(self.p1 == p)]}
+            msg = {'op': EOutOperation.SP_DECIDED.value, 'args': [int(self.p1 == p)]}
             p.output(msg)
 
     def __ph_show_card(self):
         def show_one(p: GamePlayer, rank: ECardRank):
-            msg = {'op': EOutOperation.SHOW_A_CARD.value, 'result': [p, rank.value]}
+            msg = {'op': EOutOperation.SHOW_A_CARD.value, 'args': [p, rank.value]}
             p.output(msg)
 
             cards_index = list()
             for i in range(0, len(p.hand)):
                 if p.hand[i].rank == rank.value:
                     cards_index.append(p.hand[i])
-            msg = {'op': EOutOperation.CHOOSE_TARGET.value, 'result': [1]}
+            msg = {'op': EOutOperation.CHOOSE_TARGET.value, 'args': [1]}
             p.output(msg)
             msg = {'op': EInOperation.CHOOSE_CARDS_FORCE.value, 'alter': cards_index,
                    'num': 1}
             shown_card_index = p.input(msg)
-            msg = {'op': EOutOperation.ANNOUNCE_TARGET.value, 'result': [shown_card_index]}
+            msg = {'op': EOutOperation.ANNOUNCE_TARGET.value, 'args': [shown_card_index]}
             p.output(msg)
 
         show_one(self.p1, ECardRank.TRUMP)
@@ -271,7 +268,7 @@ class Game:
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
         if out:
-            self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT.value, 'result': [tp.value]})
+            self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT.value, 'args': [tp.value]})
         self.react()
         self.tp_stack.remove(tp)
 
@@ -283,7 +280,7 @@ class Game:
             tts.append(t)
             mtts.append(t.value)
 
-        self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT.value, 'result': [*mtts]})
+        self.__batch_sending(msg={'op': EOutOperation.ENTER_TIME_POINT.value, 'args': [*mtts]})
 
         self.temp_tp_stack.clear()
         self.react()
