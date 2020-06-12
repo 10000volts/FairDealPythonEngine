@@ -11,9 +11,9 @@ if __name__ == '__main__':
     p1 = Player(p1j['pid'], p1j['op_method'], sys.argv[1])
     p2j = json.loads(sys.argv[4])
     p2 = Player(p2j['pid'], p2j['op_method'], sys.argv[2])
+    match_config = json.loads(sys.argv[5])
 
-    global main_match
     main_match = Match(p1, p1j['deck'], p1j['leader_id'],
-                       p2, p2j['deck'], p2j['leader_id'],
-                       sys.argv[5])
+                        p2, p2j['deck'], p2j['leader_id'],
+                        match_config)
     main_match.start()
