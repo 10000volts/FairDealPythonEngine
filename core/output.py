@@ -1,5 +1,5 @@
 import socket
-from utils.hints import Hint
+from utils.hints import hints
 
 
 def send_2_socket(acceptor, msg):
@@ -7,7 +7,7 @@ def send_2_socket(acceptor, msg):
 
 
 def send_msg(acceptor, msg: dict):
-    print(Hint.hints[int(msg['op'])].format(msg['result']))
+    print(hints[int(msg['op'])].format(msg['result']))
 
 
 def send_2_ai(acceptor, msg):
