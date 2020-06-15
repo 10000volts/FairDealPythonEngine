@@ -127,3 +127,4 @@ dmypy.json
 # database & log
 *.out
 *.rdb
+*.conf

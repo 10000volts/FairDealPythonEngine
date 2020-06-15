@@ -3,18 +3,18 @@ import json
 
 from core.game import Match
 from models.player import Player
-from time import sleep
 
 main_match: Match = None
 
 if __name__ == '__main__':
-    while True:
-        sleep(10)
-    p1j = json.loads(sys.argv[3])
-    p1 = Player(p1j['pid'], p1j['op_method'], sys.argv[1])
-    p2j = json.loads(sys.argv[4])
-    p2 = Player(p2j['pid'], p2j['op_method'], sys.argv[2])
-    match_config = json.loads(sys.argv[5])
+    with open(sys.argv[1]) as f:
+        j = json.loads(f.read())
+    print(j)
+    p1j = json.loads(j[2])
+    p1 = Player(p1j['info']['pid'], p1j['info']['op_method'], j[0])
+    p2j = json.loads(j[3])
+    p2 = Player(p2j['info']['pid'], p2j['info']['op_method'], j[1])
+    match_config = json.loads(j[4])
 
     main_match = Match(p1, p1j['deck'], p1j['leader_id'],
                         p2, p2j['deck'], p2j['leader_id'],
