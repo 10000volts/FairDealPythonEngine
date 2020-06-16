@@ -69,11 +69,14 @@ class GameCard:
         self.type = rds.hget(cid, 'type')
         self.subtype = rds.hget(cid, 'subtype')
         self.rank = rds.hget(cid, 'rank')
-        self.bsc_atk = rds.hget(cid, 'atk_eff')
-        self.bsc_def = rds.hget(cid, 'def_hp')
+        self.src_atk = rds.hget(cid, 'atk_eff')
+        self.src_def = rds.hget(cid, 'def_hp')
         self.series = rds.hget(cid, 'series')
         # 附加值。additional value
         self.add_val = 0
+        # basic atk/def = source atk/def + add_val, 用于倍乘
+        self.bsc_atk = 0
+        self.bsc_def = 0
         self.buff_atk = 0
         self.buff_def = 0
         self.halo_atk = 0
