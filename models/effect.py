@@ -1,7 +1,4 @@
-from core.game import GameCard
-
-
-class EffectObj:
+class Effect:
     """
     单个卡片效果的抽象。
     """
@@ -25,7 +22,7 @@ class EffectObj:
         self.host_id = host_id
         self.secret = secret
         self.sec_arg = scr_arg
-        # 是否为无源效果(如：延时几回合自动发动的效果，这时，发动的位置与其所属的卡目前所在地无关)。
+        # 是否为无源效果(这时，发动的位置与其所属的卡目前所在地无关)。
         self.no_source = no_src
         # 满足条件时是否强制发动。
         self.force_exec = force_exec

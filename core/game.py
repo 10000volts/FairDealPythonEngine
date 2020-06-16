@@ -1,10 +1,15 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
     EGamePhase, EInOperation, EOutOperation
 from models.player import Player
-from core.input import wait_4_response_from_socket, wait_4_response,\
-    wait_4_response_from_ai
-from core.output import send_2_socket, send_msg, send_2_ai
+from core.io import input_from_socket, input_from_local, input_from_ai, output_2_socket,\
+    output_2_local, output_2_ai, set_socket
+from models.effect import Effect
+
 import random
+import redis
+
+# redis键值对int/str不敏感
+rds = redis.StrictRedis(db=0)
 
 
 class GamePlayer:
@@ -14,24 +19,33 @@ class GamePlayer:
     def __init__(self, p: Player, deck: list, leader_card_id: int):
         def method_convert(om):
             if om == 'local':
-                return wait_4_response, send_msg
+                return input_from_local, output_2_local
             elif om == 'from_network':
-                return wait_4_response_from_socket, send_2_socket
+                set_socket(p.upstream)
+                return input_from_socket, output_2_socket
             else:
-                return wait_4_response_from_ai, send_2_ai
+                return input_from_ai, output_2_ai
         self.player = p
-        self.name = p.name
         # op_method的acceptor
         self.upstream = p.upstream
         m = method_convert(p.op_method)
         self.in_method = m[0]
         self.out_method = m[1]
-        self.ori_deck = deck
+        md = list()
+        sd = list()
+        for cid in deck:
+            for i in range(deck[cid][0]):
+                gc = GameCard(cid)
+                if int(deck[cid][3]):
+                    sd.append(gc)
+                else:
+                    md.append(gc)
+        self.ori_deck = md
         self.deck = list()
-        self.ori_side = side
-        self.side = side
+        self.ori_side = sd
+        self.side = sd
         # 手牌
-        self.hand = deck
+        self.hand = md
         self.graveyard = list()
         # 除外区
         self.exiled = list()
@@ -49,8 +63,26 @@ class GamePlayer:
 
 
 class GameCard:
-    def __init__(self, ty):
-        self.type = ty
+    def __init__(self, cid, is_token=False):
+        self.cid = cid
+        self.name = rds.hget(cid, 'name')
+        self.type = rds.hget(cid, 'type')
+        self.subtype = rds.hget(cid, 'subtype')
+        self.rank = rds.hget(cid, 'rank')
+        self.bsc_atk = rds.hget(cid, 'atk_eff')
+        self.bsc_def = rds.hget(cid, 'def_hp')
+        self.series = rds.hget(cid, 'series')
+        # 附加值。additional value
+        self.add_val = 0
+        self.buff_atk = 0
+        self.buff_def = 0
+        self.halo_atk = 0
+        self.halo_def = 0
+        self.is_token = is_token
+        self.effects = list()
+
+    def register_effect(self, e: Effect):
+        pass
 
 
 class LeaderCard(GameCard):
