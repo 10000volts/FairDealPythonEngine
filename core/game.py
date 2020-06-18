@@ -1,5 +1,5 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
-    EGamePhase, EInOperation, EOutOperation
+    EGamePhase  # , EInOperation, EOutOperation
 from models.player import Player
 from core.io import input_from_socket, input_from_local, input_from_ai, output_2_socket,\
     output_2_local, output_2_ai, set_socket, make_output, make_input
@@ -27,13 +27,12 @@ class GamePlayer:
                 return input_from_socket, output_2_socket
             else:
                 return input_from_ai, output_2_ai
-        self.player = p
-        self.id = p.id
         # op_method的acceptor
         self.upstream = p.upstream
         m = method_convert(p.op_method)
         self.in_method = m[0]
         self.out_method = m[1]
+        self.auto_skip = p.auto_skip
         md = list()
         sd = list()
         for cid in deck:
@@ -59,8 +58,8 @@ class GamePlayer:
         self.strategy = list()
         self.leader = GameCard(leader_card_id, ELocation.UNKNOWN)
 
-    def input(self, *args):
-        return self.in_method(self.upstream, make_input(*args))
+    def input(self, func, *args):
+        return self.in_method(self.upstream, make_input(*args), func)
 
     def output(self, *args):
         self.out_method(self.upstream, make_output(*args))
@@ -89,7 +88,6 @@ class GameCard:
         self.add_val = 0
         # basic atk/def = source atk/def + add_val, 用于倍乘
         self.bsc_atk = 0
-        self.bsc_def = 0
         self.buff_atk = 0
         self.buff_def = 0
         self.halo_atk = 0
@@ -97,7 +95,7 @@ class GameCard:
         self.is_token = is_token
         self.effects = list()
         self.location = ori_loc
-        # 在对局中获得的效果。{gcid(给予该卡新效果的卡的gcid): effect, ...}
+        # 在对局中获得的效果。{description: effect, ...}
         self.buff_eff = dict()
 
     def register_effect(self, e: Effect):
@@ -115,7 +113,6 @@ class GameCard:
             'series': self.series,
             'add_val': self.add_val,
             'bsc_atk': self.bsc_atk,
-            'bsc_def': self.bsc_def,
             'buff_atk': self.buff_atk,
             'buff_def': self.buff_def,
             'halo_atk': self.halo_atk,
@@ -180,34 +177,22 @@ class Match:
 
         self.wins = {gp1: 0, gp2: 0}
 
-    def deck_check(self, card_table):
-        """
-        检查双方卡组是否有效。
-        :param card_table: 比赛用卡表。
-        :return:
-        """
-        for gp in self.players:
-            pass
-        return True
-
     def start(self):
-        for p in self.players:
-            p.output(EOutOperation.MATCH_START.value)
+        self.__batch_sending('startm', None)
         exec(self.match_config["match_init"])
         last_loser = None
         while True:
             self.game_now = Game(self.players, self.match_config["game_config"], last_loser)
-            pl = self.game_now.start()
+            pl: tuple = self.game_now.start()
             self.wins[pl[0]] += 1
             last_loser = pl[1]
             winner: GamePlayer = self.end_check()
             if winner is not None:
-                for p in self.players:
-                    p.output(EOutOperation.END_MATCH.value, winner.id)
+                self.__batch_sending('endm', winner)
                 exec(self.match_config['match_end'])
                 return winner
-            for p in self.players:
-                p.output(EOutOperation.MATCH_BREAK.value)
+            self.__batch_sending('endg', pl[0])
+            self.__batch_sending('mbreak', None)
             exec(self.match_config['match_break'])
 
     def end_check(self):
@@ -223,6 +208,15 @@ class Match:
     @staticmethod
     def match_roll_deck(m):
         pass
+
+    def __batch_sending(self, op, sender, args: list = None):
+        """
+        群发消息。
+        :return:
+        """
+        for p in self.players:
+            p.output(make_output(op, args, True if sender is None else p == sender))
+
 
 
 class Game:
@@ -265,7 +259,7 @@ class Game:
         # sp: starting player
         self.enter_phase(EGamePhase.GAME_START)
         for p in self.players:
-            p.output(EOutOperation.GAME_START.value)
+            p.output('startg')
 
         # 游戏流程
         process = self.game_config['process']
@@ -305,11 +299,11 @@ class Game:
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending(EOutOperation.ENTER_PHASE.value, self.turn_player, [tp.value])
+        self.__batch_sending('entp', self.turn_player, [tp.value])
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending(EOutOperation.END_PHASE.value, self.turn_player, [tp.value])
+        self.__batch_sending('endp', self.turn_player, [tp.value])
 
     def __ph_sp_decide(self):
         a = random.randint(1, 10)
@@ -320,22 +314,23 @@ class Game:
             self.p1 = self.players[1]
             self.p2 = self.players[0]
         # 输出
-        self.__batch_sending(EOutOperation.SP_DECIDED.value, self.p1)
+        self.__batch_sending('sp_decided', self.p1)
 
     def __ph_show_card(self):
         def show_one(p: GamePlayer, rank: ECardRank):
-            p.output(EOutOperation.SHOW_A_CARD.value,
-                                 [p, rank.value])
+            def check_ind(ind):
+                return ind in range(0, ind_max)
+
+            p.output('req_shw_crd', [rank.value])
 
             cards_index = list()
             for i in range(0, len(p.hand)):
                 if p.hand[i].rank == rank.value:
                     cards_index.append(p.hand[i])
-            p.output(EOutOperation.CHOOSE_TARGET.value,
-                                 [1])
-            shown_card_index = p.input(EInOperation.CHOOSE_CARDS_FORCE.value,
-                                       [c.serialize() for c in cards_index] + [1])
-            self.__batch_sending(EOutOperation.ANNOUNCE_TARGET.value,
+            ind_max = len(p.hand)
+            shown_card_index = p.input(check_ind, 'req_chs_tgt_f',
+                                       [[c.serialize() for c in cards_index], 1])
+            self.__batch_sending('anu_tgt',
                                  p, [cards_index[shown_card_index].serialize()])
 
         show_one(self.p1, ECardRank.TRUMP)
@@ -350,7 +345,7 @@ class Game:
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
         if out:
-            self.__batch_sending(EOutOperation.ENTER_TIME_POINT.value, True, [tp.value])
+            self.__batch_sending('ent_tp', None, [tp.value])
         self.react()
         self.tp_stack.remove(tp)
 
@@ -362,7 +357,7 @@ class Game:
             tts.append(t)
             mtts.append(t.value)
 
-        self.__batch_sending(EOutOperation.ENTER_TIME_POINT.value, True, mtts)
+        self.__batch_sending('ent_tp', None, mtts)
 
         self.temp_tp_stack.clear()
         self.react()
@@ -375,29 +370,40 @@ class Game:
         询问连锁。先询问对手。
         :return:
         """
-        self.__batch_sending(msg={'op': EOutOperation.QUERY_FOR_REACT.value})
+        def check_yn(yn):
+            return yn == 1 or yn == 0
+
+        def check_eff_ind(ind):
+            return ind in range(0, ind_max)
 
         op_react_list = list()
         tr_react_list = list()
         for ef in self.ef_listener:
             if ef.condition():
-                if ef.owner == self.p1:
+                if ef.owner == self.op_player:
                     op_react_list.append(ef)
                 else:
                     tr_react_list.append(ef)
-
-        if self.op_player.input(EInOperation.CHOOSE_YES_NO.value):
-            op_react_card = self.op_player.input(EInOperation.CHOOSE_CARDS.value,
-                                                 [op_react_list, 1])
-            if op_react_card is not None:
-                # 对方响应了效果。
-                self.activate_effect(op_react_card)
-        if self.turn_player.input(EInOperation.CHOOSE_YES_NO.value):
-            tr_react_card = self.turn_player.input(EInOperation.CHOOSE_CARDS.value,
-                                                   [tr_react_list, 1])
-            if tr_react_card is not None:
-                # 回合持有者响应了效果。
-                self.activate_effect(tr_react_card)
+        if len(op_react_list) > 0 or not self.op_player.auto_skip:
+            self.op_player.output('qry_rct')
+            if self.op_player.input(check_yn, 'chs_yn'):
+                ind_max = len(op_react_list)
+                op_react_ef_ind = self.op_player.input(
+                    check_eff_ind,
+                    'chs_eff', [[[ef.host.serialize(), ef.description] for ef in op_react_list]])
+                if op_react_ef_ind is not None:
+                    # 对方响应了效果。
+                    self.activate_effect(op_react_list[op_react_ef_ind])
+        if len(tr_react_list) > 0 or not self.turn_player.auto_skip:
+            self.turn_player.output('qry_rct')
+            if self.turn_player.input(check_yn, 'chs_yn'):
+                ind_max = len(tr_react_list)
+                tr_react_ef_ind = self.turn_player.input(
+                    check_eff_ind,
+                    'chs_eff', [[[ef.host.serialize(), ef.description] for ef in tr_react_list]])
+                if tr_react_ef_ind is not None:
+                    # 回合持有者响应了效果。
+                    self.activate_effect(tr_react_list[tr_react_ef_ind])
 
     def activate_effect(self, ef):
         """
@@ -426,4 +432,4 @@ class Game:
         :return:
         """
         for p in self.players:
-            p.output(make_output(op, args, p == sender))
+            p.output(make_output(op, args, True if sender is None else p == sender))

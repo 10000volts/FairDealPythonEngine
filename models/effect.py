@@ -3,13 +3,14 @@ class Effect:
     单个卡片效果的抽象。
     """
 
-    def __init__(self, active_phase, active_location, owner, host, host_id,
+    def __init__(self, desc, active_phase, active_location, owner, host, host_id,
                  secret, scr_arg, no_src, force_exec, ttl):
         """
 
         :param secret: 是否为秘密效果(发动对玩家不可见)。
         :param scr_arg: 秘密参数。
         """
+        self.description = desc
         # 该效果能发动的阶段
         self.active_phase = active_phase
         self.active_location = active_location
@@ -21,7 +22,7 @@ class Effect:
         # 宿主卡片id。该效果为无源效果时，host为None所以需要用host_id判断。
         self.host_id = host_id
         self.secret = secret
-        self.sec_arg = scr_arg
+        self.scr_arg = scr_arg
         # 是否为无源效果(这时，发动的位置与其所属的卡目前所在地无关)。
         self.no_source = no_src
         # 满足条件时是否强制发动。

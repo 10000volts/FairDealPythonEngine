@@ -24,6 +24,15 @@ class EGamePhase(Enum):
     PLAY_CARD = 7
 
 
+class EEffectDesc(Enum):
+    # 无法描述
+    INDESCRIBABLE = 0
+    # HP回复
+    HEAL = 1
+    # 造成伤害
+    CAUSE_DAMAGE = 2
+
+
 class ELocation(Enum):
     ON_FIELD = 1
     HAND = 2
@@ -33,52 +42,6 @@ class ELocation(Enum):
     SIDE = 32
     UNKNOWN = 64
     ANY = 127
-
-
-class EInOperation(Enum):
-    # 选择是或否。
-    CHOOSE_YES_NO = 0
-    #
-    CHOOSE_CARDS = 1
-    # 选择数字。
-    CHOOSE_NUMBER = 2
-    # 强制选择。
-    CHOOSE_YES_NO_FORCE = 3
-    # 强制选择。
-    CHOOSE_CARDS_FORCE = 4
-    # 选择数字。
-    CHOOSE_NUMBER_FORCE = 5
-
-
-class EOutOperation(Enum):
-    # 比赛开始
-    MATCH_START = 0
-    # 对局开始
-    GAME_START = 1
-    # 进入阶段
-    ENTER_PHASE = 2
-    # 阶段结束
-    END_PHASE = 3
-    # 单局游戏结束
-    END_GAME = 4
-    # 比赛结束
-    END_MATCH = 5
-    # 进入时点
-    ENTER_TIME_POINT = 6
-    # 说明先后手
-    SP_DECIDED = 7
-    # 展示手牌
-    SHOW_A_CARD = 8
-    # 选择目标
-    CHOOSE_TARGET = 9
-    # 公示选择结果
-    ANNOUNCE_TARGET = 10
-    # 询问是否响应
-    QUERY_FOR_REACT = 11
-    # 公示选择结果(是/否或数字等纯文本信息)
-    ANNOUNCE_DECISION = 12
-    # 比赛间歇
-    MATCH_BREAK = 13
 
 
 class ETimePoint(Enum):

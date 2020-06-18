@@ -15,11 +15,19 @@ def make_output(op: str, args: list = None, sd=1):
 不同显示。
     :return:
     """
-    return {'op': op, 'args': args, 'sd': int(sd), 'ty': 'o'}
+    return json.dumps({'op': op, 'args': args, 'sd': int(sd), 'in': 0})
 
 
 def make_input(op: str, args: list = None, sd=1):
-    return {'op': op, 'args': args, 'sd': int(sd), 'ty': 'i'}
+    """
+
+    :param op:
+    :param args:
+    :param sd: is sender, 是否是操作的主动进行者，以此来实现双方对同一信息的
+不同显示。
+    :return:
+    """
+    return json.dumps({'op': op, 'args': args, 'sd': int(sd), 'in': 1})
 
 
 def set_socket(acceptor):
@@ -27,16 +35,23 @@ def set_socket(acceptor):
     terminal[acceptor].connect(acceptor)
 
 
-def input_from_socket(acceptor, msg):
-    output_2_socket(acceptor, msg)
-    return json.loads(terminal[acceptor].recv(1024).decode())
+def input_from_socket(acceptor, msg, check_func):
+    while True:
+        try:
+            output_2_socket(acceptor, msg)
+            r = json.loads(terminal[acceptor].recv(1024).decode())
+            if check_func(r):
+                return r
+        except Exception as ex:
+            pass
+        output_2_socket(acceptor, make_output('in_err'))
 
 
-def input_from_local(acceptor, msg):
+def input_from_local(acceptor, msg, func):
     pass
 
 
-def input_from_ai(acceptor, msg):
+def input_from_ai(acceptor, msg, func):
     return acceptor.respond(msg)
 
 

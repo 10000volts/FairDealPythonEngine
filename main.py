@@ -12,9 +12,9 @@ if __name__ == '__main__':
         j = json.loads(f.read())
     print(j)
     p1j = json.loads(j[2])
-    p1 = Player(p1j['info']['pid'], p1j['info']['op_method'], j[0])
+    p1 = Player(p1j['info']['op_method'], j[0], p1j['auto_skip'])
     p2j = json.loads(j[3])
-    p2 = Player(p2j['info']['pid'], p2j['info']['op_method'], j[1])
+    p2 = Player(p2j['info']['op_method'], j[1], p2j['auto_skip'])
     match_config = json.loads(j[4])
 
     Hint.choose_language('zh-hans')
