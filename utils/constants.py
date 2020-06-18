@@ -13,17 +13,6 @@ class ECardType(Enum):
     STRATEGY = 2
 
 
-class EGamePhase(Enum):
-    GAME_START = 0
-    SP_DECIDE = 1
-    SHOW_CARD = 2
-    EXTRA_DATA = 3
-    PUT_CARD = 4
-    TAKE_CARD = 5
-    MULLIGAN = 6
-    PLAY_CARD = 7
-
-
 class EEffectDesc(Enum):
     # 无法描述
     INDESCRIBABLE = 0
@@ -42,6 +31,17 @@ class ELocation(Enum):
     SIDE = 32
     UNKNOWN = 64
     ANY = 127
+
+
+class EGamePhase(Enum):
+    GAME_START = 0
+    SP_DECIDE = 1
+    SHOW_CARD = 2
+    EXTRA_DATA = 3
+    PUT_CARD = 4
+    TAKE_CARD = 5
+    MULLIGAN = 6
+    PLAY_CARD = 7
 
 
 class ETimePoint(Enum):
@@ -169,7 +169,7 @@ class ETimePoint(Enum):
     TURN_END = 139
     # 游戏将结束时 在此时点发动效果的卡：
     # 蓝图设计者
-    GAME_ENDING = 140
+    # GAME_ENDING = 140
     # 尝试发动攻击 在此时点发动效果的卡：
     #
     TRY_ATTACK = 141
@@ -232,94 +232,94 @@ class ETimePoint(Enum):
     OUT_EXILED_END = 159
     # 入场时 在此时点发动效果的卡：
     #
-    IN_FIELD = 148
+    IN_FIELD = 160
     # 入场后 在此时点发动效果的卡：
     #
-    IN_FIELD_END = 149
+    IN_FIELD_END = 161
     # 加入手牌时 在此时点发动效果的卡：
     #
-    IN_HAND = 150
+    IN_HAND = 162
     # 加入手牌后 在此时点发动效果的卡：
     #
-    IN_HAND_END = 151
-    # 离开主卡组时 在此时点发动效果的卡：
+    IN_HAND_END = 163
+    # 加入主卡组时 在此时点发动效果的卡：
     #
-    IN_DECK = 152
-    # 离开主卡组后 在此时点发动效果的卡：
+    IN_DECK = 164
+    # 加入主卡组后 在此时点发动效果的卡：
     #
-    IN_DECK_END = 153
-    # 离开副卡组时 在此时点发动效果的卡：
+    IN_DECK_END = 165
+    # 加入副卡组时 在此时点发动效果的卡：
     #
-    IN_SIDE = 154
-    # 离开副卡组后 在此时点发动效果的卡：
+    IN_SIDE = 166
+    # 加入副卡组后 在此时点发动效果的卡：
     #
-    IN_SIDE_END = 155
-    # 离开墓地时 在此时点发动效果的卡：
+    IN_SIDE_END = 167
+    # 加入墓地时 在此时点发动效果的卡：
     #
-    IN_GRAVEYARD = 156
-    # 离开墓地后 在此时点发动效果的卡：
+    IN_GRAVEYARD = 168
+    # 加入墓地后 在此时点发动效果的卡：
     #
-    IN_GRAVEYARD_END = 157
-    # 离开移除区时 在此时点发动效果的卡：
+    IN_GRAVEYARD_END = 169
+    # 加入移除区时 在此时点发动效果的卡：
     #
-    IN_EXILED = 158
-    # 离开移除区后 在此时点发动效果的卡：
+    IN_EXILED = 170
+    # 加入移除区后 在此时点发动效果的卡：
     #
-    IN_EXILED_END = 159
+    IN_EXILED_END = 171
     # 尝试丢弃手牌 在此时点发动效果的卡：
     #
-    TRY_DISCARD = 160
+    TRY_DISCARD = 172
     # 丢弃手牌时 在此时点发动效果的卡：
     #
-    DISCARDING = 161
+    DISCARDING = 173
     # 被丢弃后 在此时点发动效果的卡：
     #
-    DISCARDED = 162
+    DISCARDED = 174
     # 尝试奉献 在此时点发动效果的卡：
     #
-    TRY_DEVOTRE = 163
+    TRY_DEVOTRE = 175
     # 奉献时 在此时点发动效果的卡：
     #
-    DEVOTING = 164
+    DEVOTING = 176
     # 奉献后 在此时点发动效果的卡：
     #
-    DEVOTED = 165
+    DEVOTED = 177
     # 尝试进行契约 在此时点发动效果的卡：
     #
-    TRY_CONTRACT = 166
+    TRY_CONTRACT = 178
     # 进行契约时 在此时点发动效果的卡：
     #
-    TRY_CONTRACTING = 167
+    TRY_CONTRACTING = 179
     # 进行契约后 在此时点发动效果的卡：
     #
-    CONTRACTED = 168
+    CONTRACTED = 180
     # 尝试抽卡 在此时点发动效果的卡：
     #
-    TRY_DRAW = 169
+    TRY_DRAW = 181
     # 抽卡时 在此时点发动效果的卡：
     #
-    DRAWING = 170
+    DRAWING = 182
     # 抽卡后 在此时点发动效果的卡：
     #
-    DRAWN = 171
+    DRAWN = 183
     # 使用阶段将结束时 在此时点发动效果的卡：
     # 蓝图设计者
-    PH_PLAY_CARD_ENDING = 172
+    PH_PLAY_CARD_ENDING = 184
     # 尝试将效果无效 在此时点发动效果的卡：
     # 各种发动不会被无效的效果
-    TRY_EFF_NEGATE = 174
+    TRY_EFF_NEGATE = 185
     # 效果将被无效时 在此时点发动效果的卡：
     #
-    EFF_NEGATING = 175
+    EFF_NEGATING = 186
     # 效果被无效后 在此时点发动效果的卡：
     #
-    EFF_NEGATED = 176
+    EFF_NEGATED = 187
     # 尝试阻挡 在此时点发动效果的卡：
     # 梦想奔流 萨菲尔·逐梦
-    TRY_BLOCK = 177
+    TRY_BLOCK = 188
     # 阻挡时 在此时点发动效果的卡：
     #
-    BLOCKING = 178
+    BLOCKING = 189
     # 阻挡后 在此时点发动效果的卡：
     #
-    BLOCKED = 179
+    BLOCKED = 190

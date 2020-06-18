@@ -299,11 +299,11 @@ class Game:
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending('entp', self.turn_player, [tp.value])
+        self.__batch_sending('ent_ph', None, [tp.value])
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending('endp', self.turn_player, [tp.value])
+        self.__batch_sending('endp', None, [tp.value])
 
     def __ph_sp_decide(self):
         a = random.randint(1, 10)
