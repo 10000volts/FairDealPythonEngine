@@ -124,11 +124,10 @@ class Hint:
     def choose_language(lan: str = 'zh-hans'):
         from utils import hints_zh_hans
         from utils import hints_en_us
+        global hints
         if lan == 'zh-hans':
-            global hints
             hints = hints_zh_hans.hints
         elif lan == 'en-us':
-            global hints
             hints = hints_en_us.hints
 
 

@@ -2,9 +2,8 @@ from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
     EGamePhase  # , EInOperation, EOutOperation
 from models.player import Player
 from core.io import input_from_socket, input_from_local, input_from_ai, output_2_socket,\
-    output_2_local, output_2_ai, set_socket, make_output, make_input, make_output_batch
+    output_2_local, output_2_ai, set_socket, make_output, make_input
 from models.effect import Effect
-from main import main_match
 
 import random
 import redis
@@ -18,7 +17,7 @@ class GamePlayer:
     """
     游戏中的玩家。
     """
-    def __init__(self, p: Player, deck: list, leader_card_id: int):
+    def __init__(self, p: Player, deck: dict, leader_card_id: int):
         def method_convert(om):
             if om == 'local':
                 return input_from_local, output_2_local
@@ -33,22 +32,12 @@ class GamePlayer:
         self.in_method = m[0]
         self.out_method = m[1]
         self.auto_skip = p.auto_skip
-        md = list()
-        sd = list()
-        for cid in deck:
-            for i in range(deck[cid][0]):
-                if int(deck[cid][3]):
-                    gc = GameCard(cid, ELocation.DECK.value)
-                    sd.append(gc)
-                else:
-                    gc = GameCard(cid, ELocation.SIDE.value)
-                    md.append(gc)
-        self.ori_deck = md
+        self.ori_deck = deck
         self.deck = list()
-        self.ori_side = sd
-        self.side = sd
+        self.ori_side = list()
+        self.side = list()
         # 手牌
-        self.hand = md
+        self.hand = list()
         self.graveyard = list()
         # 除外区
         self.exiled = list()
@@ -56,17 +45,32 @@ class GamePlayer:
         self.employees = list()
         # 场上策略
         self.strategy = list()
-        self.leader = GameCard(leader_card_id, ELocation.UNKNOWN)
+        self.leader: GameCard = None
+        self.leader_id = leader_card_id
 
-    def input(self, func, *args):
-        return self.in_method(self.upstream, make_input(*args), func)
+    def init_deck(self, g):
+        self.leader = GameCard(g, self.leader_id, ELocation.UNKNOWN)
+        md = list()
+        sd = list()
+        for cid in self.ori_deck.keys():
+            for i in range(self.ori_deck[cid][0]):
+                if int(self.ori_deck[cid][3]):
+                    gc = GameCard(g, cid, ELocation.DECK.value)
+                    sd.append(gc)
+                else:
+                    gc = GameCard(g, cid, ELocation.SIDE.value)
+                    md.append(gc)
+        self.deck = list()
+        self.ori_side = sd
+        self.side = sd
+        # 手牌
+        self.hand = md
+
+    def input(self, g, func, *args):
+        return self.in_method(self.upstream, g, make_input(*args), func)
 
     def output(self, *args):
         self.out_method(self.upstream, make_output(*args))
-
-    def output_batch(self, msgs):
-        print(make_output_batch(msgs))
-        self.out_method(self.upstream, make_output_batch(msgs))
 
     def init_card_info(self, pl: list):
         """
@@ -76,18 +80,17 @@ class GamePlayer:
         """
         msgs = list()
         for c in self.hand:
-            msgs.append(make_output('upd_crd', [c.gcid, c.serialize()]))
+            self.update_card(c.gcid, c.serialize())
         for p in pl:
             for c in p.hand:
-                msgs.append(make_output('upd_crd', [c.gcid, None]))
-        self.output_batch(msgs)
+                self.update_card(c.gcid, None)
 
     def update_card(self, gcid, info: str):
         self.output('upd_crd', [gcid, info])
 
 
 class GameCard:
-    def __init__(self, cid, ori_loc, is_token=False):
+    def __init__(self, g, cid, ori_loc, is_token=False):
         """
 
         :param cid:
@@ -96,19 +99,19 @@ class GameCard:
         """
         # game card id
         self.gcid = 0
-        main_match.game_now.gcid_manager.register(self)
+        g.gcid_manager.register(self)
         self.cid = cid
-        self.name = rds.hget(cid, 'name')
-        self.type = rds.hget(cid, 'type')
-        self.subtype = rds.hget(cid, 'subtype')
-        self.rank = rds.hget(cid, 'rank')
-        self.src_atk = rds.hget(cid, 'atk_eff')
-        self.src_def = rds.hget(cid, 'def_hp')
-        self.series = rds.hget(cid, 'series')
+        self.name = rds.hget(cid, 'name').decode()
+        self.type = ECardType(int(rds.hget(cid, 'type').decode()))
+        self.subtype = int(rds.hget(cid, 'subtype').decode())
+        self.rank = ECardRank(int(rds.hget(cid, 'rank').decode()))
+        self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
+        self.src_def = int(rds.hget(cid, 'def_hp').decode())
+        self.series = json.loads(rds.hget(cid, 'series').decode())
         # 附加值。additional value
         self.add_val = 0
         # basic atk/def = source atk/def + add_val, 用于倍乘
-        self.bsc_atk = 0
+        self.bsc_atk = self.src_atk
         self.buff_atk = 0
         self.buff_def = 0
         self.halo_atk = 0
@@ -126,9 +129,10 @@ class GameCard:
         return json.dumps({
             'gcid': self.gcid,
             'cid': self.cid,
-            'type': self.type,
+            'name': self.name,
+            'type': self.type.value,
             'subtype': self.subtype,
-            'rank': self.rank,
+            'rank': self.rank.value,
             'src_atk': self.src_atk,
             'src_def': self.src_def,
             'series': self.series,
@@ -153,6 +157,7 @@ class GCIDManager:
         gcid = random.randint(0, 99999999)
         while gcid in self._cards.keys():
             gcid = random.randint(0, 99999999)
+        self._cards[gcid] = c
         c.gcid = gcid
 
     def recycle(self, gcid: int):
@@ -164,7 +169,7 @@ class GCIDManager:
 
 class TimePoint:
     def __init__(self, tp_id: ETimePoint, sender: Effect, args):
-        self.value = tp_id
+        self.tp = tp_id
         self.sender = sender
         self.args = args
 
@@ -203,6 +208,8 @@ class Match:
         last_loser = None
         while True:
             self.game_now = Game(self.players, self.match_config["game_config"], last_loser)
+            for p in self.players:
+                p.init_deck(self.game_now)
             pl: tuple = self.game_now.start()
             self.wins[pl[0]] += 1
             last_loser = pl[1]
@@ -231,7 +238,7 @@ class Match:
         :return:
         """
         for p in self.players:
-            p.output(make_output(op, args, True if sender is None else p == sender))
+            p.output(op, args, True if sender is None else p == sender)
 
 
 class Game:
@@ -255,6 +262,8 @@ class Game:
         self.turn_player: GamePlayer = None
         # 未进行当前回合的玩家代表
         self.op_player: GamePlayer = None
+        # 当前回合数
+        self.turns = 1
         self.game_config = game_config
         self.last_loser = last_loser
         self.phase_now: EGamePhase = None
@@ -272,13 +281,10 @@ class Game:
         :return: 列表，前者为获胜的玩家代表，后者为落败的玩家代表。
         """
         # sp: starting player
-        self.enter_phase(EGamePhase.GAME_START)
-        for p in self.players:
-            p.output('startg')
-
         # 游戏流程
         process = self.game_config['process']
         for ph in process:
+            ph = EGamePhase(ph)
             self.enter_phase(ph)
             if self.winner is not None:
                 break
@@ -287,12 +293,13 @@ class Game:
     def enter_phase(self, ph: EGamePhase):
         self.phase_now = ph
         self.update_ef_list()
-        if ph == EGamePhase.GAME_START:
-            self.enter_time_point(TimePoint.generate(ETimePoint.PH_GAME_START), False)
-        elif ph == EGamePhase.SP_DECIDE:
-            self.__enter_phase(ETimePoint.PH_SP_DECIDE)
+        if ph == EGamePhase.SP_DECIDE:
             self.__ph_sp_decide()
             self.__end_phase(ETimePoint.PH_SP_DECIDE_END)
+        elif ph == EGamePhase.INITIALIZE:
+            self.enter_time_point(TimePoint.generate(ETimePoint.PH_GAME_START), False)
+            for p in self.players:
+                p.output('startg')
         elif ph == EGamePhase.SHOW_CARD:
             self.__enter_phase(ETimePoint.PH_SHOWED_CARD)
             self.__ph_show_card()
@@ -314,7 +321,7 @@ class Game:
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.__batch_sending('ent_ph', None, [tp.value])
+        self.__batch_sending('ent_ph', None, [self.phase_now.value])
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
@@ -331,6 +338,9 @@ class Game:
         # 输出
         self.__batch_sending('sp_decided', self.p1)
 
+        self.turn_player = self.p1
+        self.op_player = self.p2
+
         self.p1.init_card_info([self.p2])
         self.p2.init_card_info([self.p1])
 
@@ -343,10 +353,10 @@ class Game:
 
             card_gcid = list()
             for i in range(0, len(p.hand)):
-                if p.hand[i].rank == rank.value:
+                if p.hand[i].rank == rank:
                     card_gcid.append(p.hand[i].gcid)
             ind_max = len(p.hand)
-            shown_card_index = p.input(check_ind, 'req_chs_tgt_f',
+            shown_card_index = p.input(self, check_ind, 'req_chs_tgt_f',
                                        [card_gcid, 1])
 
             self.show_card(p, card_gcid[shown_card_index])
@@ -360,10 +370,19 @@ class Game:
         # todo: 删除
         self.winner = self.p1
 
+    def exchange_turn(self):
+        p = self.op_player
+        self.op_player = self.turn_player
+        self.turn_player = p
+
+    # def next_turn(self):
+    #     self.turns += 1
+    #     self.exchange_turn()
+
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
         if out:
-            self.__batch_sending('ent_tp', None, [tp.value])
+            self.__batch_sending('ent_tp', None, [tp.tp.value])
         self.react()
         self.tp_stack.remove(tp)
 
@@ -375,7 +394,7 @@ class Game:
             tts.append(t)
             mtts.append(t.value)
 
-        self.__batch_sending('ent_tp', None, [mtts])
+        self.__batch_sending('ent_tp', None, [tp.value for tp in mtts])
 
         self.temp_tp_stack.clear()
         self.react()
@@ -404,20 +423,20 @@ class Game:
                     tr_react_list.append(ef)
         if len(op_react_list) > 0 or not self.op_player.auto_skip:
             self.op_player.output('qry_rct')
-            if self.op_player.input(check_yn, 'chs_yn'):
+            if self.op_player.input(self, check_yn, 'chs_yn'):
                 ind_max = len(op_react_list)
                 op_react_ef_ind = self.op_player.input(
-                    check_eff_ind,
+                    self, check_eff_ind,
                     'chs_eff', [[[ef.host.serialize(), ef.description] for ef in op_react_list]])
                 if op_react_ef_ind is not None:
                     # 对方响应了效果。
                     self.activate_effect(op_react_list[op_react_ef_ind])
         if len(tr_react_list) > 0 or not self.turn_player.auto_skip:
             self.turn_player.output('qry_rct')
-            if self.turn_player.input(check_yn, 'chs_yn'):
+            if self.turn_player.input(self, check_yn, 'chs_yn'):
                 ind_max = len(tr_react_list)
                 tr_react_ef_ind = self.turn_player.input(
-                    check_eff_ind,
+                    self, check_eff_ind,
                     'chs_eff', [[[ef.host.serialize(), ef.description] for ef in tr_react_list]])
                 if tr_react_ef_ind is not None:
                     # 回合持有者响应了效果。
@@ -452,7 +471,7 @@ class Game:
         :return:
         """
         for p in self.players:
-            p.output(make_output(op, args, True if sender is None else p == sender))
+            p.output(op, args, True if sender is None else p == sender)
 
     def get(self, cmd: str):
         """
@@ -476,7 +495,12 @@ class Game:
         if doing_tp is not None:
             doing_tp = TimePoint(doing_tp, ef, None)
             self.enter_time_point(doing_tp)
-        if ef.succ_activate:
+        if ef is None:
+            yield
+            if done_tp is not None:
+                done_tp = TimePoint(done_tp, None, None)
+                self.enter_time_point(done_tp)
+        elif ef.succ_activate:
             yield
             if done_tp is not None:
                 done_tp = TimePoint(done_tp, ef, None)

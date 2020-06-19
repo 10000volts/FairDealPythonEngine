@@ -8,9 +8,9 @@ class ECardRank(Enum):
 
 
 class ECardType(Enum):
-    LEADER = 0
-    EMPLOYEE = 1
-    STRATEGY = 2
+    LEADER = 1
+    EMPLOYEE = 2
+    STRATEGY = 3
 
 
 class EEffectDesc(Enum):
@@ -34,8 +34,8 @@ class ELocation(Enum):
 
 
 class EGamePhase(Enum):
-    GAME_START = 0
-    SP_DECIDE = 1
+    SP_DECIDE = 0
+    INITIALIZE = 1
     SHOW_CARD = 2
     EXTRA_DATA = 3
     PUT_CARD = 4
@@ -55,7 +55,7 @@ class ETimePoint(Enum):
     PH_GAME_START = 0
     # 先后手决定阶段开始时 在此时点发动效果的卡：
     #
-    PH_SP_DECIDE = 5
+    # PH_SP_DECIDE = 5
     # 先后手决定阶段末尾 在此时点发动效果的卡：
     #
     PH_SP_DECIDE_END = 10

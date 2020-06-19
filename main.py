@@ -1,13 +1,14 @@
 import sys
 import json
 
-from core.game import Match
 from models.player import Player
 from utils.hints import Hint
 
-main_match: Match = None
+main_match = None
 
-if __name__ == '__main__':
+
+def main():
+    from core.game import Match
     with open(sys.argv[1]) as f:
         j = json.loads(f.read())
     print(j)
@@ -19,7 +20,12 @@ if __name__ == '__main__':
 
     Hint.choose_language('zh-hans')
 
+    global main_match
     main_match = Match(p1, p1j['deck'], p1j['leader_id'],
-                        p2, p2j['deck'], p2j['leader_id'],
-                        match_config)
+                       p2, p2j['deck'], p2j['leader_id'],
+                       match_config)
     main_match.start()
+
+
+if __name__ == '__main__':
+    main()
