@@ -2,7 +2,7 @@ from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
     EGamePhase  # , EInOperation, EOutOperation
 from models.player import Player
 from core.io import input_from_socket, input_from_local, input_from_ai, output_2_socket,\
-    output_2_local, output_2_ai, set_socket, make_output, make_input
+    output_2_local, output_2_ai, set_socket, make_output, make_input, make_output_batch
 from models.effect import Effect
 from main import main_match
 
@@ -63,6 +63,27 @@ class GamePlayer:
 
     def output(self, *args):
         self.out_method(self.upstream, make_output(*args))
+
+    def output_batch(self, msgs):
+        print(make_output_batch(msgs))
+        self.out_method(self.upstream, make_output_batch(msgs))
+
+    def init_card_info(self, pl: list):
+        """
+        向客户端发送初始化卡片请求。
+        :param pl: 其他玩家，他们的卡将被初始化成未知卡(知晓存在但不知内容)。
+        :return:
+        """
+        msgs = list()
+        for c in self.hand:
+            msgs.append(make_output('upd_crd', [c.gcid, c.serialize()]))
+        for p in pl:
+            for c in p.hand:
+                msgs.append(make_output('upd_crd', [c.gcid, None]))
+        self.output_batch(msgs)
+
+    def update_card(self, gcid, info: str):
+        self.output('upd_crd', [gcid, info])
 
 
 class GameCard:
@@ -142,15 +163,14 @@ class GCIDManager:
 
 
 class TimePoint:
-    def __init__(self, tp_id, sender, location, args):
+    def __init__(self, tp_id: ETimePoint, sender: Effect, args):
         self.value = tp_id
         self.sender = sender
-        self.location = location
         self.args = args
 
     @staticmethod
     def generate(tp_id):
-        return TimePoint(tp_id, None, None, None)
+        return TimePoint(tp_id, None, None)
 
 
 class Match:
@@ -205,10 +225,6 @@ class Match:
                 return p
         return None
 
-    @staticmethod
-    def match_roll_deck(m):
-        pass
-
     def __batch_sending(self, op, sender, args: list = None):
         """
         群发消息。
@@ -216,7 +232,6 @@ class Match:
         """
         for p in self.players:
             p.output(make_output(op, args, True if sender is None else p == sender))
-
 
 
 class Game:
@@ -306,8 +321,8 @@ class Game:
         self.__batch_sending('endp', None, [tp.value])
 
     def __ph_sp_decide(self):
-        a = random.randint(1, 10)
-        if a > 5:
+        a = random.randint(1, 16)
+        if a > 8:
             self.p1 = self.players[0]
             self.p2 = self.players[1]
         else:
@@ -316,6 +331,9 @@ class Game:
         # 输出
         self.__batch_sending('sp_decided', self.p1)
 
+        self.p1.init_card_info([self.p2])
+        self.p2.init_card_info([self.p1])
+
     def __ph_show_card(self):
         def show_one(p: GamePlayer, rank: ECardRank):
             def check_ind(ind):
@@ -323,15 +341,15 @@ class Game:
 
             p.output('req_shw_crd', [rank.value])
 
-            cards_index = list()
+            card_gcid = list()
             for i in range(0, len(p.hand)):
                 if p.hand[i].rank == rank.value:
-                    cards_index.append(p.hand[i])
+                    card_gcid.append(p.hand[i].gcid)
             ind_max = len(p.hand)
             shown_card_index = p.input(check_ind, 'req_chs_tgt_f',
-                                       [[c.serialize() for c in cards_index], 1])
-            self.__batch_sending('anu_tgt',
-                                 p, [cards_index[shown_card_index].serialize()])
+                                       [card_gcid, 1])
+
+            self.show_card(p, card_gcid[shown_card_index])
 
         show_one(self.p1, ECardRank.TRUMP)
         show_one(self.p2, ECardRank.TRUMP)
@@ -357,7 +375,7 @@ class Game:
             tts.append(t)
             mtts.append(t.value)
 
-        self.__batch_sending('ent_tp', None, mtts)
+        self.__batch_sending('ent_tp', None, [mtts])
 
         self.temp_tp_stack.clear()
         self.react()
@@ -416,7 +434,9 @@ class Game:
         self.enter_time_points()
         if ef.succ_activate:
             ef.execute()
-        self.temp_tp_stack.append(ETimePoint.SUCC_EFFECT_ACTIVATE)
+            self.temp_tp_stack.append(ETimePoint.SUCC_EFFECT_ACTIVATE)
+        else:
+            self.temp_tp_stack.append(ETimePoint.FAIL_EFFECT_ACTIVATE)
         self.enter_time_points()
 
     def update_ef_list(self):
@@ -433,3 +453,51 @@ class Game:
         """
         for p in self.players:
             p.output(make_output(op, args, True if sender is None else p == sender))
+
+    def get(self, cmd: str):
+        """
+
+        :return: list
+        """
+        ls = cmd.split(' ')
+        if ls[0] == 'gcid':
+            return [self.gcid_manager.get_card(int(ls[1])).serialize()]
+        return None
+
+    # -------⬇效果函数(execute部分)⬇--------
+    def activate_effect_step2(self, ef: Effect, doing_tp: ETimePoint, done_tp: ETimePoint):
+        """
+        适用效果。
+        :param ef:
+        :param doing_tp: 进行该效果时的时点，用于无效该效果。
+        :param done_tp
+        :return:
+        """
+        if doing_tp is not None:
+            doing_tp = TimePoint(doing_tp, ef, None)
+            self.enter_time_point(doing_tp)
+        if ef.succ_activate:
+            yield
+            if done_tp is not None:
+                done_tp = TimePoint(done_tp, ef, None)
+                self.enter_time_point(done_tp)
+        yield
+
+    def show_card(self, p: GamePlayer, gcid, ef: Effect = None, with_tp=True):
+        """
+        向双方展示自己选择的卡。
+        :param p: 发动效果的玩家
+        :param gcid:
+        :param ef: 所属效果，为None表示无源效果
+        :param with_tp: 能否响应
+        :return:
+        """
+        if with_tp:
+            check_point = self.activate_effect_step2(ef, ETimePoint.SHOWING_CARD, ETimePoint.SHOWED_CARD)
+            next(check_point)
+            self.__batch_sending('upd_crd', p, [gcid, self.gcid_manager.get_card(gcid).serialize()])
+            self.__batch_sending('shw_crd', p, [gcid])
+            next(check_point)
+        else:
+            self.__batch_sending('upd_crd', p, [gcid, self.gcid_manager.get_card(gcid).serialize()])
+            self.__batch_sending('shw_crd', p, [gcid])

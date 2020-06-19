@@ -323,3 +323,9 @@ class ETimePoint(Enum):
     # 阻挡后 在此时点发动效果的卡：
     #
     BLOCKED = 190
+    # 展示卡时 在此时点发动效果的卡：
+    #
+    SHOWING_CARD = 191
+    # 展示卡后 在此时点发动效果的卡：
+    # 冠军大力士
+    SHOWED_CARD = 192

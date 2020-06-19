@@ -1,4 +1,6 @@
 from utils.hints import hints
+from main import main_match
+
 import socket
 import json
 
@@ -15,7 +17,11 @@ def make_output(op: str, args: list = None, sd=1):
 不同显示。
     :return:
     """
-    return json.dumps({'op': op, 'args': args, 'sd': int(sd), 'in': 0})
+    return json.dumps([{'op': op, 'args': args, 'sd': int(sd), 'in': 0}])
+
+
+def make_output_batch(*msgs):
+    return json.dumps(msgs)
 
 
 def make_input(op: str, args: list = None, sd=1):
@@ -27,7 +33,7 @@ def make_input(op: str, args: list = None, sd=1):
 不同显示。
     :return:
     """
-    return json.dumps({'op': op, 'args': args, 'sd': int(sd), 'in': 1})
+    return json.dumps([{'op': op, 'args': args, 'sd': int(sd), 'in': 1}])
 
 
 def set_socket(acceptor):
@@ -39,7 +45,13 @@ def input_from_socket(acceptor, msg, check_func):
     while True:
         try:
             output_2_socket(acceptor, msg)
-            r = json.loads(terminal[acceptor].recv(1024).decode())
+            ans = terminal[acceptor].recv(1024).decode()
+            info = main_match.game_now.get(ans)
+            if info is not None:
+                output_2_socket(acceptor, make_output('info', info))
+                continue
+            r = json.loads(ans)
+            # 判断是否为读取信息的指令。
             if check_func(r):
                 return r
         except Exception as ex:

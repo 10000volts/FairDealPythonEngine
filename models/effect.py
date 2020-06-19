@@ -34,7 +34,7 @@ class Effect:
 
     def condition(self):
         """
-        是否满足该效果发动的前提条件。
+        是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
         :return:
         """
         return True
