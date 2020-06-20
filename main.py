@@ -4,6 +4,8 @@ import json
 from models.player import Player
 from utils.hints import Hint
 
+from time import sleep
+
 main_match = None
 
 
@@ -25,6 +27,8 @@ def main():
                        p2, p2j['deck'], p2j['leader_id'],
                        match_config)
     main_match.start()
+    # 防止在接收到结果前退出
+    sleep(2)
 
 
 if __name__ == '__main__':

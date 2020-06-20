@@ -50,21 +50,21 @@ class GamePlayer:
 
     def init_deck(self, g):
         self.leader = GameCard(g, self.leader_id, ELocation.UNKNOWN)
-        md = list()
+        hd = list()
         sd = list()
         for cid in self.ori_deck.keys():
             for i in range(self.ori_deck[cid][0]):
                 if int(self.ori_deck[cid][3]):
-                    gc = GameCard(g, cid, ELocation.DECK.value)
+                    gc = GameCard(g, cid, ELocation.SIDE.value)
                     sd.append(gc)
                 else:
-                    gc = GameCard(g, cid, ELocation.SIDE.value)
-                    md.append(gc)
+                    gc = GameCard(g, cid, ELocation.HAND.value)
+                    hd.append(gc)
         self.deck = list()
         self.ori_side = sd
         self.side = sd
         # 手牌
-        self.hand = md
+        self.hand = hd
 
     def input(self, g, func, *args):
         return self.in_method(self.upstream, g, make_input(*args), func)
