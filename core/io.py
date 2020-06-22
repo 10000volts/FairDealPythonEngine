@@ -33,6 +33,7 @@ def make_input(op: str, args: list = None, sd=1):
 
 def set_socket(acceptor):
     terminal[acceptor] = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    print(acceptor)
     terminal[acceptor].connect(acceptor)
 
 
