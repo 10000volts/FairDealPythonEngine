@@ -2,6 +2,7 @@ from utils.hints import hints
 
 import socket
 import json
+import os
 
 # {'acceptor': socket, ...}
 terminal = dict()
@@ -32,12 +33,10 @@ def make_input(op: str, args: list = None, sd=1):
 
 
 def set_socket(acceptor):
+    while not os.path.exists(acceptor):
+        pass
     terminal[acceptor] = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    # todo: del
-    try:
-        terminal[acceptor].connect(acceptor)
-    except Exception as ex:
-        print(acceptor)
+    terminal[acceptor].connect(acceptor)
 
 
 def input_from_socket(acceptor, g, msg, check_func):
