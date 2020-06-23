@@ -126,7 +126,7 @@ class GameCard:
         pass
 
     def serialize(self):
-        return json.dumps({
+        return {
             'gcid': self.gcid,
             'cid': self.cid,
             'name': self.name,
@@ -145,7 +145,7 @@ class GameCard:
             'is_token': self.is_token,
             'location': self.location,
             'buff_eff': list(self.buff_eff.keys())
-                           })
+                           }
 
 
 class GCIDManager:
@@ -367,8 +367,6 @@ class Game:
         show_one(self.p2, ECardRank.GOOD)
         show_one(self.p1, ECardRank.COMMON)
         show_one(self.p2, ECardRank.COMMON)
-        # todo: 删除
-        self.winner = self.p1
 
     def exchange_turn(self):
         p = self.op_player
