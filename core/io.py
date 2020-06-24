@@ -39,18 +39,25 @@ def set_socket(acceptor):
     terminal[acceptor].connect(acceptor)
 
 
-def input_from_socket(acceptor, g, msg, check_func):
+def input_from_socket(p, msg, check_func):
+    """
+
+    :param p: player
+    :param msg: 提示信息
+    :param check_func:
+    :return:
+    """
     while True:
         try:
-            output_2_socket(acceptor, msg)
-            ans = terminal[acceptor].recv(1024).decode()
-            info = g.get(ans)
-            if info is not None:
-                output_2_socket(acceptor, make_output('info', info))
-                continue
+            output_2_socket(p.upstream, msg)
+            ans = terminal[p.upstream].recv(1024).decode()
+            # 判断是否为读取信息的指令。
+            # info = g.get_info(p, ans)
+            # if info is not None:
+            #     output_2_socket(p.upstream, make_output('info', info))
+            #     continue
             if type(ans) == str:
                 r = json.loads(ans)
-                # 判断是否为读取信息的指令。
             else:
                 r = ans
             if check_func(r):
@@ -58,15 +65,15 @@ def input_from_socket(acceptor, g, msg, check_func):
         except Exception as ex:
             print(ex)
             pass
-        output_2_socket(acceptor, make_output('in_err'))
+        output_2_socket(p.upstream, make_output('in_err'))
 
 
-def input_from_local(acceptor, msg, func):
+def input_from_local(p, msg, func):
     pass
 
 
-def input_from_ai(acceptor, msg, func):
-    return acceptor.respond(msg)
+def input_from_ai(p, msg, func):
+    return p.upstream.respond(msg)
 
 
 def output_2_socket(acceptor, msg: str):

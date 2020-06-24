@@ -23,14 +23,18 @@ class EEffectDesc(Enum):
 
 
 class ELocation(Enum):
-    ON_FIELD = 1
-    HAND = 2
-    GRAVE = 4
-    EXILED = 8
-    DECK = 16
-    SIDE = 32
-    UNKNOWN = 64
-    ANY = 127
+    # 先手
+    P1 = 1
+    # 后手
+    P2 = 2
+    ON_FIELD = 4
+    HAND = 8
+    GRAVE = 16
+    EXILED = 32
+    DECK = 64
+    SIDE = 128
+    UNKNOWN = 256
+    ANY = 511
 
 
 class EGamePhase(Enum):
