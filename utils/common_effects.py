@@ -1,5 +1,6 @@
 from models.effect import Effect
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint
+from utils.common import adj_pos
 
 
 class EffInvestigator(Effect):
@@ -41,17 +42,14 @@ class EffInvestigator(Effect):
         执行效果。
         :return:
         """
-        # todo: del
-        print('ohhhhhh')
         g = self.game
         tp = self.reacted[-1]
         x = tp.args[0]
         y = tp.args[1]
-        cs = [g.chessboard[y * 6 + x - 1], g.chessboard[y * 6 + x + 1],
-              g.chessboard[y * 6 + x - 6], g.chessboard[y * 6 + x + 6]]
+        cs = adj_pos(x, y)
         # 展示其中的对方卡
         for c in cs:
-            if c is not None:
-                if (c.location - self.owner.sp) % 2:
-                    g.show_card(self.owner, c.vid, self)
+            if g.chessboard[c] is not None:
+                if (g.chessboard[c].location - self.owner.sp) % 2:
+                    g.show_card(self.owner, g.chessboard[c].vid, self)
         self.host.remove_effect(self)

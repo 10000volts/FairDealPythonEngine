@@ -1,5 +1,6 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
     EGamePhase  # , EInOperation, EOutOperation
+from utils.common import adj_pos
 from utils.common_effects import EffInvestigator
 from models.player import Player
 from core.io import input_from_socket, input_from_local, input_from_ai, output_2_socket,\
@@ -501,11 +502,10 @@ class Game:
                 self.chessboard[y * 6 + x] = c
                 hand.remove(c)
                 # 变化周围的数值。
-                cs = [self.chessboard[y * 6 + x - 1], self.chessboard[y * 6 + x + 1],
-                      self.chessboard[y * 6 + x - 6], self.chessboard[y * 6 + x + 6]]
+                cs = adj_pos(x, y)
                 for ac in cs:
-                    if ac is not None:
-                        ac.add_val += c.add_val
+                    if self.chessboard[ac] is not None:
+                        self.chessboard[ac].add_val += c.add_val
                 # 影响力值发挥作用后归零，成为附加值。
                 c.add_val = 0
                 self.batch_sending('go', p, [x, y, card_vid[ind]])
@@ -518,7 +518,13 @@ class Game:
             f = go(self.p1) | go(self.p2)
         self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_CALC))
         # todo: del
-        self.winner = self.p2
+        p1s = 0
+        p2s = 0
+        for c in self.p1.hand:
+            p1s += c.add_val
+        for c in self.p2.hand:
+            p2s += c.add_val
+        self.winner = self.p1 if p1s > p2s else self.p2
 
     def __ph_take_card(self):
         self.p1.shuffle()
