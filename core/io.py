@@ -56,12 +56,13 @@ def input_from_socket(p, msg, check_func):
             # if info is not None:
             #     output_2_socket(p.upstream, make_output('info', info))
             #     continue
-            if type(ans) == str:
-                r = json.loads(ans)
+            if ' ' in ans:
+                ans = [int(x) for x in ans.split(' ')]
+                if check_func(*ans):
+                    return ans
             else:
-                r = ans
-            if check_func(r):
-                return r
+                if check_func(int(ans)):
+                    return int(ans)
         except Exception as ex:
             print(ex)
             pass

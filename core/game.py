@@ -1,10 +1,12 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
     EGamePhase  # , EInOperation, EOutOperation
+from utils.common_effects import EffInvestigator
 from models.player import Player
 from core.io import input_from_socket, input_from_local, input_from_ai, output_2_socket,\
     output_2_local, output_2_ai, set_socket, make_output, make_input
 from models.effect import Effect
 
+from importlib import import_module
 from random import randint
 import redis
 import json
@@ -77,7 +79,11 @@ class GamePlayer:
         return self.in_method(self, make_input(*args), func)
 
     def output(self, *args):
-        self.out_method(self.upstream, make_output(*args))
+        msg = make_output(*args)
+        # 与之对应，输入不需要记录。
+        if self.game_now is not None:
+            self.game_now.record(self, msg)
+        self.out_method(self.upstream, msg)
 
     def init_card_info(self):
         """
@@ -105,11 +111,11 @@ class GamePlayer:
         for p in self.game_now.players:
             p.output('shf', [loc.value + 2 - self.sp])
             if p == self:
-                for c in p.hand:
+                for c in self.hand:
                     self.update_vc(c)
             else:
-                for c in p.hand:
-                    self.update_vc_ano(c)
+                for c in self.hand:
+                    p.update_vc_ano(c)
 
     def update_vc(self, c):
         self.output('upd_vc', [c.vid, c.serialize()])
@@ -128,6 +134,7 @@ class GameCard:
         """
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
         self.vid = 0
+        self.game = g
         g.vid_manager.register(self)
         self.cid = cid
         self.name = rds.hget(cid, 'name').decode()
@@ -139,8 +146,8 @@ class GameCard:
         self.series = json.loads(rds.hget(cid, 'series').decode())
         # 附加值。additional value
         self.add_val = 0
-        # basic atk/def = source atk/def + add_val, 用于倍乘
-        self.bsc_atk = self.src_atk
+        # basic atk/def = source atk/def + add_val, 用于倍乘、变成XXX
+        self.bsc_atk = self.src_atk  # + self.add_val
         self.buff_atk = 0
         self.buff_def = 0
         self.halo_atk = 0
@@ -148,13 +155,42 @@ class GameCard:
         self.is_token = is_token
         self.effects = list()
         self.location = ori_loc
-        # 在对局中获得的效果。{description: effect, ...}
+        # 在对局中获得的效果。{eff: desc}
         self.buff_eff = dict()
         # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区
         self.inf_pos = 0
+        m = import_module('cards.c{}'.format(self.cid))
+        m.give(self)
 
-    def register_effect(self, e: Effect):
-        pass
+    def register_effect(self, e: Effect, buff_eff=False):
+        """
+
+        :param e:
+        :param buff_eff: 是否是附加的效果。
+        :return:
+        """
+        self.effects.append(e)
+        if buff_eff:
+            self.buff_eff[e] = e.description
+
+    def remove_effect(self, e):
+        self.effects.remove(e)
+        if e in self.buff_eff:
+            self.buff_eff.pop(e)
+        if e in self.game.ef_listener:
+            self.game.ef_listener.remove(e)
+
+    def reset(self):
+        self.bsc_atk = self.src_atk + self.add_val
+        self.buff_atk = 0
+        self.buff_def = 0
+        self.halo_atk = 0
+        self.halo_def = 0
+        for e in self.effects:
+            if not e.no_reset:
+                self.remove_effect(e)
+        m = import_module('cards.c{}.py'.format(self.cid))
+        m.give(self)
 
     def serialize(self):
         return {
@@ -175,7 +211,7 @@ class GameCard:
             'halo_def': self.halo_def,
             'is_token': self.is_token,
             'location': self.location,
-            'buff_eff': list(self.buff_eff.keys()),
+            'buff_eff': list(self.buff_eff.values()),
             'inf_pos': self.inf_pos
                            }
 
@@ -184,7 +220,7 @@ class GameCard:
             'vid': self.vid,
             'add_val': self.add_val,
             'location': self.location,
-            'buff_eff': list(self.buff_eff.keys()),
+            'buff_eff': list(self.buff_eff.values()),
             'inf_pos': self.inf_pos
                            }
 
@@ -192,39 +228,39 @@ class GameCard:
 class GCIDManager:
     def __init__(self):
         # {gcid: GameCard, ...}
-        self._cards = dict()
+        self.cards = dict()
 
     def register(self, c: GameCard):
         gcid = randint(0, 99999999)
-        while gcid in self._cards.keys():
+        while gcid in self.cards.keys():
             gcid = randint(0, 99999999)
-        self._cards[gcid] = c
+        self.cards[gcid] = c
         c.vid = gcid
 
     def change(self, gcid):
-        c = self._cards.pop(gcid)
+        c = self.cards.pop(gcid)
         new_gcid = randint(0, 99999999)
-        while new_gcid in self._cards.keys():
+        while new_gcid in self.cards.keys():
             new_gcid = randint(0, 99999999)
         c.vid = new_gcid
-        self._cards[new_gcid] = c
+        self.cards[new_gcid] = c
 
     def recycle(self, gcid: int):
-        self._cards.pop(gcid)
+        self.cards.pop(gcid)
 
     def get_card(self, gcid: int):
-        return self._cards[gcid]
+        return self.cards[gcid]
 
 
 class TimePoint:
-    def __init__(self, tp_id: ETimePoint, sender: Effect, args=None):
+    def __init__(self, tp_id: ETimePoint, sender: Effect = None, args=None):
         self.tp = tp_id
         self.sender = sender
         self.args = args
 
     @staticmethod
     def generate(tp_id):
-        return TimePoint(tp_id, None)
+        return TimePoint(tp_id)
 
 
 class Match:
@@ -309,6 +345,9 @@ class Game:
         self.turn_player: GamePlayer = None
         # 未进行当前回合的玩家代表
         self.op_player: GamePlayer = None
+
+        # 放置&取走阶段时用的6*6棋盘
+        self.chessboard = [None for x in range(0, 36)]
         # 当前回合数
         self.turns = 1
         self.game_config = game_config
@@ -329,6 +368,9 @@ class Game:
         """
         # sp: starting player
         # 游戏流程
+        for p in self.players:
+            p.output('startg')
+
         process = self.game_config['process']
         for ph in process:
             ph = EGamePhase(ph)
@@ -345,8 +387,6 @@ class Game:
             self.__end_phase(ETimePoint.PH_SP_DECIDE_END)
         elif ph == EGamePhase.INITIALIZE:
             self.enter_time_point(TimePoint.generate(ETimePoint.PH_GAME_START), False)
-            for p in self.players:
-                p.output('startg')
         elif ph == EGamePhase.SHOW_CARD:
             self.__enter_phase(ETimePoint.PH_SHOWED_CARD)
             self.__ph_show_card()
@@ -357,9 +397,11 @@ class Game:
             self.__end_phase(ETimePoint.PH_EXTRA_DATA_END)
         elif ph == EGamePhase.PUT_CARD:
             self.__enter_phase(ETimePoint.PH_PUT_CARD)
+            self.__ph_put_card()
             self.__end_phase(ETimePoint.PH_PUT_CARD_END)
         elif ph == EGamePhase.TAKE_CARD:
             self.__enter_phase(ETimePoint.PH_TAKE_CARD)
+            self.__ph_take_card()
             self.__end_phase(ETimePoint.PH_TAKE_CARD_END)
         elif ph == EGamePhase.MULLIGAN:
             self.__enter_phase(ETimePoint.PH_MULLIGAN)
@@ -402,10 +444,7 @@ class Game:
 
             p.output('req_shw_crd', [rank.value])
 
-            card_vid = list()
-            for i in range(0, len(p.hand)):
-                if p.hand[i].rank == rank:
-                    card_vid.append(p.hand[i].vid)
+            card_vid = [c.vid for c in p.hand if c.rank == rank]
             ind_max = len(card_vid)
             shown_card_index = p.input(check_ind, 'req_chs_tgt_f',
                                        [card_vid, 1])
@@ -425,15 +464,65 @@ class Game:
         def gen(p: GamePlayer):
             for c in p.hand:
                 c.add_val = randint(-2, 2) * 500
+                self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
+            # 调查筹码
+            i = randint(0, 17)
+            p.hand[i].add_val = 0
+            p.hand[i].register_effect(EffInvestigator(p, p.hand[i]), True)
+            self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
 
         gen(self.p1)
         gen(self.p2)
 
-        self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATED, None))
-        # self.p1.shuffle()
-        # self.p2.shuffle()
+        self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATED))
+        # 用处是传输。
+        self.p1.shuffle()
+        self.p2.shuffle()
+
         self.batch_sending('lst_all_ano')
-        self.winner = self.p1
+
+    def __ph_put_card(self):
+        # 落子
+        def go(p: GamePlayer):
+            # 检查落子合法性
+            def check_go(_x, _y, _ind):
+                return _x in range(0, 6) and _y in range(0, 6) and\
+                       self.chessboard[_y * 6 + _x] is None and _ind < ind_max
+
+            hand = p.hand
+            if len(hand) == 0:
+                return False
+            else:
+                card_vid = [c.vid for c in hand]
+                ind_max = len(hand)
+                # x, y, ind
+                x, y, ind = p.input(check_go, 'req_go', [card_vid])
+                c = self.vid_manager.get_card(card_vid[ind])
+                self.chessboard[y * 6 + x] = c
+                hand.remove(c)
+                # 变化周围的数值。
+                cs = [self.chessboard[y * 6 + x - 1], self.chessboard[y * 6 + x + 1],
+                      self.chessboard[y * 6 + x - 6], self.chessboard[y * 6 + x + 6]]
+                for ac in cs:
+                    if ac is not None:
+                        ac.add_val += c.add_val
+                # 影响力值发挥作用后归零，成为附加值。
+                c.add_val = 0
+                self.batch_sending('go', p, [x, y, card_vid[ind]])
+
+                # 放下后的处理。
+                self.enter_time_point(TimePoint(ETimePoint.CARD_PUT, None, [x, y, c]))
+                return True
+        f = True
+        while f:
+            f = go(self.p1) | go(self.p2)
+        self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_CALC))
+        # todo: del
+        self.winner = self.p2
+
+    def __ph_take_card(self):
+        self.p1.shuffle()
+        self.p2.shuffle()
 
     def exchange_turn(self):
         p = self.op_player
@@ -457,9 +546,9 @@ class Game:
         for t in self.temp_tp_stack:
             self.tp_stack.append(t)
             tts.append(t)
-            mtts.append(t.value)
+            mtts.append(t.tp.value)
 
-        self.batch_sending('ent_tp', None, [tp.value for tp in mtts])
+        self.batch_sending('ent_tp', None, [*mtts])
 
         self.temp_tp_stack.clear()
         self.react()
@@ -483,9 +572,15 @@ class Game:
         for ef in self.ef_listener:
             if ef.condition():
                 if ef.owner == self.op_player:
-                    op_react_list.append(ef)
+                    if ef.force_exec:
+                        self.activate_effect(ef)
+                    else:
+                        op_react_list.append(ef)
                 else:
-                    tr_react_list.append(ef)
+                    if ef.force_exec:
+                        self.activate_effect(ef)
+                    else:
+                        tr_react_list.append(ef)
         if len(op_react_list) > 0 or not self.op_player.auto_skip:
             self.op_player.output('qry_rct')
             if self.op_player.input(check_yn, 'chs_yn'):
@@ -514,13 +609,16 @@ class Game:
         :return:
         """
         ef.cost()
-        self.temp_tp_stack.append(ETimePoint.PAID_COST)
+        if ef.secret:
+            ef.execute()
+            return
+        self.temp_tp_stack.append(TimePoint(ETimePoint.PAID_COST))
         self.enter_time_points()
         if ef.succ_activate:
             ef.execute()
-            self.temp_tp_stack.append(ETimePoint.SUCC_EFFECT_ACTIVATE)
+            self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE))
         else:
-            self.temp_tp_stack.append(ETimePoint.FAIL_EFFECT_ACTIVATE)
+            self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE))
         self.enter_time_points()
 
     def update_ef_list(self):
@@ -528,7 +626,11 @@ class Game:
         手动刷新ef_list。
         :return:
         """
-        pass
+        self.ef_listener = list()
+        for c in self.vid_manager.cards.values():
+            for ef in c.effects:
+                if ef.act_phase == self.phase_now and ef.trigger:
+                    self.ef_listener.append(ef)
 
     def batch_sending(self, op, sender=None, args: list = None):
         """
@@ -552,27 +654,38 @@ class Game:
         #         return [self.vid_manager.get_card(vid).serialize()]
         return None
 
+    def record(self, p: GamePlayer, msg):
+        """
+        记录操作，用于卡片效果查询其发动条件是否满足。
+        :param p:
+        :param msg:
+        :return:
+        """
+        self.event_stack.append((p, msg))
+
     # -------⬇效果函数(execute部分)⬇--------
-    def activate_effect_step2(self, ef: Effect, doing_tp: ETimePoint, done_tp: ETimePoint):
+    def activate_effect_step2(self, ef: Effect, doing_tp: ETimePoint, done_tp: ETimePoint,
+                              args=None):
         """
         适用效果。
         :param ef:
         :param doing_tp: 进行该效果时的时点，用于无效该效果。
         :param done_tp
+        :param args
         :return:
         """
         if doing_tp is not None:
-            doing_tp = TimePoint(doing_tp, ef, None)
+            doing_tp = TimePoint(doing_tp, ef, args)
             self.enter_time_point(doing_tp)
         if ef is None:
             yield
             if done_tp is not None:
-                done_tp = TimePoint(done_tp, None, None)
+                done_tp = TimePoint(done_tp, None, args)
                 self.enter_time_point(done_tp)
         elif ef.succ_activate:
             yield
             if done_tp is not None:
-                done_tp = TimePoint(done_tp, ef, None)
+                done_tp = TimePoint(done_tp, ef, args)
                 self.enter_time_point(done_tp)
         yield
 
@@ -586,7 +699,8 @@ class Game:
         :return:
         """
         if with_tp:
-            check_point = self.activate_effect_step2(ef, ETimePoint.SHOWING_CARD, ETimePoint.SHOWED_CARD)
+            check_point = self.activate_effect_step2(ef, ETimePoint.SHOWING_CARD, ETimePoint.SHOWED_CARD,
+                                                     self.vid_manager.get_card(vid))
             next(check_point)
             self.batch_sending('upd_vc', p, [vid, self.vid_manager.get_card(vid).serialize()])
             self.batch_sending('shw_crd', p, [vid])

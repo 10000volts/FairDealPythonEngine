@@ -16,10 +16,12 @@ class ECardType(Enum):
 class EEffectDesc(Enum):
     # 无法描述
     INDESCRIBABLE = 0
+    # 调查筹码
+    INVESTIGATE = 1
     # HP回复
-    HEAL = 1
+    HEAL = 2
     # 造成伤害
-    CAUSE_DAMAGE = 2
+    CAUSE_DAMAGE = 3
 
 
 class ELocation(Enum):
@@ -70,13 +72,18 @@ class ETimePoint(Enum):
     #
     PH_SHOWED_CARD_END = 20
     # 额外生成阶段开始时 在此时点发动效果的卡：
-    #
+    # 多变雇员
     PH_EXTRA_DATA = 25
-    # 附加值生成后 在此时点发动效果的卡：
-    # 密灵西、皮亚娜……
+    # 附加值生成在某张卡时 在此时点发动效果的卡：
+    # 愚者、魔术师
+    # args: 卡。
+    EXTRA_DATA_GENERATING = 27
+    # 全部附加值生成后 在此时点发动效果的卡：
+    # 皮亚娜……
     EXTRA_DATA_GENERATED = 30
     # 调查筹码生成后 在此时点发动效果的卡：
     # 数据分析师(如果在生成前就已经是调查筹码则数据分析师的效果将不处理，也不会扣血)
+    # args: 生成的单个调查筹码。
     INVESTIGATOR_GENERATED = 40
     # 额外生成阶段末尾 在此时点发动效果的卡：
     #
@@ -85,7 +92,7 @@ class ETimePoint(Enum):
     #
     PH_PUT_CARD = 46
     # 单个筹码放置后 在此时点发动效果的卡：
-    #
+    # args: x, y, 放置的卡
     CARD_PUT = 50
     # 所有筹码放下后，附加值结算时 在此时点发动效果的卡：
     # 婴儿
