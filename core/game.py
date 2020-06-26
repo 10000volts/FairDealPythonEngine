@@ -527,6 +527,7 @@ class Game:
         self.winner = self.p1 if p1s > p2s else self.p2
 
     def __ph_take_card(self):
+        
         self.p1.shuffle()
         self.p2.shuffle()
 
