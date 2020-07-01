@@ -163,6 +163,22 @@ class GameCard:
         m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
 
+    def get_atk(self):
+        """
+        获得实际结算时使用的ATK。
+        :return:
+        """
+        atk = self.src_atk + self.add_val + self.buff_atk + self.halo_atk
+        return atk if atk > 0 else 0
+
+    def get_def(self):
+        """
+        获得实际结算时使用的DEF。
+        :return:
+        """
+        _def = self.src_def + self.buff_def + self.halo_def
+        return _def if _def > 0 else 0
+
     def register_effect(self, e: Effect, buff_eff=False):
         """
 
@@ -201,15 +217,10 @@ class GameCard:
             'type': self.type.value,
             'subtype': self.subtype,
             'rank': self.rank.value,
-            'src_atk': self.src_atk,
-            'src_def': self.src_def,
             'series': self.series,
             'add_val': self.add_val,
-            'bsc_atk': self.bsc_atk,
-            'buff_atk': self.buff_atk,
-            'buff_def': self.buff_def,
-            'halo_atk': self.halo_atk,
-            'halo_def': self.halo_def,
+            'atk': self.get_atk(),
+            'def': self.get_def(),
             'is_token': self.is_token,
             'location': self.location,
             'buff_eff': list(self.buff_eff.values()),
@@ -289,7 +300,7 @@ class Match:
         self.wins = {gp1: 0, gp2: 0}
 
     def start(self):
-        self.batch_sending('startm', None)
+        self.batch_sending('startm')
         exec(self.match_config["match_init"])
         last_loser = None
         while True:
@@ -299,11 +310,11 @@ class Match:
             last_loser = pl[1]
             winner: GamePlayer = self.end_check()
             if winner is not None:
-                self.batch_sending('endm', winner)
+                self.batch_sending('endm', None, winner)
                 exec(self.match_config['match_end'])
                 return winner
-            self.batch_sending('endg', pl[0])
-            self.batch_sending('mbreak', None)
+            self.batch_sending('endg', None, pl[0])
+            self.batch_sending('mbreak')
             exec(self.match_config['match_break'])
 
     def end_check(self):
@@ -316,7 +327,7 @@ class Match:
                 return p
         return None
 
-    def batch_sending(self, op, sender, args: list = None):
+    def batch_sending(self, op, args: list = None, sender=None):
         """
         群发消息。
         :return:
@@ -412,11 +423,11 @@ class Game:
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.batch_sending('ent_ph', None, [self.phase_now.value])
+        self.batch_sending('ent_ph', [self.phase_now.value])
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.batch_sending('endp', None, [tp.value])
+        self.batch_sending('endp', [tp.value])
 
     def __ph_sp_decide(self):
         a = randint(1, 16)
@@ -427,7 +438,7 @@ class Game:
             self.p1 = self.players[1]
             self.p2 = self.players[0]
         # 输出
-        self.batch_sending('sp_decided', self.p1)
+        self.batch_sending('sp_decided', None, self.p1)
 
         self.turn_player = self.p1
         self.op_player = self.p2
@@ -494,42 +505,72 @@ class Game:
             if len(hand) == 0:
                 return False
             else:
-                card_vid = [c.vid for c in hand]
                 ind_max = len(hand)
                 # x, y, ind
-                x, y, ind = p.input(check_go, 'req_go', [card_vid])
-                c = self.vid_manager.get_card(card_vid[ind])
-                self.chessboard[y * 6 + x] = c
-                hand.remove(c)
+                x, y, ind = p.input(check_go, 'req_go')
+                card = hand[ind]
+                self.chessboard[y * 6 + x] = card
+                hand.remove(card)
                 # 变化周围的数值。
                 cs = adj_pos(x, y)
                 for ac in cs:
                     if self.chessboard[ac] is not None:
-                        self.chessboard[ac].add_val += c.add_val
+                        self.chessboard[ac].add_val += card.add_val
                 # 影响力值发挥作用后归零，成为附加值。
-                c.add_val = 0
-                self.batch_sending('go', p, [x, y, card_vid[ind]])
+                card.add_val = 0
+                self.batch_sending('go', [x, y, card.vid], p)
 
                 # 放下后的处理。
-                self.enter_time_point(TimePoint(ETimePoint.CARD_PUT, None, [x, y, c]))
+                self.enter_time_point(TimePoint(ETimePoint.CARD_PUT, None, [x, y, card]))
                 return True
         f = True
         while f:
             f = go(self.p1) | go(self.p2)
         self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_CALC))
-        # todo: del
-        p1s = 0
-        p2s = 0
-        for c in self.p1.hand:
-            p1s += c.add_val
-        for c in self.p2.hand:
-            p2s += c.add_val
-        self.winner = self.p1 if p1s > p2s else self.p2
+        # 结算附加值。
+        for c in self.chessboard:
+            c.bsc_atk = c.src_atk + c.add_val
 
     def __ph_take_card(self):
-        
-        self.p1.shuffle()
-        self.p2.shuffle()
+        def take_card(p: GamePlayer):
+            # direction: 0: 只取走1个筹码 6: 同时取走下方的筹码 1: 同时取走右侧的筹码
+            def check(_x, _y, direction):
+                if (direction != 6) & (direction != 1) & (direction != 0):
+                    return False
+                if (self.chessboard[6 * _y + _x] is None) | (6 * _y + _x + direction not in range(0, 36)):
+                    return False
+                return self.chessboard[6 * _y + _x + direction] is not None
+            x, y, d = p.input(check, 'req_tk_crd')
+            # 将卡取走。
+            if d:
+                cards = [self.chessboard[6 * y + x],
+                         self.chessboard[6 * y + x + d]]
+                self.chessboard[6 * y + x] = None
+                self.chessboard[6 * y + x + d] = None
+            else:
+                cards = [self.chessboard[6 * y + x]]
+                self.chessboard[6 * y + x] = None
+            for card in cards:
+                p.hand.append(card)
+                card.location = 2 - p.sp + ELocation.HAND.value
+                p.output('upd_vc', [card.vid, card.serialize()])
+            self.batch_sending('tk_crd', [x, y, d], p)
+            for card in cards:
+                self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
+
+        # 后手玩家在这个环节中先取走卡片以平衡先后手。
+        self.exchange_turn()
+        f = True
+        while f:
+            f = False
+
+            take_card(self.turn_player)
+            self.exchange_turn()
+
+            for c in self.chessboard:
+                f = f | (c is not None)
+        self.turn_player.shuffle()
+        self.op_player.shuffle()
 
     def exchange_turn(self):
         p = self.op_player
@@ -543,7 +584,7 @@ class Game:
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
         if out:
-            self.batch_sending('ent_tp', None, [tp.tp.value])
+            self.batch_sending('ent_tp', [tp.tp.value])
         self.react()
         self.tp_stack.remove(tp)
 
@@ -555,7 +596,7 @@ class Game:
             tts.append(t)
             mtts.append(t.tp.value)
 
-        self.batch_sending('ent_tp', None, [*mtts])
+        self.batch_sending('ent_tp', [*mtts])
 
         self.temp_tp_stack.clear()
         self.react()
@@ -639,7 +680,7 @@ class Game:
                 if ef.act_phase == self.phase_now and ef.trigger:
                     self.ef_listener.append(ef)
 
-    def batch_sending(self, op, sender=None, args: list = None):
+    def batch_sending(self, op, args: list = None, sender=None):
         """
         群发消息。
         :return:
@@ -709,9 +750,9 @@ class Game:
             check_point = self.activate_effect_step2(ef, ETimePoint.SHOWING_CARD, ETimePoint.SHOWED_CARD,
                                                      self.vid_manager.get_card(vid))
             next(check_point)
-            self.batch_sending('upd_vc', p, [vid, self.vid_manager.get_card(vid).serialize()])
-            self.batch_sending('shw_crd', p, [vid])
+            self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()], p)
+            self.batch_sending('shw_crd', [vid], p)
             next(check_point)
         else:
-            self.batch_sending('upd_vc', p, [vid, self.vid_manager.get_card(vid).serialize()])
-            self.batch_sending('shw_crd', p, [vid])
+            self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()], p)
+            self.batch_sending('shw_crd', [vid], p)
