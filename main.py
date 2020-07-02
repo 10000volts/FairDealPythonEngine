@@ -6,8 +6,6 @@ from utils.hints import Hint
 
 from time import sleep
 
-main_match = None
-
 
 def main():
     from core.game import Match
@@ -22,7 +20,6 @@ def main():
 
     Hint.choose_language('zh-hans')
 
-    global main_match
     main_match = Match(p1, p1j['deck'], p1j['leader_id'],
                        p2, p2j['deck'], p2j['leader_id'],
                        match_config)

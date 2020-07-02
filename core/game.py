@@ -125,6 +125,100 @@ class GamePlayer:
         self.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
 
 
+class CardProperty:
+    def __init__(self, v, tp1: ETimePoint, tp2: ETimePoint, c):
+        """
+
+        :param v: 初始值。
+        :param tp1: 计算该属性时触发的时点。
+        :param tp2: 计算该属性后触发的时点。
+        :param c: GameCard
+        """
+        self.src_value = v
+        # 不能在类外修改。方便起见没有进行封装。
+        self.value = v
+        # 附加值。additional value
+        self.add_val = 0
+        # 运算符栈。包含+、*、=(变成)、++(永久上升)、**、==、+x(上升不定值)、*x、=x、++x、**x、==x
+        self.op_st = list()
+        # 数值栈。
+        self.val_st = list()
+        self.tp1 = tp1
+        self.tp2 = tp2
+        self.card = c
+
+    def reset(self):
+        for i in range(0, len(self.op_st)):
+            if self.op_st[i] in '+*=+x*x=x':
+                self.op_st.pop(i)
+                self.val_st.pop(i)
+                i -= 1
+        self.update()
+
+    def update(self):
+        v = self.src_value + self.add_val
+        i = 0
+        for op in self.op_st:
+            if (op == '+') | (op == '++'):
+                v += self.val_st[i]
+            elif (op == '*') | (op == '**'):
+                v *= self.val_st[i]
+            elif (op == '=') | (op == '=='):
+                v = self.val_st[i]
+            elif (op == '+x') | (op == '++x'):
+                # 回调函数。
+                x = self.val_st[i]
+                v += getattr(x, 'x')()
+            elif (op == '*x') | (op == '**x'):
+                x = self.val_st[i]
+                v *= getattr(x, 'x')()
+            elif (op == '=x') | (op == '==x'):
+                x = self.val_st[i]
+                v = getattr(x, 'x')()
+            i += 1
+        self.value = v if v > 0 else 0
+        t1 = TimePoint(self.tp1, None, self.value)
+        self.card.game.enter_time_point(t1)
+        self.value = int(t1.args) if t1.args > 0 else 0
+        self.card.game.enter_time_point(TimePoint(self.tp2, None, self.value))
+
+    def gain(self, v, perm: bool):
+        """
+        攻击力上升/下降。
+        :param v:
+        :param perm: 是否永久。
+        :return:
+        """
+        self.op_st.append('++' if perm else '+')
+        self.val_st.append(v)
+        self.update()
+
+    def gain_x(self, x, perm: bool):
+        self.op_st.append('++x' if perm else '+x')
+        self.val_st.append(x)
+        self.update()
+
+    def become(self, v, perm: bool):
+        self.op_st.append('==' if perm else '=')
+        self.val_st.append(v)
+        self.update()
+
+    def become_x(self, x, perm: bool):
+        self.op_st.append('==x' if perm else '=x')
+        self.val_st.append(x)
+        self.update()
+
+    def ratio(self, v, perm: bool):
+        self.op_st.append('**' if perm else '*')
+        self.val_st.append(v)
+        self.update()
+
+    def ration_x(self, x, perm: bool):
+        self.op_st.append('**x' if perm else '*x')
+        self.val_st.append(x)
+        self.update()
+
+
 class GameCard:
     def __init__(self, g, cid, ori_loc, is_token=False):
         """
@@ -142,17 +236,12 @@ class GameCard:
         self.type = ECardType(int(rds.hget(cid, 'type').decode()))
         self.subtype = int(rds.hget(cid, 'subtype').decode())
         self.rank = ECardRank(int(rds.hget(cid, 'rank').decode()))
+        # 不可修改。
         self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
         self.src_def = int(rds.hget(cid, 'def_hp').decode())
+        self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
+        self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
         self.series = json.loads(rds.hget(cid, 'series').decode())
-        # 附加值。additional value
-        self.add_val = 0
-        # basic atk/def = source atk/def + add_val, 用于倍乘、变成XXX
-        self.bsc_atk = self.src_atk  # + self.add_val
-        self.buff_atk = 0
-        self.buff_def = 0
-        self.halo_atk = 0
-        self.halo_def = 0
         self.is_token = is_token
         self.effects = list()
         self.location = ori_loc
@@ -162,22 +251,6 @@ class GameCard:
         self.inf_pos = 0
         m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
-
-    def get_atk(self):
-        """
-        获得实际结算时使用的ATK。
-        :return:
-        """
-        atk = self.src_atk + self.add_val + self.buff_atk + self.halo_atk
-        return atk if atk > 0 else 0
-
-    def get_def(self):
-        """
-        获得实际结算时使用的DEF。
-        :return:
-        """
-        _def = self.src_def + self.buff_def + self.halo_def
-        return _def if _def > 0 else 0
 
     def register_effect(self, e: Effect, buff_eff=False):
         """
@@ -198,16 +271,18 @@ class GameCard:
             self.game.ef_listener.remove(e)
 
     def reset(self):
-        self.bsc_atk = self.src_atk + self.add_val
-        self.buff_atk = 0
-        self.buff_def = 0
-        self.halo_atk = 0
-        self.halo_def = 0
+        """
+        离场时，清除所有非永久的buff，效果复原。
+        :return:
+        """
         for e in self.effects:
             if not e.no_reset:
                 self.remove_effect(e)
         m = import_module('cards.c{}.py'.format(self.cid))
         m.give(self)
+        self.ATK.reset()
+        self.ATK.gain(self.add_val, True)
+        self.DEF.reset()
 
     def serialize(self):
         return {
@@ -218,9 +293,11 @@ class GameCard:
             'subtype': self.subtype,
             'rank': self.rank.value,
             'series': self.series,
-            'add_val': self.add_val,
-            'atk': self.get_atk(),
-            'def': self.get_def(),
+            'src_atk': self.src_atk,
+            'src_def': self.src_def,
+            'add_val': self.ATK.add_val,
+            'atk': self.ATK.value,
+            'def': self.DEF.value,
             'is_token': self.is_token,
             'location': self.location,
             'buff_eff': list(self.buff_eff.values()),
@@ -230,7 +307,7 @@ class GameCard:
     def serialize_anonymous(self):
         return {
             'vid': self.vid,
-            'add_val': self.add_val,
+            'add_val': self.ATK.add_val,
             'location': self.location,
             'buff_eff': list(self.buff_eff.values()),
             'inf_pos': self.inf_pos
@@ -437,6 +514,8 @@ class Game:
         else:
             self.p1 = self.players[1]
             self.p2 = self.players[0]
+            self.players[0] = self.p1
+            self.players[1] = self.p2
         # 输出
         self.batch_sending('sp_decided', None, self.p1)
 
@@ -475,11 +554,11 @@ class Game:
     def __ph_extra_data(self):
         def gen(p: GamePlayer):
             for c in p.hand:
-                c.add_val = randint(-2, 2) * 500
+                c.ATK.add_val = randint(-2, 2) * 500
                 self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
             # 调查筹码
             i = randint(0, 17)
-            p.hand[i].add_val = 0
+            p.hand[i].ATK.add_val = 0
             p.hand[i].register_effect(EffInvestigator(p, p.hand[i]), True)
             self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
 
@@ -515,9 +594,9 @@ class Game:
                 cs = adj_pos(x, y)
                 for ac in cs:
                     if self.chessboard[ac] is not None:
-                        self.chessboard[ac].add_val += card.add_val
+                        self.chessboard[ac].ATK.add_val += card.ATK.add_val
                 # 影响力值发挥作用后归零，成为附加值。
-                card.add_val = 0
+                card.ATK.add_val = 0
                 self.batch_sending('go', [x, y, card.vid], p)
 
                 # 放下后的处理。
@@ -529,7 +608,7 @@ class Game:
         self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_CALC))
         # 结算附加值。
         for c in self.chessboard:
-            c.bsc_atk = c.src_atk + c.add_val
+            c.ATK.update()
 
     def __ph_take_card(self):
         def take_card(p: GamePlayer):
