@@ -11,6 +11,7 @@ from importlib import import_module
 from random import randint
 import redis
 import json
+from datetime import datetime
 
 # redis键值对int/str不敏感
 rds = redis.StrictRedis(db=0)
@@ -438,11 +439,13 @@ class Game:
         # 放置&取走阶段时用的6*6棋盘
         self.chessboard = [None for x in range(0, 36)]
         # 当前回合数
-        self.turns = 1
+        self.turns = 0
         self.game_config = game_config
         self.last_loser = last_loser
         self.phase_now: EGamePhase = None
         self.winner: GamePlayer = None
+        self.win_reason = 0
+        self.start_time = datetime.now()
         self.loser: GamePlayer = None
 
         # 在当前阶段所有需要检查是否满足了触发条件的效果
@@ -465,6 +468,7 @@ class Game:
             ph = EGamePhase(ph)
             self.enter_phase(ph)
             if self.winner is not None:
+                self.loser = self.players[1 - self.winner.sp]
                 break
         return self.winner, self.loser
 
@@ -497,6 +501,7 @@ class Game:
             self.__end_phase(ETimePoint.PH_MULLIGAN_END)
         elif ph == EGamePhase.PLAY_CARD:
             self.__enter_phase(ETimePoint.PH_PLAY_CARD)
+            self.__ph_play_card()
 
     def __enter_phase(self, tp: ETimePoint):
         self.enter_time_point(TimePoint.generate(tp), False)
@@ -651,14 +656,65 @@ class Game:
         self.turn_player.shuffle()
         self.op_player.shuffle()
 
+    def __ph_play_card(self):
+        def check(_cmd, *_args):
+            if _cmd == 0:
+                pass
+            elif _cmd == 1:
+                pass
+            elif _cmd == 2:
+                pass
+            elif _cmd == 3:
+                pass
+            elif _cmd == 4:
+                pass
+            elif _cmd == 5:
+                pass
+            elif _cmd == 6:
+                pass
+            elif _cmd == 7:
+                pass
+            else:
+                return False
+            return True
+
+        while self.winner is None:
+            if self.turns >= 50:
+                self.win_reason = 3
+                self.judge()
+                break
+            self.next_turn()
+            while True:
+                cmd = self.turn_player.input(check, 'req_op')
+                # play card 打出手牌
+                if cmd[0] == 0:
+                    pass
+                # end 结束回合
+                elif cmd[0] == 6:
+                    break
+                # give up 单局认输
+                elif cmd[0] == 7:
+                    self.win_reason = 2
+                    self.winner = self.op_player
+                    break
+
+    def judge(self):
+        """
+        强制进行单局的胜负判断。
+        :return:
+        """
+        self.winner = self.p1 if self.p1.leader.DEF > self.p2.leader.DEF else self.p2
+
     def exchange_turn(self):
         p = self.op_player
         self.op_player = self.turn_player
         self.turn_player = p
 
-    # def next_turn(self):
-    #     self.turns += 1
-    #     self.exchange_turn()
+    def next_turn(self):
+        self.enter_time_point(TimePoint(ETimePoint.TURN_END))
+        self.turns += 1
+        self.exchange_turn()
+        self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
 
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
