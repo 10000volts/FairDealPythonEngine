@@ -1,5 +1,5 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
-    EGamePhase  # , EInOperation, EOutOperation
+    EGamePhase, ETurnPhase  # , EInOperation, EOutOperation
 from utils.common import adj_pos
 from utils.common_effects import EffInvestigator
 from models.player import Player
@@ -440,6 +440,7 @@ class Game:
         self.chessboard = [None for x in range(0, 36)]
         # 当前回合数
         self.turns = 0
+        self.turn_phase: ETurnPhase = None
         self.game_config = game_config
         self.last_loser = last_loser
         self.phase_now: EGamePhase = None
@@ -448,9 +449,9 @@ class Game:
         self.start_time = datetime.now()
         self.loser: GamePlayer = None
 
+        self.turn_process = self.game_config['turn_process']
         # 在当前阶段所有需要检查是否满足了触发条件的效果
         self.ef_listener = list()
-
         self.vid_manager = GCIDManager()
 
     def start(self):
@@ -670,10 +671,6 @@ class Game:
                 pass
             elif _cmd == 5:
                 pass
-            elif _cmd == 6:
-                pass
-            elif _cmd == 7:
-                pass
             else:
                 return False
             return True
@@ -683,20 +680,63 @@ class Game:
                 self.win_reason = 3
                 self.judge()
                 break
-            self.next_turn()
-            while True:
+            ntp = self.next_turn_phase()
+            self.next_turn(ntp)
+            while self.turn_phase != ETurnPhase.ENDING:
                 cmd = self.turn_player.input(check, 'req_op')
                 # play card 打出手牌
                 if cmd[0] == 0:
                     pass
-                # end 结束回合
-                elif cmd[0] == 6:
-                    break
+                # act 询问可发动的效果
+                elif cmd[0] == 1:
+                    pass
+                # set 将手牌盖放到场上
+                elif cmd[0] == 2:
+                    pass
+                # attack 尝试发动攻击
+                elif cmd[0] == 3:
+                    pass
+                # next phase 主动进行自己回合的下个阶段(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
+                elif cmd[0] == 4:
+                    self.enter_turn_phase(next(ntp))
                 # give up 单局认输
-                elif cmd[0] == 7:
+                elif cmd[0] == 5:
                     self.win_reason = 2
                     self.winner = self.op_player
                     break
+
+    def next_turn_phase(self):
+        for p in self.turn_process:
+            yield ETurnPhase(p)
+
+    def enter_turn_phase(self, ph: ETurnPhase):
+        self.batch_sending('ent_tph', [ph.value], self.turn_player)
+        self.turn_phase = ph
+        if ph == ETurnPhase.BEGINNING:
+            self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
+        elif ph == ETurnPhase.DP:
+            self.enter_time_point(TimePoint(ETimePoint.DP_BEGIN))
+            self.__tph_draw_card()
+        elif ph == ETurnPhase.M1:
+            self.enter_time_point(TimePoint(ETimePoint.M1_BEGIN))
+        elif ph == ETurnPhase.BP1:
+            self.enter_time_point(TimePoint(ETimePoint.BP1_BEGIN))
+        elif ph == ETurnPhase.LBP1:
+            self.enter_time_point(TimePoint(ETimePoint.LBP1_BEGIN))
+        elif ph == ETurnPhase.LBP2:
+            self.enter_time_point(TimePoint(ETimePoint.LBP2_BEGIN))
+        elif ph == ETurnPhase.M2:
+            self.enter_time_point(TimePoint(ETimePoint.M2_BEGIN))
+        elif ph == ETurnPhase.ENDING:
+            self.enter_time_point(TimePoint(ETimePoint.TURN_END))
+
+    def __tph_draw_card(self):
+        if len(self.turn_player.deck) > 0:
+            count = 2 if len(self.turn_player.deck) > 1 else 1
+            tp = TimePoint(ETimePoint.TRY_DRAW, None, [count, True])
+            self.enter_time_point(tp)
+            if tp.args[1]:
+                self.draw_card(self.turn_player, tp.args[0])
 
     def judge(self):
         """
@@ -710,11 +750,12 @@ class Game:
         self.op_player = self.turn_player
         self.turn_player = p
 
-    def next_turn(self):
-        self.enter_time_point(TimePoint(ETimePoint.TURN_END))
+    def next_turn(self, ntp):
         self.turns += 1
         self.exchange_turn()
-        self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
+        self.enter_turn_phase(ETurnPhase.BEGINNING)
+        self.enter_turn_phase(ETurnPhase.DP)
+        self.enter_turn_phase(next(ntp))
 
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
@@ -846,7 +887,7 @@ class Game:
         """
         self.event_stack.append((p, msg))
 
-    # -------⬇效果函数(execute部分)⬇--------
+    # -------⬇效果函数(execute部分, 卡片属性的修改也属于此类(gain、become...))⬇--------
     def activate_effect_step2(self, ef: Effect, doing_tp: ETimePoint, done_tp: ETimePoint,
                               args=None):
         """
@@ -891,3 +932,29 @@ class Game:
         else:
             self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()], p)
             self.batch_sending('shw_crd', [vid], p)
+
+    def draw_card(self, p: GamePlayer, count, ef: Effect = None, with_tp=True):
+        """
+        抽卡。
+        :param p: 发动效果的玩家
+        :param count: 抽卡数量
+        :param ef: 所属效果，为None表示无源效果
+        :param with_tp: 能否响应
+        :return:
+        """
+        if with_tp:
+            check_point = self.activate_effect_step2(ef, ETimePoint.DRAWING, ETimePoint.DRAWN,
+                                                     count)
+            next(check_point)
+            for i in range(0, count):
+                if len(p.deck) > 0:
+                    p.hand.append(p.deck.pop())
+                else:
+                    break
+            next(check_point)
+        else:
+            for i in range(0, count):
+                if len(p.deck) > 0:
+                    p.hand.append(p.deck.pop())
+                else:
+                    break

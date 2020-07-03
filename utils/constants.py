@@ -40,21 +40,48 @@ class ELocation(Enum):
 
 
 class EGamePhase(Enum):
+    # 先后手决定阶段
     SP_DECIDE = 0
+    # 初始化阶段
     INITIALIZE = 1
+    # 展示阶段
     SHOW_CARD = 2
+    # 额外生成阶段
     EXTRA_DATA = 3
+    # 放置阶段
     PUT_CARD = 4
+    # 取走阶段
     TAKE_CARD = 5
+    # 调整阶段
     MULLIGAN = 6
+    # 使用阶段
     PLAY_CARD = 7
+
+
+class ETurnPhase(Enum):
+    # 回合开始时
+    BEGINNING = 0
+    # 抽卡阶段
+    DP = 1
+    # 主要阶段1
+    M1 = 2
+    # 战斗阶段1
+    BP1 = 3
+    # 限制战斗阶段1
+    LBP1 = 4
+    # 限制战斗阶段2
+    LBP2 = 5
+    # 主要阶段1
+    M2 = 6
+    # 回合结束时
+    ENDING = 7
 
 
 class ETimePoint(Enum):
     """
       时点枚举。
       PH_XXX: 阶段的开始/结束时点。
-      TRY_XXX: 尝试……的隐藏时点，只用来判断该效果是否不能发动(因为被封锁)。
+      TRY_XXX: 尝试……的隐藏时点，只用来判断该效果是否不能发动(因为被封锁)。 args[-1]: 是否成功。
       """
     # 游戏开始时 在此时点发动效果的卡：
     # 一些特殊模式下，需要为领袖添加一些隐藏效果。
@@ -356,3 +383,9 @@ class ETimePoint(Enum):
     #
     # args: 计算后的防御力数值。
     DEF_CALC = 196
+    # 限制战斗阶段1开始时 在此时点发动效果的卡：
+    #
+    LBP1_BEGIN=197
+    # 限制战斗阶段2开始时 在此时点发动效果的卡：
+    #
+    LBP2_BEGIN=198
