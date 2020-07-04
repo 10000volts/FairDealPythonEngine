@@ -1,5 +1,5 @@
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
-    EGamePhase, ETurnPhase  # , EInOperation, EOutOperation
+    EGamePhase, ETurnPhase, EErrorCode, EEmployeeType, EStrategyType
 from utils.common import adj_pos
 from utils.common_effects import EffInvestigator
 from models.player import Player
@@ -48,13 +48,17 @@ class GamePlayer:
         # 除外区
         self.exiled = list()
         # 场上
-        self.in_field = list()
+        self.in_field = [None, None, None, None, None, None]
         self.leader: GameCard = None
         self.leader_id = leader_card_id
+        # 可使雇员从手牌通常入场的剩余次数。通常情况下每回合1次。
+        self.summon_times = 1
+        # 可从手牌发动策略的剩余次数。通常情况下每回合1次。
+        self.strategy_times = 1
         # 是否为先手玩家。
         self.sp = 0
 
-    def init_game(self, g, p_loc: ELocation):
+    def init_game(self, g, p_loc):
         self.game_now = g
 
         self.sp = int(g.p1 == self)
@@ -64,11 +68,11 @@ class GamePlayer:
         for cid in self.ori_deck.keys():
             for i in range(self.ori_deck[cid][0]):
                 if int(self.ori_deck[cid][3]):
-                    gc = GameCard(g, cid, ELocation.SIDE.value + p_loc.value)
+                    gc = GameCard(g, cid, ELocation.SIDE + p_loc)
                     # self.vision.append(gc.vid)
                     sd.append(gc)
                 else:
-                    gc = GameCard(g, cid, ELocation.HAND.value + p_loc.value)
+                    gc = GameCard(g, cid, ELocation.HAND + p_loc)
                     # self.vision.append(gc.vid)
                     hd.append(gc)
         self.deck = list()
@@ -111,7 +115,7 @@ class GamePlayer:
             self.game_now.vid_manager.change(c.vid)
         # g: Game = self.game_now
         for p in self.game_now.players:
-            p.output('shf', [loc.value + 2 - self.sp])
+            p.output('shf', [loc + 2 - self.sp])
             if p == self:
                 for c in self.hand:
                     self.update_vc(c)
@@ -127,7 +131,7 @@ class GamePlayer:
 
 
 class CardProperty:
-    def __init__(self, v, tp1: ETimePoint, tp2: ETimePoint, c):
+    def __init__(self, v, tp1, tp2, c):
         """
 
         :param v: 初始值。
@@ -234,9 +238,9 @@ class GameCard:
         g.vid_manager.register(self)
         self.cid = cid
         self.name = rds.hget(cid, 'name').decode()
-        self.type = ECardType(int(rds.hget(cid, 'type').decode()))
+        self.type = int(rds.hget(cid, 'type').decode())
         self.subtype = int(rds.hget(cid, 'subtype').decode())
-        self.rank = ECardRank(int(rds.hget(cid, 'rank').decode()))
+        self.rank = int(rds.hget(cid, 'rank').decode())
         # 不可修改。
         self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
         self.src_def = int(rds.hget(cid, 'def_hp').decode())
@@ -290,9 +294,9 @@ class GameCard:
             'vid': self.vid,
             'cid': self.cid,
             'name': self.name,
-            'type': self.type.value,
+            'type': self.type,
             'subtype': self.subtype,
-            'rank': self.rank.value,
+            'rank': self.rank,
             'series': self.series,
             'src_atk': self.src_atk,
             'src_def': self.src_def,
@@ -343,7 +347,7 @@ class GCIDManager:
 
 
 class TimePoint:
-    def __init__(self, tp_id: ETimePoint, sender: Effect = None, args=None):
+    def __init__(self, tp_id, sender: Effect = None, args=None):
         self.tp = tp_id
         self.sender = sender
         self.args = args
@@ -436,14 +440,16 @@ class Game:
         # 未进行当前回合的玩家代表
         self.op_player: GamePlayer = None
 
+        # 棋盘规模。
+        self.scale = self.game_config['scale']
         # 放置&取走阶段时用的6*6棋盘
-        self.chessboard = [None for x in range(0, 36)]
+        self.chessboard = [None for x in range(0, self.scale ** 2)]
         # 当前回合数
         self.turns = 0
-        self.turn_phase: ETurnPhase = None
+        self.turn_phase = None
         self.game_config = game_config
         self.last_loser = last_loser
-        self.phase_now: EGamePhase = None
+        self.phase_now = None
         self.winner: GamePlayer = None
         self.win_reason = 0
         self.start_time = datetime.now()
@@ -466,14 +472,13 @@ class Game:
 
         process = self.game_config['process']
         for ph in process:
-            ph = EGamePhase(ph)
             self.enter_phase(ph)
             if self.winner is not None:
                 self.loser = self.players[1 - self.winner.sp]
                 break
         return self.winner, self.loser
 
-    def enter_phase(self, ph: EGamePhase):
+    def enter_phase(self, ph):
         self.phase_now = ph
         self.update_ef_list()
         if ph == EGamePhase.SP_DECIDE:
@@ -504,13 +509,13 @@ class Game:
             self.__enter_phase(ETimePoint.PH_PLAY_CARD)
             self.__ph_play_card()
 
-    def __enter_phase(self, tp: ETimePoint):
+    def __enter_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.batch_sending('ent_ph', [self.phase_now.value])
+        self.batch_sending('ent_ph', [self.phase_now])
 
     def __end_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
-        self.batch_sending('endp', [tp.value])
+        self.batch_sending('endp', [tp])
 
     def __ph_sp_decide(self):
         a = randint(1, 16)
@@ -535,11 +540,11 @@ class Game:
         self.p2.init_card_info()
 
     def __ph_show_card(self):
-        def show_one(p: GamePlayer, rank: ECardRank):
+        def show_one(p: GamePlayer, rank):
             def check_ind(ind):
-                return ind in range(0, ind_max)
+                return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
 
-            p.output('req_shw_crd', [rank.value])
+            p.output('req_shw_crd', [rank])
 
             card_vid = [c.vid for c in p.hand if c.rank == rank]
             ind_max = len(card_vid)
@@ -563,7 +568,7 @@ class Game:
                 c.ATK.add_val = randint(-2, 2) * 500
                 self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
             # 调查筹码
-            i = randint(0, 17)
+            i = randint(0, len(p.hand))
             p.hand[i].ATK.add_val = 0
             p.hand[i].register_effect(EffInvestigator(p, p.hand[i]), True)
             self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
@@ -583,8 +588,10 @@ class Game:
         def go(p: GamePlayer):
             # 检查落子合法性
             def check_go(_x, _y, _ind):
-                return _x in range(0, 6) and _y in range(0, 6) and\
-                       self.chessboard[_y * 6 + _x] is None and _ind < ind_max
+                if (_y * self.scale + _x not in range(0, self.scale ** 2)) | (_ind not in range(0, ind_max)):
+                    return EErrorCode.OVERSTEP
+                return 0 if self.chessboard[_y * self.scale + _x] is None \
+                    else EErrorCode.INVALID_PUT
 
             hand = p.hand
             if len(hand) == 0:
@@ -594,10 +601,10 @@ class Game:
                 # x, y, ind
                 x, y, ind = p.input(check_go, 'req_go')
                 card = hand[ind]
-                self.chessboard[y * 6 + x] = card
+                self.chessboard[y * self.scale + x] = card
                 hand.remove(card)
                 # 变化周围的数值。
-                cs = adj_pos(x, y)
+                cs = adj_pos(x, y, self.scale)
                 for ac in cs:
                     if self.chessboard[ac] is not None:
                         self.chessboard[ac].ATK.add_val += card.ATK.add_val
@@ -620,24 +627,26 @@ class Game:
         def take_card(p: GamePlayer):
             # direction: 0: 只取走1个筹码 6: 同时取走下方的筹码 1: 同时取走右侧的筹码
             def check(_x, _y, direction):
-                if (direction != 6) & (direction != 1) & (direction != 0):
-                    return False
-                if (self.chessboard[6 * _y + _x] is None) | (6 * _y + _x + direction not in range(0, 36)):
-                    return False
-                return self.chessboard[6 * _y + _x + direction] is not None
+                if (direction != self.scale) & (direction != 1) & (direction != 0):
+                    return EErrorCode.INVALID_TOOK
+                if (self.chessboard[self.scale * _y + _x] is None) | \
+                        (self.scale * _y + _x + direction not in range(0, self.scale ** 2)):
+                    return EErrorCode.DONT_EXIST
+                return 0 if self.chessboard[self.scale * _y + _x + direction] is not None\
+                    else EErrorCode.DONT_EXIST
             x, y, d = p.input(check, 'req_tk_crd')
             # 将卡取走。
             if d:
-                cards = [self.chessboard[6 * y + x],
-                         self.chessboard[6 * y + x + d]]
-                self.chessboard[6 * y + x] = None
-                self.chessboard[6 * y + x + d] = None
+                cards = [self.chessboard[self.scale * y + x],
+                         self.chessboard[self.scale * y + x + d]]
+                self.chessboard[self.scale * y + x] = None
+                self.chessboard[self.scale * y + x + d] = None
             else:
-                cards = [self.chessboard[6 * y + x]]
-                self.chessboard[6 * y + x] = None
+                cards = [self.chessboard[self.scale * y + x]]
+                self.chessboard[self.scale * y + x] = None
             for card in cards:
                 p.hand.append(card)
-                card.location = 2 - p.sp + ELocation.HAND.value
+                card.location = 2 - p.sp + ELocation.HAND
                 p.output('upd_vc', [card.vid, card.serialize()])
             self.batch_sending('tk_crd', [x, y, d], p)
             for card in cards:
@@ -659,21 +668,113 @@ class Game:
 
     def __ph_play_card(self):
         def check(_cmd, *_args):
+            # play card 打出手牌
             if _cmd == 0:
-                pass
+                # 只能在主要阶段打出手牌。
+                if (self.turn_phase != ETurnPhase.M1) & (self.turn_phase != ETurnPhase.M2):
+                    return EErrorCode.WRONG_PHASE
+                if _args[0] not in range(0, len(self.turn_player.hand)):
+                    return EErrorCode.OVERSTEP
+                _c = self.turn_player.hand[_args[0]]
+                if _c.type == ECardType.EMPLOYEE:
+                    # 不在雇员区域或该区域已有雇员
+                    if _args[1] not in range(0, 3) or self.turn_player.in_field[_args[1]] is not None:
+                        return EErrorCode.INVALID_PUT
+                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, 1])
+                    self.enter_time_point(_tp)
+                    if not _tp.args[1]:
+                        return EErrorCode.FORBIDDEN_SUMMON
+                    # 是否还有剩余的入场次数
+                    if self.turn_player.summon_times == 0:
+                        return EErrorCode.TIMES_LIMIT
+                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, _tp.args[1]])
+                    self.enter_time_point(_tp)
+                    return 0
+                elif _c.type == ECardType.STRATEGY:
+                    # 不在策略区域或该区域已有策略
+                    if _args[1] not in range(3, 6) or self.turn_player.in_field[_args[1]] is not None:
+                        return EErrorCode.INVALID_PUT
+                    # 反制策略无法直接发动(除非 不败律师 的效果适用中)
+                    if _c.subtype & EStrategyType.COUNTER:
+                        return EErrorCode.PLAY_COUNTER
+                    # 其他种类的策略发动时会顺带发动效果
+                    _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [_c, 1])
+                    _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [_c.effects[0], 1])
+                    self.temp_tp_stack.append(_tp1)
+                    self.temp_tp_stack.append(_tp2)
+                    self.enter_time_points()
+                    if not(_tp1.args[1] & _tp2.args[1] & _c.effects[0].condition()):
+                        return EErrorCode.FORBIDDEN_STRATEGY
+                    # 是否还有剩余的使用次数
+                    if self.turn_player.strategy_times == 0:
+                        return EErrorCode.TIMES_LIMIT
+                    _tp = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[1]])
+                    self.enter_time_point(_tp)
+                    return 0
+                return EErrorCode.UNKNOWN_CARD
+            # act 询问可发动的效果
             elif _cmd == 1:
-                pass
+                return 0
+            # set 将手牌盖放到场上
             elif _cmd == 2:
-                pass
+                # 只能在主要阶段打出手牌。
+                if (self.turn_phase != ETurnPhase.M1) & (self.turn_phase != ETurnPhase.M2):
+                    return EErrorCode.WRONG_PHASE
+                if _args[0] not in range(0, len(self.turn_player.hand)):
+                    return EErrorCode.OVERSTEP
+                _c = self.turn_player.hand[_args[0]]
+                if _c.type == ECardType.EMPLOYEE:
+                    # 非秘密雇员不能盖放。
+                    if _c.subtype & EEmployeeType.SECRET == 0:
+                        return EErrorCode.CANNOT_SET
+                    # 不在雇员区域或该区域已有雇员
+                    if _args[1] not in range(0, 3) or self.turn_player.in_field[_args[1]] is not None:
+                        return EErrorCode.INVALID_PUT
+                    _tp = TimePoint(ETimePoint.TRY_SET_EM, None, [_c, 1])
+                    self.enter_time_point(_tp)
+                    if not _tp.args[1]:
+                        return EErrorCode.FORBIDDEN_SET
+                    # 是否还有剩余的入场次数
+                    if self.turn_player.summon_times == 0:
+                        return EErrorCode.TIMES_LIMIT
+                    return 0
+                elif _c.type == ECardType.STRATEGY:
+                    # 不在策略区域或该区域已有策略
+                    if _args[1] not in range(3, 6) or self.turn_player.in_field[_args[1]] is not None:
+                        return EErrorCode.INVALID_PUT
+                    _tp = TimePoint(ETimePoint.TRY_SET_STRATEGY, None, [_c, 1])
+                    self.enter_time_point(_tp)
+                    if not _tp.args[1]:
+                        return EErrorCode.FORBIDDEN_SET
+                    # 是否还有剩余的使用次数
+                    if self.turn_player.strategy_times == 0:
+                        return EErrorCode.TIMES_LIMIT
+                    return 0
+                return EErrorCode.UNKNOWN_CARD
+            # attack 尝试发动攻击
             elif _cmd == 3:
-                pass
+                # 只能在战斗阶段发动攻击。
+                if (self.turn_phase != ETurnPhase.BP1) & (self.turn_phase != ETurnPhase.LBP1) &\
+                        (self.turn_phase != ETurnPhase.LBP2):
+                    return EErrorCode.WRONG_PHASE
+                if _args[0] not in range(0, 3):
+                    return EErrorCode.OVERSTEP
+                _c = self.turn_player.in_field[_args[0]]
+                if _c is None:
+                    return EErrorCode.DONT_EXIST
+                _tp = TimePoint(ETimePoint.TRY_ATTACK, None, [_c, 1])
+                self.enter_time_point(_tp)
+                if not _tp.args[1]:
+                    return EErrorCode.FORBIDDEN_ATTACK
+                return 0
+            # next phase 主动进行自己回合的下个阶段
             elif _cmd == 4:
-                pass
+                return 0
+            # 单局认输
             elif _cmd == 5:
-                pass
+                return 0
             else:
-                return False
-            return True
+                return EErrorCode.INVALID_INPUT
 
         while self.winner is None:
             if self.turns >= 50:
@@ -686,13 +787,32 @@ class Game:
                 cmd = self.turn_player.input(check, 'req_op')
                 # play card 打出手牌
                 if cmd[0] == 0:
-                    pass
+                    c = self.turn_player.hand[cmd[1]]
+                    # 先消耗次数。
+                    if c.type == ECardType.EMPLOYEE:
+                        self.turn_player.summon_times -= 1
+                        self.summon(self.turn_player, c, cmd[2], None, True,
+                                    self.turn_player.hand, ETimePoint.OUT_HAND, ETimePoint.OUT_HAND_END)
+                    elif c.type == ECardType.STRATEGY:
+                        self.turn_player.strategy_times -= 1
+                        self.activate_strategy(self.turn_player, c, cmd[2], True,
+                                               self.turn_player.hand,
+                                               ETimePoint.OUT_HAND, ETimePoint.OUT_HAND_END)
                 # act 询问可发动的效果
                 elif cmd[0] == 1:
                     pass
                 # set 将手牌盖放到场上
                 elif cmd[0] == 2:
-                    pass
+                    c = self.turn_player.hand[cmd[1]]
+                    if c.type == ECardType.EMPLOYEE:
+                        self.turn_player.summon_times -= 1
+                        self.set_em(self.turn_player, c, cmd[2], None, True,
+                                    self.turn_player.hand, ETimePoint.OUT_HAND, ETimePoint.OUT_HAND_END)
+                    elif c.type == ECardType.STRATEGY:
+                        self.turn_player.strategy_times -= 1
+                        self.set_strategy(self.turn_player, c, cmd[2], None, True,
+                                          self.turn_player.hand,
+                                          ETimePoint.OUT_HAND, ETimePoint.OUT_HAND_END)
                 # attack 尝试发动攻击
                 elif cmd[0] == 3:
                     pass
@@ -707,10 +827,10 @@ class Game:
 
     def next_turn_phase(self):
         for p in self.turn_process:
-            yield ETurnPhase(p)
+            yield p
 
-    def enter_turn_phase(self, ph: ETurnPhase):
-        self.batch_sending('ent_tph', [ph.value], self.turn_player)
+    def enter_turn_phase(self, ph):
+        self.batch_sending('ent_tph', [ph], self.turn_player)
         self.turn_phase = ph
         if ph == ETurnPhase.BEGINNING:
             self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
@@ -753,6 +873,10 @@ class Game:
     def next_turn(self, ntp):
         self.turns += 1
         self.exchange_turn()
+        # 重置可召唤、适用策略次数。
+        for p in self.players:
+            p.summon_times = 1
+            p.strategy_times = 1
         self.enter_turn_phase(ETurnPhase.BEGINNING)
         self.enter_turn_phase(ETurnPhase.DP)
         self.enter_turn_phase(next(ntp))
@@ -760,19 +884,17 @@ class Game:
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
         if out:
-            self.batch_sending('ent_tp', [tp.tp.value])
+            self.batch_sending('ent_tp', [tp.tp])
         self.react()
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
         tts = list()
-        mtts = list()
         for t in self.temp_tp_stack:
             self.tp_stack.append(t)
             tts.append(t)
-            mtts.append(t.tp.value)
 
-        self.batch_sending('ent_tp', [*mtts])
+        self.batch_sending('ent_tp', [[t.tp for t in tts]])
 
         self.temp_tp_stack.clear()
         self.react()
@@ -786,10 +908,10 @@ class Game:
         :return:
         """
         def check_yn(yn):
-            return yn == 1 or yn == 0
+            return 0
 
         def check_eff_ind(ind):
-            return ind in range(0, ind_max)
+            return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
 
         op_react_list = list()
         tr_react_list = list()
@@ -888,7 +1010,7 @@ class Game:
         self.event_stack.append((p, msg))
 
     # -------⬇效果函数(execute部分, 卡片属性的修改也属于此类(gain、become...))⬇--------
-    def activate_effect_step2(self, ef: Effect, doing_tp: ETimePoint, done_tp: ETimePoint,
+    def activate_effect_step2(self, ef: Effect, doing_tp, done_tp,
                               args=None):
         """
         适用效果。
@@ -899,19 +1021,22 @@ class Game:
         :return:
         """
         if doing_tp is not None:
-            doing_tp = TimePoint(doing_tp, ef, args)
+            doing_tp = TimePoint(doing_tp, ef, [*args, 1])
             self.enter_time_point(doing_tp)
-        if ef is None:
-            yield
-            if done_tp is not None:
-                done_tp = TimePoint(done_tp, None, args)
-                self.enter_time_point(done_tp)
-        elif ef.succ_activate:
-            yield
-            if done_tp is not None:
-                done_tp = TimePoint(done_tp, ef, args)
-                self.enter_time_point(done_tp)
-        yield
+        if doing_tp.args[-1]:
+            if ef is None:
+                yield True
+                if done_tp is not None:
+                    done_tp = TimePoint(done_tp, None, args)
+                    self.enter_time_point(done_tp)
+            elif ef.succ_activate:
+                yield True
+                if done_tp is not None:
+                    done_tp = TimePoint(done_tp, ef, args)
+                    self.enter_time_point(done_tp)
+            yield True
+        else:
+            yield False
 
     def show_card(self, p: GamePlayer, vid, ef: Effect = None, with_tp=True):
         """
@@ -925,6 +1050,7 @@ class Game:
         if with_tp:
             check_point = self.activate_effect_step2(ef, ETimePoint.SHOWING_CARD, ETimePoint.SHOWED_CARD,
                                                      self.vid_manager.get_card(vid))
+            # 没有能无效展示卡的效果所以这里不作判断
             next(check_point)
             self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()], p)
             self.batch_sending('shw_crd', [vid], p)
@@ -943,18 +1069,182 @@ class Game:
         :return:
         """
         if with_tp:
-            check_point = self.activate_effect_step2(ef, ETimePoint.DRAWING, ETimePoint.DRAWN,
-                                                     count)
-            next(check_point)
-            for i in range(0, count):
-                if len(p.deck) > 0:
-                    p.hand.append(p.deck.pop())
-                else:
-                    break
-            next(check_point)
+            check_point = self.activate_effect_step2(ef, ETimePoint.DRAWING, None, count)
+            if next(check_point):
+                cs = list()
+                for i in range(0, count):
+                    if len(p.deck) > 0:
+                        c = p.deck.pop()
+                        cs.append(c)
+                        p.hand.append(c)
+                    else:
+                        break
+                self.enter_time_point(TimePoint(ETimePoint.DRAWN, None, cs))
         else:
             for i in range(0, count):
                 if len(p.deck) > 0:
                     p.hand.append(p.deck.pop())
                 else:
                     break
+
+    def summon(self, p: GamePlayer, em: GameCard, pos, ef: Effect = None, with_tp=True,
+               _from: list = None, from_tp1=None, from_tp2=None):
+        """
+        雇员入场。
+        :param p:
+        :param em: 雇员
+        :param pos: 入场位置(0-2)
+        :param ef:
+        :param with_tp:
+        :param _from: 原本区域。为None表示衍生。
+        :param from_tp1: 离开原本区域时的时点。为None表示衍生。
+        :param from_tp2: 离开原本区域后的时点。
+        :return:
+        """
+        if with_tp:
+            tp1 = TimePoint(from_tp1, ef, [em, 1])
+            tp2 = TimePoint(ETimePoint.IN_FIELD, ef, [em, 1])
+            self.tp_stack.append(tp1)
+            self.tp_stack.append(tp2)
+            self.enter_time_points()
+            if tp1.args[1] & tp2.args[1]:
+                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, 1])
+                self.enter_time_point(tp)
+                if tp.args[1]:
+                    if _from is not None:
+                        _from.remove(em)
+                    p.in_field[pos] = em
+                    self.tp_stack.append(TimePoint(ETimePoint.IN_FIELD_END, ef, em))
+                    self.tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, em))
+                    self.tp_stack.append(TimePoint(from_tp2, ef, em))
+                    self.enter_time_points()
+        else:
+            p.in_field[pos] = em
+            
+    def activate_strategy(self, p: GamePlayer, s: GameCard, pos, with_tp=True,
+                          _from: list = None, from_tp1=None, from_tp2=None):
+        """
+        发动策略。
+        :param p: 
+        :param s: 
+        :param pos: 
+        :param with_tp:
+        :param _from: 原本区域。为None表示为场上发动。
+        :param from_tp1: 为None表示为场上发动。
+        :param from_tp2: 
+        :return: 
+        """
+        if with_tp:
+            tp1 = TimePoint(from_tp1, None, [s, 1])
+            if from_tp1 is not None:
+                self.tp_stack.append(tp1)
+            tp2 = TimePoint(ETimePoint.IN_FIELD, None, [s, 1])
+            self.tp_stack.append(tp2)
+            self.enter_time_points()
+            if tp1.args[1] & tp2.args[1]:
+                tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
+                self.enter_time_point(tp)
+                if tp.args[1]:
+                    if _from is not None:
+                        _from.remove(s)
+                    p.in_field[pos] = s
+                    self.tp_stack.append(TimePoint(from_tp2, None, s))
+                    self.tp_stack.append(TimePoint(ETimePoint.IN_FIELD_END, None, s))
+                    self.enter_time_points()
+                    # 策略使用时自动发动效果。
+                    self.activate_effect(s.effects[0])
+                    self.enter_time_point(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, s))
+                    # 非持续/单人策略发动后离场
+                    if not ((s.subtype & EStrategyType.LASTING) |
+                            (s.subtype & EStrategyType.ATTACHMENT)):
+                        tp = TimePoint(ETimePoint.IN_GRAVEYARD, None, [s, 1])
+                        self.enter_time_point(tp)
+                        if tp.args[1]:
+                            p.in_field[pos] = None
+                            p.graveyard.append(s)
+                            self.tp_stack.append(TimePoint(ETimePoint.OUT_FIELD_END, None, s))
+                            self.tp_stack.append(TimePoint(ETimePoint.IN_GRAVEYARD_END, None, s))
+                            self.enter_time_points()
+        else:
+            if _from is not None:
+                _from.remove(s)
+            p.in_field[pos] = s
+            # 策略使用时自动发动效果。
+            self.activate_effect(s.effects[0])
+            # 非持续/单人策略发动后离场
+            if not ((s.subtype & EStrategyType.LASTING) |
+                    (s.subtype & EStrategyType.ATTACHMENT)):
+                p.in_field[pos] = None
+                p.graveyard.append(s)
+
+    def set_em(self, p: GamePlayer, em: GameCard, pos, ef: Effect = None, with_tp=True,
+               _from: list = None, from_tp1=None, from_tp2=None):
+        """
+        盖放秘密雇员。
+        :param p:
+        :param em:
+        :param pos:
+        :param ef:
+        :param with_tp:
+        :param _from: 原本区域。为None表示为场上发动。
+        :param from_tp1: 为None表示为场上发动。
+        :param from_tp2:
+        :return:
+        """
+        if with_tp:
+            tp1 = TimePoint(from_tp1, ef, [em, 1])
+            if from_tp1 is not None:
+                self.tp_stack.append(tp1)
+            tp2 = TimePoint(ETimePoint.IN_FIELD, ef, [em, 1])
+            self.tp_stack.append(tp2)
+            self.enter_time_points()
+            if tp1.args[1] & tp2.args[1]:
+                tp = TimePoint(ETimePoint.SET_EM, ef, [em, 1])
+                self.enter_time_point(tp)
+                if tp.args[1]:
+                    if _from is not None:
+                        _from.remove(em)
+                    p.in_field[pos] = em
+                    self.tp_stack.append(TimePoint(from_tp2, ef, em))
+                    self.tp_stack.append(TimePoint(ETimePoint.IN_FIELD_END, ef, em))
+                    self.enter_time_points()
+        else:
+            if _from is not None:
+                _from.remove(em)
+            p.in_field[pos] = em
+
+    def set_strategy(self, p: GamePlayer, s: GameCard, pos, ef: Effect = None, with_tp=True,
+                     _from: list = None, from_tp1=None, from_tp2=None):
+        """
+        盖放策略。
+        :param p:
+        :param s:
+        :param pos:
+        :param ef:
+        :param with_tp:
+        :param _from: 原本区域。为None表示为场上发动。
+        :param from_tp1: 为None表示为场上发动。
+        :param from_tp2:
+        :return:
+        """
+        if with_tp:
+            tp1 = TimePoint(from_tp1, ef, [s, 1])
+            if from_tp1 is not None:
+                self.tp_stack.append(tp1)
+            tp2 = TimePoint(ETimePoint.IN_FIELD, ef, [s, 1])
+            self.tp_stack.append(tp2)
+            self.enter_time_points()
+            if tp1.args[1] & tp2.args[1]:
+                tp = TimePoint(ETimePoint.SET_STRATEGY, ef, [s, 1])
+                self.enter_time_point(tp)
+                if tp.args[1]:
+                    if _from is not None:
+                        _from.remove(s)
+                    p.in_field[pos] = s
+                    self.tp_stack.append(TimePoint(from_tp2, ef, s))
+                    self.tp_stack.append(TimePoint(ETimePoint.IN_FIELD_END, ef, s))
+                    self.enter_time_points()
+        else:
+            if _from is not None:
+                _from.remove(s)
+            p.in_field[pos] = s

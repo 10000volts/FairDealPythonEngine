@@ -1,19 +1,35 @@
-from enum import Enum
 
 
-class ECardRank(Enum):
+class ECardRank:
     COMMON = 0
     GOOD = 1
     TRUMP = 2
 
 
-class ECardType(Enum):
+class ECardType:
     LEADER = 1
     EMPLOYEE = 2
     STRATEGY = 3
 
 
-class EEffectDesc(Enum):
+class EEmployeeType:
+    COMMON = 1
+    CONTRACT = 2
+    INHERIT = 4
+    PARTNER = 8
+    SECRET = 16
+
+
+class EStrategyType:
+    COMMON = 1
+    LASTING = 2
+    ATTACHMENT = 4
+    COUNTER = 8
+    CONTRACT = 16
+    BACKGROUND = 32
+
+
+class EEffectDesc:
     # 无法描述
     INDESCRIBABLE = 0
     # 调查筹码
@@ -24,7 +40,7 @@ class EEffectDesc(Enum):
     CAUSE_DAMAGE = 3
 
 
-class ELocation(Enum):
+class ELocation:
     # 先手
     P1 = 1
     # 后手
@@ -39,7 +55,7 @@ class ELocation(Enum):
     ANY = 511
 
 
-class EGamePhase(Enum):
+class EGamePhase:
     # 先后手决定阶段
     SP_DECIDE = 0
     # 初始化阶段
@@ -58,7 +74,7 @@ class EGamePhase(Enum):
     PLAY_CARD = 7
 
 
-class ETurnPhase(Enum):
+class ETurnPhase:
     # 回合开始时
     BEGINNING = 0
     # 抽卡阶段
@@ -77,11 +93,43 @@ class ETurnPhase(Enum):
     ENDING = 7
 
 
-class ETimePoint(Enum):
+class EErrorCode:
+    # 输入不在范围内。
+    OVERSTEP = 1
+    # 取走的筹码不合规则(通常情况下，你只能取走单个筹码/两个相邻的筹码)。
+    INVALID_TOOK = 2
+    # 不能对空筹码进行操作。
+    DONT_EXIST = 3
+    # 该位置上已存在筹码。
+    INVALID_PUT = 4
+    # 无法进行这次雇员的入场。
+    FORBIDDEN_SUMMON = 5
+    # 无法进行这次策略的发动。
+    FORBIDDEN_STRATEGY = 6
+    # 反制策略必须先在场上盖放1回合才能发动。
+    PLAY_COUNTER = 7
+    # 使用超过次数限制。
+    TIMES_LIMIT = 8
+    # 无法识别的卡。
+    UNKNOWN_CARD = 9
+    # 无法放置非秘密雇员。
+    CANNOT_SET = 10
+    # 无法进行这次放置。
+    FORBIDDEN_SET = 11
+    # 无效输入。
+    INVALID_INPUT = 12
+    # 无法进行这次攻击。
+    FORBIDDEN_ATTACK = 13
+    # 不能在战斗阶段外攻击/不能在主要阶段外主动使用非触发的效果。
+    WRONG_PHASE = 14
+
+
+class ETimePoint:
     """
       时点枚举。
       PH_XXX: 阶段的开始/结束时点。
       TRY_XXX: 尝试……的隐藏时点，只用来判断该效果是否不能发动(因为被封锁)。 args[-1]: 是否成功。
+      XXX_ING: ……时的时点。用来无效/改变效果。
       """
     # 游戏开始时 在此时点发动效果的卡：
     # 一些特殊模式下，需要为领袖添加一些隐藏效果。
@@ -146,21 +194,22 @@ class ETimePoint(Enum):
     # 假博士
     PH_PLAY_CARD = 115
     # 尝试使雇员入场 在此时点发动效果的卡：
-    # 强力姐姐(的副作用效果)
-    TRY_SUMMON_EM_CARD = 120
+    # 强力姐姐(的副作用效果) 不计入常规入场次数的雇员在此时点让可进行次数偷偷+1
+    # args[0]: 入场雇员 args[1]: 是否成功
+    TRY_SUMMON = 120
     # 雇员入场时 在此时点发动效果的卡：
     # 陷阱合同
-    SUMMON_EM_CARD = 121
+    SUMMONING = 121
     # 雇员入场成功 在此时点发动效果的卡：
     # 流量明星、帮派成员、奇利亚诺、信息大盗 杰拉德……
-    SUCC_SUMMON_EM_CARD = 122
+    SUCC_SUMMON = 122
     # 雇员入场失败时 在此时点发动效果的卡：
     #
     # FAIL_SUMMON_EM_CARD=123
     # 尝试发动策略 在此时点发动效果的卡：
     #
-    # TRY_ACTIVATE_STRATEGY=124
-    # 尝试发动效果 在此时点发动效果的卡：
+    TRY_ACTIVATE_STRATEGY = 124
+    # 尝试发动效果(主动/触发) 在此时点发动效果的卡：
     # 鲁莽的开发者
     TRY_ACTIVATE_EFFECT = 125
     # 尝试支付代价 在此时点发动效果的卡：
@@ -233,10 +282,10 @@ class ETimePoint(Enum):
     # 救火队长……
     DESTROYED = 147
     # 离场时 在此时点发动效果的卡：
-    # 堆笑推销员……
+    # 主要用于辅助判断如"从手牌入场时..."的条件
     OUT_FIELD = 148
     # 离场后 在此时点发动效果的卡：
-    #
+    # 堆笑推销员
     OUT_FIELD_END = 149
     # 离开手牌时 在此时点发动效果的卡：
     #
@@ -389,3 +438,15 @@ class ETimePoint(Enum):
     # 限制战斗阶段2开始时 在此时点发动效果的卡：
     #
     LBP2_BEGIN=198
+    # 发动策略时 在此时点发动效果的卡：
+    #
+    ACTIVATING_STRATEGY = 199
+    # 成功发动策略后 在此时点发动效果的卡：
+    #
+    SUCC_ACTIVATE_STRATEGY = 200
+    # 尝试从手牌常规入场结束 在此时点发动效果的卡：
+    #
+    TRIED_SUMMON = 201
+    # 尝试发动策略结束 在此时点发动效果的卡：
+    # 不计入策略使用次数的策略在此时点将偷偷加的使用次数扣回
+    TRIED_ACTIVATE_STRATEGY = 202

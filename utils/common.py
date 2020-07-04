@@ -1,28 +1,19 @@
-def bit_check(state, bit):
-    """
-    检测给定的状态中是否包含指定的位。
-    :param state:
-    :param bit:
-    :return:
-    """
-    return state & bit != 0
-
-
-def adj_pos(x, y):
+def adj_pos(x, y, sc):
     """
     生成临近的合法坐标。
     :param x:
     :param y:
+    :param sc: scale 棋盘规模(边长)。
     :return:
     """
-    p = y * 6 + x
-    if p == 0:
-        return p + 1, p + 6
-    elif p < 6:
-        return p - 1, p + 1, p + 6
-    elif p < 30:
-        return p - 6, p - 1, p + 1, p + 6
-    elif p < 35:
-        return p - 6, p - 1, p + 1
-    else:
-        return p - 6, p - 1
+    p = y * sc + x
+    r = list()
+    if x > 0:
+        r.append(p - 1)
+    if x < sc - 1:
+        r.append(p + 1)
+    if y > 0:
+        r.append(p - sc)
+    if y < sc - 1:
+        r.append(p + sc)
+    return r

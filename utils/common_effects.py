@@ -46,7 +46,7 @@ class EffInvestigator(Effect):
         tp = self.reacted[-1]
         x = tp.args[0]
         y = tp.args[1]
-        cs = adj_pos(x, y)
+        cs = adj_pos(x, y, g.scale)
         # 展示其中的对方卡
         for c in cs:
             if g.chessboard[c] is not None:

@@ -58,15 +58,18 @@ def input_from_socket(p, msg, check_func):
             #     continue
             if ' ' in ans:
                 ans = [int(x) for x in ans.split(' ')]
-                if check_func(*ans):
+                err_code = check_func(*ans)
+                if err_code == 0:
                     return ans
+                output_2_socket(p.upstream, make_output('in_err', [err_code]))
+                continue
             else:
                 if check_func(int(ans)):
                     return int(ans)
         except Exception as ex:
             print(ex)
             pass
-        output_2_socket(p.upstream, make_output('in_err'))
+        output_2_socket(p.upstream, make_output('in_err', [0]))
 
 
 def input_from_local(p, msg, func):
