@@ -195,7 +195,7 @@ class ETimePoint:
     PH_PLAY_CARD = 115
     # 尝试使雇员入场 在此时点发动效果的卡：
     # 强力姐姐(的副作用效果) 不计入常规入场次数的雇员在此时点让可进行次数偷偷+1
-    # args[0]: 入场雇员 args[1]: 是否成功
+    # args[0]: 入场雇员 args[1]: 入场姿态(非零表示防御姿态) args[2]: 是否成功
     TRY_SUMMON = 120
     # 雇员入场时 在此时点发动效果的卡：
     # 陷阱合同
@@ -307,10 +307,10 @@ class ETimePoint:
     OUT_SIDE_END = 155
     # 离开墓地时 在此时点发动效果的卡：
     #
-    OUT_GRAVEYARD = 156
+    OUT_GRAVE = 156
     # 离开墓地后 在此时点发动效果的卡：
     #
-    OUT_GRAVEYARD_END = 157
+    OUT_GRAVE_END = 157
     # 离开移除区时 在此时点发动效果的卡：
     #
     OUT_EXILED = 158
@@ -343,10 +343,10 @@ class ETimePoint:
     IN_SIDE_END = 167
     # 加入墓地时 在此时点发动效果的卡：
     #
-    IN_GRAVEYARD = 168
+    IN_GRAVE = 168
     # 加入墓地后 在此时点发动效果的卡：
     #
-    IN_GRAVEYARD_END = 169
+    IN_GRAVE_END = 169
     # 加入移除区时 在此时点发动效果的卡：
     #
     IN_EXILED = 170
