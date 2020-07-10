@@ -64,7 +64,8 @@ def input_from_socket(p, msg, check_func):
                 output_2_socket(p.upstream, make_output('in_err', [err_code]))
                 continue
             else:
-                if check_func(int(ans)):
+                err_code = check_func(int(ans))
+                if err_code == 0:
                     return int(ans)
         except Exception as ex:
             print(ex)

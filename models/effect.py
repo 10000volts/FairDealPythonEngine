@@ -22,7 +22,7 @@ class Effect:
         :param no_src:
         :param no_reset: 不会被重置。
         """
-        self.description = desc.value
+        self.description = desc
         # 该效果能发动的阶段
         self.act_phase = act_phase
 
