@@ -61,8 +61,8 @@ class GamePlayer:
     def init_game(self, g, p_loc):
         self.game_now = g
 
-        self.sp = int(g.p1 == self)
-        self.leader = GameCard(g, self.leader_id, ELocation.UNKNOWN)
+        self.sp = int(g.p1 is self)
+        self.leader = GameCard(g, self.leader_id, 2 - self.sp)
         hd = list()
         sd = list()
         for cid in self.ori_deck.keys():
@@ -84,6 +84,9 @@ class GamePlayer:
     def input(self, func, *args):
         return self.in_method(self, make_input(*args), func)
 
+    def free_input(self, func, *args):
+        return self.in_method(self, make_input(*args), func, False)
+
     def output(self, *args):
         msg = make_output(*args)
         # 与之对应，输入不需要记录。
@@ -101,7 +104,7 @@ class GamePlayer:
         for c in self.hand:
             self.update_vc(c)
         for p in self.game_now.players:
-            self.output('upd_vc', [p.leader.vid, p.leader.serialize()], self == p)
+            self.output('upd_vc', [p.leader.vid, p.leader.serialize()], self is p)
             if p != self:
                 for c in p.hand:
                     self.update_vc_ano(c)
@@ -119,7 +122,7 @@ class GamePlayer:
         # g: Game = self.game_now
         for p in self.game_now.players:
             p.output('shf', [loc + 2 - self.sp])
-            if p == self:
+            if p is self:
                 for c in self.hand:
                     self.update_vc(c)
             else:
@@ -131,6 +134,14 @@ class GamePlayer:
 
     def update_vc_ano(self, c):
         self.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+
+
+class ObjList(list):
+    def remove(self, obj) -> None:
+        for i in range(0, len(self)):
+            if obj is self[i]:
+                self.pop(i)
+                return
 
 
 class CardProperty:
@@ -148,9 +159,9 @@ class CardProperty:
         # 附加值。additional value
         self.add_val = 0
         # 运算符栈。包含+、*、=(变成)、++(永久上升)、**、==、+x(上升不定值)、*x、=x、++x、**x、==x
-        self.op_st = list()
+        self.op_st = ObjList()
         # 数值栈。
-        self.val_st = list()
+        self.val_st = ObjList()
         self.tp1 = tp1
         self.tp2 = tp2
         self.card = c
@@ -164,6 +175,7 @@ class CardProperty:
         self.update()
 
     def update(self):
+        temp = self.value
         v = self.src_value + self.add_val
         i = 0
         for op in self.op_st:
@@ -176,54 +188,77 @@ class CardProperty:
             elif (op == '+x') | (op == '++x'):
                 # 回调函数。
                 x = self.val_st[i]
-                v += getattr(x, 'x')()
+                v += x(self.card)
             elif (op == '*x') | (op == '**x'):
                 x = self.val_st[i]
-                v *= getattr(x, 'x')()
+                v *= x(self.card)
             elif (op == '=x') | (op == '==x'):
                 x = self.val_st[i]
-                v = getattr(x, 'x')()
+                v = x(self.card)
             i += 1
         self.value = v if v > 0 else 0
         t1 = TimePoint(self.tp1, None, self.value)
-        self.card.game.enter_time_point(t1)
+        g = self.card.game
+        g.enter_time_point(t1)
         self.value = int(t1.args) if t1.args > 0 else 0
-        self.card.game.enter_time_point(TimePoint(self.tp2, None, self.value))
+        g.enter_time_point(TimePoint(self.tp2, None, self.value))
+        # 发送属性更新信息。
+        if temp != self.value:
+            for p in self.card.game.players:
+                if (p is g.get_player(self.card)) | (not self.card.cover):
+                    p.output('upd_vc', [self.card.vid, self.card.serialize()])
 
-    def gain(self, v, perm: bool):
+    def gain(self, v, perm: bool = False):
         """
         攻击力上升/下降。
         :param v:
         :param perm: 是否永久。
         :return:
         """
-        self.op_st.append('++' if perm else '+')
+        new_op = '++' if perm else '+'
+        self.op_st.append(new_op)
         self.val_st.append(v)
         self.update()
+        return new_op, v
 
-    def gain_x(self, x, perm: bool):
+    def gain_x(self, x, perm: bool = False):
+        new_op = '++x' if perm else '+x'
         self.op_st.append('++x' if perm else '+x')
         self.val_st.append(x)
         self.update()
+        return new_op, x
 
-    def become(self, v, perm: bool):
+    def become(self, v, perm: bool = False):
+        new_op = '==' if perm else '='
         self.op_st.append('==' if perm else '=')
         self.val_st.append(v)
         self.update()
+        return new_op, v
 
-    def become_x(self, x, perm: bool):
+    def become_x(self, x, perm: bool = False):
+        new_op = '==x' if perm else '=x'
         self.op_st.append('==x' if perm else '=x')
         self.val_st.append(x)
         self.update()
+        return new_op, x
 
-    def ratio(self, v, perm: bool):
+    def ratio(self, v, perm: bool = False):
+        new_op = '**' if perm else '*'
         self.op_st.append('**' if perm else '*')
         self.val_st.append(v)
         self.update()
+        return new_op, v
 
-    def ration_x(self, x, perm: bool):
+    def ration_x(self, x, perm: bool = False):
+        new_op = '**x' if perm else '*x'
         self.op_st.append('**x' if perm else '*x')
         self.val_st.append(x)
+        self.update()
+        return new_op, x
+
+    def remove(self, op, v):
+        self.op_st.remove(op)
+        self.val_st.remove(v)
         self.update()
 
 
@@ -259,8 +294,18 @@ class GameCard:
         self.inf_pos = 0
         # 场上的姿态。非零表示防御姿态。
         self.posture = 0
-        # 是否被暗置(背面朝上)。
-        self.cover = 0
+        # 是否被暗置(背面朝上，对对方玩家不可见)。
+        self.cover = 1
+        # 是否拥有"风行"效果
+        self.charge = False
+        # 剩余攻击次数(入场、回合开始时重置)。为负数则可无限次数攻击。
+        self.attack_times = 0
+        # 剩余阻挡次数(入场、回合开始时重置)。为负数则可无限次数阻挡。
+        self.block_times = 0
+        # 剩余可改变姿态次数(回合开始时重置)。为负数则可无限次数改变。
+        self.posture_times = 0
+        # 经历过的回合数(回合结束时自动+1)。
+        self.turns = 0
         m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
 
@@ -290,11 +335,57 @@ class GameCard:
         for e in self.effects:
             if not e.no_reset:
                 self.remove_effect(e)
-        m = import_module('cards.c{}.py'.format(self.cid))
+        m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
-        self.cover = 0
+        # self.attack_times = 0
+        # self.block_times = 0
         self.ATK.reset()
         self.DEF.reset()
+        self.turns = 0
+
+    def attack(self, target, block=False):
+        """
+        直接攻击。
+        :param target:
+        :param block:
+        :return:
+        """
+        if target.type == ECardType.LEADER:
+            self.game.deal_damage(self, target, self.ATK.value, None)
+        else:
+            damage = self.ATK.value - target.DEF.value if block else 0
+            tp = TimePoint(ETimePoint.ATTACK_DAMAGE_JUDGE, None, [self, target, damage])
+            self.game.enter_time_point(tp)
+            if tp.args[2] > 0:
+                self.game.deal_damage(self, self.game.get_player(target).leader, tp.args[2])
+            if target.posture:
+                if self.ATK.value > target.DEF.value:
+                    self.game.destroy(self, target)
+                elif self.ATK.value < target.DEF.value:
+                    self.game.destroy(target, self)
+            elif block:
+                if self.ATK.value > target.DEF.value:
+                    self.game.destroy(self, target)
+                elif self.ATK.value < target.DEF.value:
+                    self.game.destroy(target, self)
+                self.game.temp_tp_stack.append(TimePoint(ETimePoint.BLOCKED, None, [self, target]))
+            else:
+                if self.ATK.value > target.ATK.value:
+                    self.game.destroy(self, target)
+                elif self.ATK.value < target.DEF.value:
+                    self.game.destroy(target, self)
+                elif self.ATK.value == target.DEF.value:
+                    self.game.destroy(self, target)
+                    self.game.destroy(target, self)
+        self.game.temp_tp_stack.append(TimePoint(ETimePoint.ATTACKED, None, [self, target]))
+        self.game.enter_time_points()
+
+    def reset_times(self):
+        self.attack_times = 1
+        self.block_times = 1
+        if self.game.phase_now == ETurnPhase.BEGINNING:
+            self.posture_times = 1
+        self.game.enter_time_point(TimePoint(ETimePoint.RESET_TIMES, None, self))
 
     def move_to(self, ef, loc):
         """
@@ -314,6 +405,8 @@ class GameCard:
                 if self.location & ELocation.SIDE:
                     return ETimePoint.OUT_SIDE, ETimePoint.OUT_SIDE_END, p.side
                 if self.location & ELocation.ON_FIELD:
+                    # 离场时重置
+                    self.reset()
                     return ETimePoint.OUT_FIELD, ETimePoint.OUT_FIELD_END, p.on_field
                 if self.location & ELocation.GRAVE:
                     return ETimePoint.OUT_GRAVE, ETimePoint.OUT_GRAVE_END, p.grave
@@ -322,20 +415,26 @@ class GameCard:
 
             def enter():
                 if loc & ELocation.HAND:
-                    self.cover = 0
+                    self.turns = 0
+                    self.cover = 1
                     return ETimePoint.IN_HAND, ETimePoint.IN_HAND_END, p.hand
                 if loc & ELocation.DECK:
-                    self.cover = 0
+                    self.turns = 0
+                    self.cover = 1
                     return ETimePoint.IN_DECK, ETimePoint.IN_DECK_END, p.deck
                 if loc & ELocation.SIDE:
-                    self.cover = 0
+                    self.turns = 0
+                    self.cover = 1
                     return ETimePoint.IN_SIDE, ETimePoint.IN_SIDE_END, p.side
                 if loc & ELocation.ON_FIELD:
+                    self.turns = 0
                     return ETimePoint.IN_FIELD, ETimePoint.IN_FIELD_END, p.on_field
                 if loc & ELocation.GRAVE:
+                    self.turns = 0
                     self.cover = 0
                     return ETimePoint.IN_GRAVE, ETimePoint.IN_GRAVE_END, p.grave
                 if loc & ELocation.EXILED:
+                    self.turns = 0
                     return ETimePoint.IN_EXILED, ETimePoint.IN_EXILED_END, p.exiled
 
             # 离开我放半场去到对方半场不算离场，其他区域同理
@@ -354,8 +453,8 @@ class GameCard:
                 _from.remove(self)
             # 进入, 入场的具体位置不在这里处理
             self.location = loc
-            if self.location & ELocation.ON_FIELD == 0:
-                _from.append(self)
+            if (loc & ELocation.ON_FIELD) == 0:
+                _to.append(self)
             tp3 = TimePoint(etp3, ef, self)
             tp4 = TimePoint(etp3, ef, self)
             self.game.temp_tp_stack.append(tp3)
@@ -495,7 +594,7 @@ class Match:
         :return:
         """
         for p in self.players:
-            p.output(op, args, True if sender is None else p == sender)
+            p.output(op, args, True if sender is None else p is sender)
 
 
 class Game:
@@ -510,6 +609,7 @@ class Game:
         self.event_stack = list()
         # 临时时点调用栈，每个时点都询问一次对玩家打扰率比较高，所以可以合并一些时点的处理。
         self.temp_tp_stack = list()
+        # 先手的索引为0
         self.players = players
         # 先手玩家代表
         self.p1: GamePlayer = None
@@ -764,6 +864,7 @@ class Game:
                         return EErrorCode.INVALID_PUT
                     _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, _args[3], 1])
                     self.enter_time_point(_tp)
+                    # 换掉_c的效果不会出，太奇怪了
                     if not _tp.args[-1]:
                         return EErrorCode.FORBIDDEN_SUMMON
                     # 是否还有剩余的入场次数
@@ -850,7 +951,10 @@ class Game:
                 _c = self.turn_player.on_field[_args[1]]
                 if _c is None:
                     return EErrorCode.DONT_EXIST
-                _tp = TimePoint(ETimePoint.TRY_ATTACK, None, [_c, 1])
+                # 为负数可以无限攻击。
+                if _c.attack_times == 0:
+                    return EErrorCode.TIMES_LIMIT
+                _tp = TimePoint(ETimePoint.TRY_ATTACK_ANNOUNCE, None, [_c, 1])
                 self.enter_time_point(_tp)
                 if not _tp.args[-1]:
                     return EErrorCode.FORBIDDEN_ATTACK
@@ -864,6 +968,11 @@ class Game:
             else:
                 return EErrorCode.INVALID_INPUT
 
+        def check_atk_tgt(ind):
+            if ind not in range(0, atk_tgt_len):
+                return EErrorCode.OVERSTEP
+            return 0
+
         while self.winner is None:
             if self.turns >= 50:
                 self.win_reason = 3
@@ -871,7 +980,7 @@ class Game:
                 break
             ntp = self.next_turn_phase()
             self.next_turn(ntp)
-            while self.turn_phase != ETurnPhase.ENDING:
+            while (self.turn_phase != ETurnPhase.ENDING) & (self.winner is None):
                 cmd = self.turn_player.input(check, 'req_op')
                 # play card 打出手牌
                 if cmd[0] == 0:
@@ -897,7 +1006,37 @@ class Game:
                         self.set_strategy(self.turn_player, self.turn_player, c, cmd[2])
                 # attack 尝试发动攻击
                 elif cmd[0] == 3:
-                    pass
+                    attacker = self.turn_player.on_field[cmd[1]]
+                    # 模拟攻击以筛选可攻击目标
+                    atk_tgt = list()
+                    for em in self.op_player.on_field:
+                        if em is not None and em.type == ECardType.EMPLOYEE:
+                            tp = TimePoint(ETimePoint.TRY_ATTACK, None, [attacker, em, 1])
+                            self.enter_time_point(tp)
+                            if tp.args[-1]:
+                                atk_tgt.append(em.vid)
+                    tp = TimePoint(ETimePoint.TRY_ATTACK, None, [attacker, self.op_player.leader, 1])
+                    self.enter_time_point(tp)
+                    # 入场回合默认不能直接攻击对方领袖。
+                    if tp.args[-1] & ((attacker.charge | attacker.turns) > 0):
+                        atk_tgt.append(self.op_player.leader.vid)
+                    atk_tgt_len = len(atk_tgt)
+                    tgt_ind = self.turn_player.free_input(check_atk_tgt, 'req_atk', [atk_tgt])
+                    if tgt_ind is None:
+                        continue
+                    tgt = self.vid_manager.get_card(atk_tgt[tgt_ind])
+                    attacker.attack_times -= 1
+                    tp = TimePoint(ETimePoint.ATTACKING, None, [attacker, tgt, 1])
+                    self.enter_time_point(tp)
+                    if tp.args[-1]:
+                        tgt = tp.args[1]
+                        self.batch_sending('atk', [attacker.vid, tgt.vid])
+                        # 对领袖的攻击，询问阻挡
+                        if tgt is self.op_player.leader:
+                            tgt = self.req4block(attacker, tgt)
+                            attacker.attack(tgt, True)
+                        else:
+                            attacker.attack(tgt)
                 # next phase 主动进行自己回合的下个阶段(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
                 elif cmd[0] == 4:
                     self.enter_turn_phase(next(ntp))
@@ -916,6 +1055,8 @@ class Game:
         self.turn_phase = ph
         if ph == ETurnPhase.BEGINNING:
             self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
+            # 重置次数
+            self.__beginning()
         elif ph == ETurnPhase.DP:
             self.enter_time_point(TimePoint(ETimePoint.DP_BEGIN))
             self.__tph_draw_card()
@@ -931,6 +1072,24 @@ class Game:
             self.enter_time_point(TimePoint(ETimePoint.M2_BEGIN))
         elif ph == ETurnPhase.ENDING:
             self.enter_time_point(TimePoint(ETimePoint.TURN_END))
+            # 场上全部卡历经回合数+1
+            self.__ending()
+
+    def __beginning(self):
+        self.turns += 1
+        # 重置可召唤、适用策略次数。
+        for p in self.players:
+            p.summon_times = 1
+            p.strategy_times = 1
+            for c in p.on_field:
+                if c is not None and c.type == ECardType.EMPLOYEE:
+                    c.reset_times()
+
+    def __ending(self):
+        for p in self.players:
+            for c in p.on_field:
+                if c is not None:
+                    c.turns += 1
 
     def __tph_draw_card(self):
         if len(self.turn_player.deck) > 0:
@@ -953,12 +1112,7 @@ class Game:
         self.turn_player = p
 
     def next_turn(self, ntp):
-        self.turns += 1
         self.exchange_turn()
-        # 重置可召唤、适用策略次数。
-        for p in self.players:
-            p.summon_times = 1
-            p.strategy_times = 1
         self.enter_turn_phase(ETurnPhase.BEGINNING)
         self.enter_turn_phase(ETurnPhase.DP)
         self.enter_turn_phase(next(ntp))
@@ -999,7 +1153,7 @@ class Game:
         tr_react_list = list()
         for ef in self.ef_listener:
             if ef.condition():
-                if ef.owner == self.op_player:
+                if ef.owner is self.op_player:
                     if ef.force_exec:
                         self.activate_effect(ef)
                     else:
@@ -1029,6 +1183,42 @@ class Game:
                 if tr_react_ef_ind is not None:
                     # 回合持有者响应了效果。
                     self.activate_effect(tr_react_list[tr_react_ef_ind])
+
+    def req4block(self, sender: GameCard, target: GameCard):
+        """
+        请求阻挡。
+        :param sender:
+        :param target:
+        :return:
+        """
+        def check_ind(ind):
+            if ind not in range(0, blk_tgt_len):
+                return EErrorCode.OVERSTEP
+            return 0
+
+        blocker = list()
+        for em in self.get_player(target).on_field:
+            if em is not None and em.type == ECardType.EMPLOYEE:
+                # 还有剩余的可阻挡次数
+                if em.block_times == 0:
+                    continue
+                tp = TimePoint(ETimePoint.TRY_BLOCK, None, [sender, em, 1])
+                self.enter_time_point(tp)
+                if tp.args[-1]:
+                    blocker.append(em.vid)
+        blk_tgt_len = len(blocker)
+        if blk_tgt_len:
+            i = self.get_player(target).free_input(check_ind, 'req_blk', [blocker])
+            if i is None:
+                return target
+            tp = TimePoint(ETimePoint.BLOCKING, None, [sender, blocker[i], 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                self.batch_sending('blk', [tp.args[1]])
+                c = self.vid_manager.get_card(tp.args[1])
+                c.block_times -= 1
+                return c
+        return target
 
     def activate_effect(self, ef):
         """
@@ -1066,7 +1256,7 @@ class Game:
         :return:
         """
         for p in self.players:
-            p.output(op, args, True if sender is None else p == sender)
+            p.output(op, args, True if sender is None else p is sender)
 
     def get_info(self, p: GamePlayer, cmd: str):
         """
@@ -1081,6 +1271,14 @@ class Game:
         #     if vid in p.vision:
         #         return [self.vid_manager.get_card(vid).serialize()]
         return None
+
+    def get_player(self, c: GameCard) -> GamePlayer:
+        """
+        获得持有指定卡的玩家。
+        :param c:
+        :return:
+        """
+        return self.players[(c.location & ELocation.P1) == 0]
 
     def record(self, p: GamePlayer, msg):
         """
@@ -1106,6 +1304,7 @@ class Game:
             doing_tp = TimePoint(doing_tp, ef, [*args, 1])
             self.enter_time_point(doing_tp)
         if doing_tp.args[-1]:
+            args = doing_tp.args
             if ef is None:
                 yield True
                 if done_tp is not None:
@@ -1186,15 +1385,19 @@ class Game:
             if next(cm):
                 tp = TimePoint(ETimePoint.SUMMONING, ef, [em, 1])
                 self.enter_time_point(tp)
-                if tp.args[1]:
+                if tp.args[-1]:
                     pt.on_field[pos] = em
                     em.inf_pos = pos
+                    em.cover = 0
                     em.posture = (posture == 1)
                     next(cm)
+                    # todo: 换em的效果不会出。
                     self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, em))
                     self.batch_sending('upd_vc', [em.vid, em.serialize()])
                     self.batch_sending('smn', [em.vid, int(ef is None)], p)
                     self.enter_time_points()
+                    # 重置攻击、阻挡次数
+                    em.reset_times()
             
     def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos):
         """
@@ -1212,10 +1415,12 @@ class Game:
             tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
             self.enter_time_point(tp)
             # 发动成功
-            if tp.args[1]:
+            if tp.args[-1]:
                 pt.on_field[pos] = s
                 s.inf_pos = pos
+                s.cover = 0
                 next(cm)
+                # todo: 换s的效果不会出。
                 self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, s))
                 self.batch_sending('upd_vc', [s.vid, s.serialize()])
                 self.batch_sending('act_stg', [s.vid], p)
@@ -1243,13 +1448,13 @@ class Game:
         if next(cm):
             tp = TimePoint(ETimePoint.SET_EM, ef, [em, 1])
             self.enter_time_point(tp)
-            if tp.args[1]:
+            if tp.args[-1]:
                 pt.on_field[pos] = em
                 em.inf_pos = pos
                 em.cover = 1
                 next(cm)
                 for pi in self.players:
-                    if pi == p:
+                    if pi is p:
                         pi.output('upd_vc', [em.vid, em.serialize()])
                     else:
                         pi.output('upd_vc_ano', [em.vid, em.serialize_anonymous()])
@@ -1272,13 +1477,13 @@ class Game:
         if next(cm):
             tp = TimePoint(ETimePoint.SET_STRATEGY, ef, [s, 1])
             self.enter_time_point(tp)
-            if tp.args[1]:
+            if tp.args[-1]:
                 pt.on_field[pos] = s
                 s.inf_pos = pos
                 s.cover = 1
                 next(cm)
                 for pi in self.players:
-                    if pi == p:
+                    if pi is p:
                         pi.output('upd_vc', [s.vid, s.serialize()])
                     else:
                         pi.output('upd_vc_ano', [s.vid, s.serialize_anonymous()])
@@ -1299,5 +1504,50 @@ class Game:
         self.enter_time_points()
         if next(cm):
             next(cm)
+            # 墓地的卡必须公开。
+            self.batch_sending('upd_vc', [c.vid, c.serialize()])
+            # todo: 换c的效果不会出。
             self.batch_sending('crd_snd2grv', [c.vid], p)
             self.enter_time_points()
+
+    def deal_damage(self, sender: GameCard, target: GameCard, damage: int, ef: Effect = None):
+        """
+        造成伤害。
+        :param sender: 伤害来源。
+        :param target: 目标。
+        :param damage: 伤害量。
+        :param ef:
+        :return:
+        """
+        tp = TimePoint(ETimePoint.DEALING_DAMAGE, ef, [sender, target, damage, 1])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            sender, target, damage = tp.args[:-1]
+            target.DEF.gain(-damage)
+            if target.DEF.value <= 0:
+                if target.type == ECardType.LEADER:
+                    self.winner = self.players[self.get_player(target).sp]
+                    self.win_reason = 0
+                else:
+                    self.destroy(sender, target, ef)
+            # todo: 是特性，不是bug。
+            self.batch_sending('upd_vc', [target.vid, target.serialize()])
+            self.batch_sending('dmg', [target.vid, damage], self.get_player(sender))
+            self.enter_time_point(TimePoint(ETimePoint.DEALT_DAMAGE, ef, [sender, target, damage]))
+
+    def destroy(self, sender: GameCard, target: GameCard, ef: Effect = None):
+        """
+        摧毁指定的卡。
+        :param sender: 摧毁者。
+        :param target: 被摧毁的目标卡。
+        :param ef:
+        :return:
+        """
+        tp = TimePoint(ETimePoint.DESTROYING, ef, [sender, target, 1])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            sender, target = tp.args[:-1]
+            # todo: 是特性，不是bug。
+            self.batch_sending('crd_des', [target.vid], self.get_player(sender))
+            self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
+            self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))

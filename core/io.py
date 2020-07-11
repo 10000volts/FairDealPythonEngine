@@ -8,6 +8,10 @@ import os
 terminal = dict()
 
 
+class TimeoutException(Exception):
+    pass
+
+
 def make_output(op: str, args: list = None, sd=1):
     """
 
@@ -39,12 +43,13 @@ def set_socket(acceptor):
     terminal[acceptor].connect(acceptor)
 
 
-def input_from_socket(p, msg, check_func):
+def input_from_socket(p, msg, check_func, force=True):
     """
 
     :param p: player
     :param msg: 提示信息
     :param check_func:
+    :param force: 是否为强制输入。
     :return:
     """
     while True:
@@ -61,16 +66,26 @@ def input_from_socket(p, msg, check_func):
                 err_code = check_func(*ans)
                 if err_code == 0:
                     return ans
-                output_2_socket(p.upstream, make_output('in_err', [err_code]))
-                continue
+                if force:
+                    output_2_socket(p.upstream, make_output('in_err', [err_code]))
+                    continue
+                return None
             else:
                 err_code = check_func(int(ans))
                 if err_code == 0:
                     return int(ans)
+                if force:
+                    output_2_socket(p.upstream, make_output('in_err', [err_code]))
+                    continue
+                return None
         except Exception as ex:
-            print(ex)
-            pass
-        output_2_socket(p.upstream, make_output('in_err', [0]))
+            if type(ex) == TimeoutException:
+                raise ex
+            if force:
+                print(ex)
+                output_2_socket(p.upstream, make_output('in_err', [0]))
+                continue
+            return None
 
 
 def input_from_local(p, msg, func):

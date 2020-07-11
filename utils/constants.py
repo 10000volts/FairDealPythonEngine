@@ -38,6 +38,8 @@ class EEffectDesc:
     HEAL = 2
     # 造成伤害
     CAUSE_DAMAGE = 3
+    # ATK暂时上升
+    PROPERTY_CHANGE = 30
 
 
 class ELocation:
@@ -129,7 +131,7 @@ class ETimePoint:
       时点枚举。
       PH_XXX: 阶段的开始/结束时点。
       TRY_XXX: 尝试……的隐藏时点，只用来判断该效果是否不能发动(因为被封锁)。 args[-1]: 是否成功。
-      XXX_ING: ……时的时点。用来无效/改变效果。
+      XXX_ING: ……时的时点。用来无效/改变效果。 args[-1]: 是否成功。
       """
     # 游戏开始时 在此时点发动效果的卡：
     # 一些特殊模式下，需要为领袖添加一些隐藏效果。
@@ -257,17 +259,21 @@ class ETimePoint:
     # 游戏将结束时 在此时点发动效果的卡：
     # 蓝图设计者
     # GAME_ENDING = 140
+    # 尝试攻击宣言 在此时点发动效果的卡：
+    # 不能发动攻击的雇员
+    # args[0]: 攻击者
+    TRY_ATTACK_ANNOUNCE = 142
     # 尝试发动攻击 在此时点发动效果的卡：
-    #
+    # 嘲讽的雇员
+    # args[0]: 攻击者 args[1]: 攻击目标
     TRY_ATTACK = 141
-    # 攻击宣言 在此时点发动效果的卡：
-    #
-    ATTACK_ANNOUNCE = 142
     # 发生攻击时 在此时点发动效果的卡：
     # 诈骗师、甩锅、威吓……
+    # args[0]: 攻击者 args[1]: 攻击目标
     ATTACKING = 143
     # 攻击伤害判定时 在此时点发动效果的卡：
     # 龙骑士 盖亚coser、偶像新星……
+    # args[0]: 攻击者 args[1]: 目标 args[2]: 目标所属的玩家应受到的伤害量
     ATTACK_DAMAGE_JUDGE = 144
     # 攻击后(意味着攻击方在攻击后仍在场上表侧存在) 在此时点发动效果的卡：
     #
@@ -403,9 +409,11 @@ class ETimePoint:
     EFF_NEGATED = 187
     # 尝试阻挡 在此时点发动效果的卡：
     # 梦想奔流 萨菲尔·逐梦
+    # args[0]: 攻击者 args[1]: 阻挡者
     TRY_BLOCK = 188
     # 阻挡时 在此时点发动效果的卡：
     #
+    # args[0]: 攻击者 args[1]: 阻挡者
     BLOCKING = 189
     # 阻挡后 在此时点发动效果的卡：
     #
@@ -450,3 +458,14 @@ class ETimePoint:
     # 尝试发动策略结束 在此时点发动效果的卡：
     # 不计入策略使用次数的策略在此时点将偷偷加的使用次数扣回
     TRIED_ACTIVATE_STRATEGY = 202
+    # 重置攻击、阻挡次数时 在此时点发动效果的卡：
+    # 枪械艺术家
+    RESET_TIMES = 203
+    # 造成伤害时 在此时点发动效果的卡：
+    # 减弱/增加伤害的卡
+    # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量
+    DEALING_DAMAGE = 204
+    # 造成伤害后 在此时点发动效果的卡：
+    # 事不过三
+    # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量
+    DEALT_DAMAGE = 205

@@ -13,7 +13,7 @@ class Effect:
 
         :param desc:
         :param act_phase:
-        :param owner:
+        :param owner: 持有玩家。
         :param host:
         :param trigger: 是否为触发式效果(触发效果需加入检查队列)。
         :param force_exec:
