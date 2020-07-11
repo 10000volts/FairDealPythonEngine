@@ -372,9 +372,9 @@ class GameCard:
             else:
                 if self.ATK.value > target.ATK.value:
                     self.game.destroy(self, target)
-                elif self.ATK.value < target.DEF.value:
+                elif self.ATK.value < target.ATK.value:
                     self.game.destroy(target, self)
-                elif self.ATK.value == target.DEF.value:
+                elif self.ATK.value == target.ATK.value:
                     self.game.destroy(self, target)
                     self.game.destroy(target, self)
         self.game.temp_tp_stack.append(TimePoint(ETimePoint.ATTACKED, None, [self, target]))
@@ -862,7 +862,7 @@ class Game:
                         return EErrorCode.OVERSTEP
                     if self.turn_player.on_field[_args[2]] is not None:
                         return EErrorCode.INVALID_PUT
-                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, _args[3], 1])
+                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, _args[2], _args[3], None, 1])
                     self.enter_time_point(_tp)
                     # 换掉_c的效果不会出，太奇怪了
                     if not _tp.args[-1]:
@@ -870,7 +870,8 @@ class Game:
                     # 是否还有剩余的入场次数
                     if self.turn_player.summon_times == 0:
                         return EErrorCode.TIMES_LIMIT
-                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, _tp.args[-1]])
+                    pos, posture = _tp.args[1:3]
+                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, pos, posture, None, _tp.args[-1]])
                     self.enter_time_point(_tp)
                     return 0
                 elif _c.type == ECardType.STRATEGY:
@@ -1234,9 +1235,9 @@ class Game:
         self.enter_time_points()
         if ef.succ_activate:
             ef.execute()
-            self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE))
+            self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, None, ef))
         else:
-            self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE))
+            self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE, None, ef))
         self.enter_time_points()
 
     def update_ef_list(self):
@@ -1383,16 +1384,17 @@ class Game:
         if next(cm):
             self.enter_time_points()
             if next(cm):
-                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, 1])
+                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, pos, posture, ef, 1])
                 self.enter_time_point(tp)
                 if tp.args[-1]:
+                    pos, posture = tp.args[1:3]
                     pt.on_field[pos] = em
                     em.inf_pos = pos
                     em.cover = 0
                     em.posture = (posture == 1)
                     next(cm)
                     # todo: 换em的效果不会出。
-                    self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, em))
+                    self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, [em, pos, posture, ef]))
                     self.batch_sending('upd_vc', [em.vid, em.serialize()])
                     self.batch_sending('smn', [em.vid, int(ef is None)], p)
                     self.enter_time_points()
