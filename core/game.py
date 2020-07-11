@@ -319,6 +319,8 @@ class GameCard:
         self.effects.append(e)
         if buff_eff:
             self.buff_eff[e] = e.description
+        if e.act_phase == self.game.phase_now and e.trigger:
+            self.game.ef_listener.append(e)
 
     def remove_effect(self, e):
         self.effects.remove(e)
