@@ -867,6 +867,10 @@ class Game:
             def check(_x, _y, direction):
                 if (direction != self.scale) & (direction != 1) & (direction != 0):
                     return EErrorCode.INVALID_TOOK
+                if (_x == 5) & (direction == 1):
+                    return EErrorCode.INVALID_TOOK
+                if (_y == 5) & (direction == 6):
+                    return EErrorCode.INVALID_TOOK
                 if (self.chessboard[self.scale * _y + _x] is None) | \
                         (self.scale * _y + _x + direction not in range(0, self.scale ** 2)):
                     return EErrorCode.DONT_EXIST
