@@ -1,3 +1,5 @@
+# todo: 优化upd_vc，使其可以支持只传部分参数
+
 from utils.constants import ECardRank, ECardType, ELocation, ETimePoint,\
     EGamePhase, ETurnPhase, EErrorCode, EEmployeeType, EStrategyType
 from utils.common import adj_pos
@@ -206,7 +208,7 @@ class CardProperty:
         if temp != self.value:
             for p in self.card.game.players:
                 if (p is g.get_player(self.card)) | (not self.card.cover):
-                    p.output('upd_vc', [self.card.vid, self.card.serialize()])
+                    p.update_vc(self.card)
 
     def gain(self, v, perm: bool = False):
         """
@@ -309,23 +311,38 @@ class GameCard:
         m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
 
-    def register_effect(self, e: Effect, buff_eff=False):
+    def register_effect(self, e: Effect, buff_eff=False, out=True):
         """
 
         :param e:
         :param buff_eff: 是否是附加的效果。
+        :param out: 是否输出
         :return:
         """
         self.effects.append(e)
         if buff_eff:
             self.buff_eff[e] = e.description
+            # 通知双方
+            if out:
+                for p in self.game.players:
+                    if (p is self.game.get_player(self)) | (not self.cover):
+                        p.update_vc(self)
+                    else:
+                        p.update_vc_ano(self)
         if e.act_phase == self.game.phase_now and e.trigger:
             self.game.ef_listener.append(e)
 
-    def remove_effect(self, e):
+    def remove_effect(self, e, out=True):
         self.effects.remove(e)
         if e in self.buff_eff:
             self.buff_eff.pop(e)
+            # 通知双方
+            if out:
+                for p in self.game.players:
+                    if (p is self.game.get_player(self)) | (not self.cover):
+                        p.update_vc(self)
+                    else:
+                        p.update_vc_ano(self)
         if e in self.game.ef_listener:
             self.game.ef_listener.remove(e)
 
@@ -336,7 +353,7 @@ class GameCard:
         """
         for e in self.effects:
             if not e.no_reset:
-                self.remove_effect(e)
+                self.remove_effect(e)  # , False)
         m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
         # self.attack_times = 0
@@ -829,7 +846,7 @@ class Game:
             for card in cards:
                 p.hand.append(card)
                 card.location = 2 - p.sp + ELocation.HAND
-                p.output('upd_vc', [card.vid, card.serialize()])
+                p.update_vc(card)
             self.batch_sending('tk_crd', [x, y, d], p)
             for card in cards:
                 self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
@@ -1336,11 +1353,11 @@ class Game:
                                                      self.vid_manager.get_card(vid))
             # 没有能无效展示卡的效果所以这里不作判断
             next(check_point)
-            self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()], p)
+            self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()])
             self.batch_sending('shw_crd', [vid], p)
             next(check_point)
         else:
-            self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()], p)
+            self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()])
             self.batch_sending('shw_crd', [vid], p)
 
     def draw_card(self, p: GamePlayer, count, ef: Effect = None, with_tp=True):
@@ -1459,8 +1476,9 @@ class Game:
                 next(cm)
                 for pi in self.players:
                     if pi is p:
-                        pi.output('upd_vc', [em.vid, em.serialize()])
+                        pi.update_vc(em)
                     else:
+                        pi.update_vc_ano(em)
                         pi.output('upd_vc_ano', [em.vid, em.serialize_anonymous()])
                 self.batch_sending('set_crd', [em.vid], p)
                 self.enter_time_points()
