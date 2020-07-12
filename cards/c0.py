@@ -8,7 +8,7 @@ class E2(Effect):
     攻击力复原。
     """
     def __init__(self, c, op, v):
-        super().__init__(EEffectDesc.PROPERTY_CHANGE, EGamePhase.PLAY_CARD, c.game.get_player(c),
+        super().__init__(EEffectDesc.PROPERTY_CHANGE, EGamePhase.PLAY_CARD,
                          c, True, True)
         self.scr_arg = [op, v]
 
@@ -52,7 +52,7 @@ class E1(Effect):
     自己的雇员入场后ATK+500。
     """
     def __init__(self, c):
-        super().__init__(EEffectDesc.PROPERTY_CHANGE, EGamePhase.PLAY_CARD, c.game.get_player(c),
+        super().__init__(EEffectDesc.PROPERTY_CHANGE, EGamePhase.PLAY_CARD,
                          c, True, True)
 
     def condition(self):
@@ -64,8 +64,9 @@ class E1(Effect):
         if not super().condition():
             return False
 
+        sd = self.game.get_player(self.host)
         for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is self.owner\
+            if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is sd\
                     and tp not in self.reacted:
                 return True
         return False
@@ -75,8 +76,9 @@ class E1(Effect):
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
+        sd = self.game.get_player(self.host)
         for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is self.owner\
+            if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is sd\
                     and tp not in self.reacted:
                 self.reacted.append(tp)
                 return True

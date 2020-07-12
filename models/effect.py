@@ -7,13 +7,12 @@ class Effect:
     """
 
     def __init__(self, desc: EEffectDesc, act_phase: EGamePhase,
-                 owner, host, trigger=False, force_exec=False,
+                 host, trigger=False, force_exec=False,
                  secret=False, scr_arg=False, no_src=False, no_reset=False):
         """
 
         :param desc:
         :param act_phase:
-        :param owner: 持有玩家。
         :param host:
         :param trigger: 是否为触发式效果(触发效果需加入检查队列)。
         :param force_exec:
@@ -25,10 +24,7 @@ class Effect:
         self.description = desc
         # 该效果能发动的阶段
         self.act_phase = act_phase
-
-        # 持有玩家
-        self.owner = owner
-        self.game = owner.game_now
+        self.game = host.game
         # 宿主(卡片)。
         self.host = host
         # 宿主卡片id。该效果为无源效果时，host为None所以需要用host_id判断。
@@ -66,6 +62,7 @@ class Effect:
         :return:
         """
         for p in self.game.players:
-            if (not self.secret) | (p is self.owner):
+            sd = self.game.get_player(self.host)
+            if (not self.secret) | (p is sd):
                 p.update_vc(self.host)
-                p.output('act_eff', [None if self.no_source else self.host.vid], p is self.owner)
+                p.output('act_eff', [None if self.no_source else self.host.vid], p is sd)

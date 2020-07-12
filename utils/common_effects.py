@@ -7,9 +7,9 @@ class EffInvestigator(Effect):
     """
     调查筹码的效果。
     """
-    def __init__(self, owner, host):
+    def __init__(self, host):
         super().__init__(desc=EEffectDesc.INVESTIGATE, act_phase=EGamePhase.PUT_CARD,
-                         owner=owner, host=host, trigger=True, force_exec=True)
+                         host=host, trigger=True, force_exec=True)
 
     def condition(self):
         """
@@ -21,8 +21,8 @@ class EffInvestigator(Effect):
             return False
 
         for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.CARD_PUT and tp.args[2] is self.host\
-                    and tp not in self.reacted:
+            if (tp.tp == ETimePoint.CARD_PUT) and (tp.args[2] is self.host) \
+                    and (tp not in self.reacted):
                 return True
         return False
 
@@ -32,8 +32,8 @@ class EffInvestigator(Effect):
         :return:
         """
         for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.CARD_PUT and tp.args[2] is self.host \
-                    and tp not in self.reacted:
+            if (tp.tp == ETimePoint.CARD_PUT) and (tp.args[2] is self.host) \
+                    and (tp not in self.reacted):
                 self.reacted.append(tp)
                 return True
         return False
@@ -50,8 +50,9 @@ class EffInvestigator(Effect):
         y = tp.args[1]
         cs = adj_pos(x, y, g.scale)
         # 展示其中的对方卡
+        sd = self.game.get_player(self.host)
         for c in cs:
             if g.chessboard[c] is not None:
-                if (g.chessboard[c].location - self.owner.sp) % 2:
-                    g.show_card(self.owner, g.chessboard[c].vid, self)
+                if (g.chessboard[c].location - sd.sp) % 2:
+                    g.show_card(sd, g.chessboard[c].vid, self)
         self.host.remove_effect(self)

@@ -808,7 +808,7 @@ class Game:
             # 调查筹码
             i = randint(0, len(p.hand) - 1)
             p.hand[i].ATK.add_val = 0
-            p.hand[i].register_effect(EffInvestigator(p, p.hand[i]), True)
+            p.hand[i].register_effect(EffInvestigator(p.hand[i]), True)
             self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
 
         gen(self.p1)
@@ -1179,7 +1179,7 @@ class Game:
         self.tp_stack.append(tp)
         if out:
             self.batch_sending('ent_tp', [tp.tp])
-        self.react(self.turn_player if tp.sender is None else tp.sender.owner)
+        self.react(self.turn_player if tp.sender is None else self.get_player(tp.sender.host))
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
@@ -1188,7 +1188,7 @@ class Game:
         for t in self.temp_tp_stack:
             self.tp_stack.append(t)
             tts.append(t)
-            p = p if t.sender is None else t.sender.owner
+            p = p if t.sender is None else self.get_player(t.sender.host)
         self.batch_sending('ent_tp', [t.tp for t in tts])
 
         self.temp_tp_stack.clear()
@@ -1215,7 +1215,7 @@ class Game:
         tr_react_list = list()
         for ef in self.ef_listener:
             if ef.condition():
-                if ef.owner is op:
+                if self.get_player(ef.host) is op:
                     if ef.force_exec:
                         self.activate_effect(ef)
                     else:
