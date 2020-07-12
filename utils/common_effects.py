@@ -28,7 +28,7 @@ class EffInvestigator(Effect):
 
     def cost(self):
         """
-        支付cost，触发式效果需要在此添加连锁到的时点。
+        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
         for tp in self.game.tp_stack[::-1]:
@@ -36,10 +36,12 @@ class EffInvestigator(Effect):
                     and tp not in self.reacted:
                 self.reacted.append(tp)
                 return True
+        return False
 
     def execute(self):
         """
-        执行效果。
+        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        调用基类方法进行输出。
         :return:
         """
         g = self.game

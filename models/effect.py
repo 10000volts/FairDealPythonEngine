@@ -40,8 +40,6 @@ class Effect:
         # 满足条件时是否强制发动。
         self.force_exec = force_exec
         self.trigger = trigger
-        # 效果是否成功发动。
-        self.succ_activate = True
         self.no_reset = no_reset
         # 已经连锁过的时点。每个效果不能重复连锁单一时点。
         self.reacted = list()
@@ -56,7 +54,7 @@ class Effect:
 
     def cost(self):
         """
-        支付cost，触发式效果需要在此添加连锁到的时点。
+        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
         return True
@@ -64,16 +62,10 @@ class Effect:
     def execute(self):
         """
         执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        调用基类方法进行输出。
         :return:
         """
-        pass
-
-    def can_select(self, sender):
-        """
-        效果/规则选择卡片作为目标时需要筛选出全部可能的选择，
-        设置此回调函数以对该效果所属的卡拥有某些不可被选择的情况。
-        如：不能成为对方雇员的效果对象、不能被丢弃等等。
-        :param sender: 效果的发动者(GameCard类型)。
-        :return:
-        """
-        return True
+        for p in self.game.players:
+            if (not self.secret) | (p is self.owner):
+                p.update_vc(self.host)
+                p.output('act_eff', [None if self.no_source else self.host.vid], p is self.owner)

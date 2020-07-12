@@ -40,6 +40,12 @@ class EEffectDesc:
     CAUSE_DAMAGE = 3
     # ATK暂时上升
     PROPERTY_CHANGE = 30
+    # 赋予效果
+    REGISTER_EFFECT = 31
+    # 变为调查筹码
+    BECOME_INVESTIGATE = 32
+    # 弱调查筹码
+    WEAK_INVESTIGATE = 33
 
 
 class ELocation:
@@ -131,6 +137,7 @@ class ETimePoint:
       时点枚举。
       PH_XXX: 阶段的开始/结束时点。
       TRY_XXX: 尝试……的隐藏时点，只用来判断该效果是否不能发动(因为被封锁)。 args[-1]: 是否成功。
+      TRY_XXX的时点不会修改任何其他的参数。
       XXX_ING: ……时的时点。用来无效/改变效果。 args[-1]: 是否成功。
       """
     # 游戏开始时 在此时点发动效果的卡：
@@ -159,11 +166,11 @@ class ETimePoint:
     # 皮亚娜……
     EXTRA_DATA_GENERATED = 30
     # 调查筹码生成后 在此时点发动效果的卡：
-    # 数据分析师(如果在生成前就已经是调查筹码则数据分析师的效果将不处理，也不会扣血)
+    #
     # args: 生成的单个调查筹码。
     INVESTIGATOR_GENERATED = 40
     # 额外生成阶段末尾 在此时点发动效果的卡：
-    #
+    # 数据分析师
     PH_EXTRA_DATA_END = 43
     # 放置阶段开始时 在此时点发动效果的卡：
     #
@@ -471,3 +478,15 @@ class ETimePoint:
     # 事不过三
     # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量
     DEALT_DAMAGE = 205
+    # 尝试支付生命力 在此时点发动效果的卡：
+    #
+    # args[0]: 支付者 args[1]: 支付量
+    TRY_HP_COST = 206
+    # 支付生命力时 在此时点发动效果的卡：
+    # 减弱/增加伤害的卡
+    # args[0]: 支付者 args[1]: 支付量
+    HP_COSTING = 207
+    # 支付生命力后 在此时点发动效果的卡：
+    #
+    # args[0]: 支付者 args[1]: 支付量
+    HP_COST = 208

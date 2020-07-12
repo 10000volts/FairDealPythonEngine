@@ -264,6 +264,13 @@ class CardProperty:
         self.update()
 
 
+class HPProperty(CardProperty):
+    def update(self):
+        super().update()
+        if self.value <= 0:
+            self.card.game.destroy(None, self.card)
+
+
 class GameCard:
     def __init__(self, g, cid, ori_loc, is_token=False):
         """
@@ -285,7 +292,13 @@ class GameCard:
         self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
         self.src_def = int(rds.hget(cid, 'def_hp').decode())
         self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
-        self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+        if self.type == ECardType.LEADER:
+            self.DEF = HPProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+            self.cover = 0
+        else:
+            self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+            # 是否被暗置(背面朝上，对对方玩家不可见)。
+            self.cover = 1
         self.series = json.loads(rds.hget(cid, 'series').decode())
         self.is_token = is_token
         self.effects = list()
@@ -296,8 +309,6 @@ class GameCard:
         self.inf_pos = 0
         # 场上的姿态。非零表示防御姿态。
         self.posture = 0
-        # 是否被暗置(背面朝上，对对方玩家不可见)。
-        self.cover = 1
         # 是否拥有"风行"效果
         self.charge = False
         # 剩余攻击次数(入场、回合开始时重置)。为负数则可无限次数攻击。
@@ -361,6 +372,32 @@ class GameCard:
         self.ATK.reset()
         self.DEF.reset()
         self.turns = 0
+
+    def hp_cost(self, v, ef: Effect = None):
+        """
+        尝试支付生命力。策略则改为支付EFF。
+        :param v:
+        :param ef:
+        :return:
+        """
+        tp = TimePoint(ETimePoint.TRY_HP_COST, ef, [self, v, 1])
+        self.game.enter_time_point(tp)
+        p = self.ATK.value if self.type == ECardType.STRATEGY else self.DEF.value
+        if tp.args[-1] & (p > v):
+            yield True
+            tp = TimePoint(ETimePoint.HP_COSTING, ef, [self, v, 1])
+            self.game.enter_time_point(tp)
+            if tp.args[-1]:
+                # 代支付
+                c, v = tp.args[:-1]
+                if c.type == ECardType.STRATEGY:
+                    c.ATK.gain(-v)
+                else:
+                    c.DEF.gain(-v)
+                # 通知玩家
+                c.game.batch_sending('hp_cst', [c.vid, v])
+                c.game.enter_time_point(TimePoint(ETimePoint.HP_COST, ef, [c.vid, v]))
+        yield False
 
     def attack(self, target, block=False):
         """
@@ -649,6 +686,8 @@ class Game:
         self.chessboard = [None for x in range(0, self.scale ** 2)]
         self.last_loser = last_loser
         self.phase_now = None
+        # 连锁计数
+        self.react_times = 0
         self.winner: GamePlayer = None
         self.win_reason = 0
         self.start_time = datetime.now()
@@ -673,7 +712,7 @@ class Game:
         for ph in process:
             self.enter_phase(ph)
             if self.winner is not None:
-                self.loser = self.players[1 - self.winner.sp]
+                self.loser = self.players[self.winner.sp]
                 break
         return self.winner, self.loser
 
@@ -889,8 +928,7 @@ class Game:
                     # 是否还有剩余的入场次数
                     if self.turn_player.summon_times == 0:
                         return EErrorCode.TIMES_LIMIT
-                    pos, posture = _tp.args[1:3]
-                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, pos, posture, None, _tp.args[-1]])
+                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, _args[2], _args[3], None, _tp.args[-1]])
                     self.enter_time_point(_tp)
                     return 0
                 elif _c.type == ECardType.STRATEGY:
@@ -1141,26 +1179,28 @@ class Game:
         self.tp_stack.append(tp)
         if out:
             self.batch_sending('ent_tp', [tp.tp])
-        self.react()
+        self.react(self.turn_player if tp.sender is None else tp.sender.owner)
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
         tts = list()
+        p = self.turn_player
         for t in self.temp_tp_stack:
             self.tp_stack.append(t)
             tts.append(t)
-
+            p = p if t.sender is None else t.sender.owner
         self.batch_sending('ent_tp', [t.tp for t in tts])
 
         self.temp_tp_stack.clear()
-        self.react()
+        self.react(p)
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
 
-    def react(self):
+    def react(self, p: GamePlayer):
         """
         询问连锁。先询问对手。
+        :param p: 连锁发起者，被最后询问的人。
         :return:
         """
         def check_yn(yn):
@@ -1169,11 +1209,13 @@ class Game:
         def check_eff_ind(ind):
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
 
+        op = self.players[p.sp]
+        self.react_times += 1
         op_react_list = list()
         tr_react_list = list()
         for ef in self.ef_listener:
             if ef.condition():
-                if ef.owner is self.op_player:
+                if ef.owner is op:
                     if ef.force_exec:
                         self.activate_effect(ef)
                     else:
@@ -1183,26 +1225,31 @@ class Game:
                         self.activate_effect(ef)
                     else:
                         tr_react_list.append(ef)
-        if len(op_react_list) > 0 or not self.op_player.auto_skip:
-            self.op_player.output('qry_rct')
-            if self.op_player.input(check_yn, 'chs_yn'):
-                ind_max = len(op_react_list)
-                op_react_ef_ind = self.op_player.input(
-                    check_eff_ind,
-                    'chs_eff', [[[ef.host.vid, ef.description] for ef in op_react_list]])
-                if op_react_ef_ind is not None:
-                    # 对方响应了效果。
-                    self.activate_effect(op_react_list[op_react_ef_ind])
-        if len(tr_react_list) > 0 or not self.turn_player.auto_skip:
-            self.turn_player.output('qry_rct')
-            if self.turn_player.input(check_yn, 'chs_yn'):
-                ind_max = len(tr_react_list)
-                tr_react_ef_ind = self.turn_player.input(
-                    check_eff_ind,
-                    'chs_eff', [[[ef.host.vid, ef.description] for ef in tr_react_list]])
-                if tr_react_ef_ind is not None:
-                    # 回合持有者响应了效果。
-                    self.activate_effect(tr_react_list[tr_react_ef_ind])
+        while True:
+            if len(op_react_list) > 0 or not op.auto_skip:
+                op.output('req_rct')
+                if op.input(check_yn, 'req_yn'):
+                    ind_max = len(op_react_list)
+                    op_react_ef_ind = op.free_input(
+                        check_eff_ind,
+                        'req_chs_eff', [[[ef.host.vid, ef.description] for ef in op_react_list]])
+                    if op_react_ef_ind is not None:
+                        # 对方响应了效果。
+                        self.activate_effect(op_react_list[op_react_ef_ind])
+            if self.react_times > 1:
+                break
+            if len(tr_react_list) > 0 or not p.auto_skip:
+                p.output('req_rct')
+                if p.input(check_yn, 'req_yn'):
+                    ind_max = len(tr_react_list)
+                    tr_react_ef_ind = p.free_input(
+                        check_eff_ind,
+                        'req_chs_eff', [[[ef.host.vid, ef.description] for ef in tr_react_list]])
+                    if tr_react_ef_ind is not None:
+                        # 回合持有者响应了效果。
+                        self.activate_effect(tr_react_list[tr_react_ef_ind])
+            break
+        self.react_times -= 1
 
     def req4block(self, sender: GameCard, target: GameCard):
         """
@@ -1246,18 +1293,19 @@ class Game:
         :param ef:
         :return:
         """
-        ef.cost()
-        if ef.secret:
-            ef.execute()
-            return
-        self.temp_tp_stack.append(TimePoint(ETimePoint.PAID_COST))
-        self.enter_time_points()
-        if ef.succ_activate:
-            ef.execute()
-            self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, None, ef))
-        else:
-            self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE, None, ef))
-        self.enter_time_points()
+        if ef.cost():
+            if ef.secret:
+                ef.execute()
+                return
+            tp = TimePoint(ETimePoint.PAID_COST, ef, [1])
+            self.temp_tp_stack.append(tp)
+            self.enter_time_points()
+            if tp.args[-1]:
+                ef.execute()
+                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, None, ef))
+            else:
+                self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE, None, ef))
+            self.enter_time_points()
 
     def update_ef_list(self):
         """
@@ -1330,7 +1378,7 @@ class Game:
                 if done_tp is not None:
                     done_tp = TimePoint(done_tp, None, args)
                     self.enter_time_point(done_tp)
-            elif ef.succ_activate:
+            elif doing_tp.args[-1]:
                 yield True
                 if done_tp is not None:
                     done_tp = TimePoint(done_tp, ef, args)
@@ -1545,15 +1593,9 @@ class Game:
         self.enter_time_point(tp)
         if tp.args[-1]:
             sender, target, damage = tp.args[:-1]
+            # gain会通知客户端。
             target.DEF.gain(-damage)
-            if target.DEF.value <= 0:
-                if target.type == ECardType.LEADER:
-                    self.winner = self.players[self.get_player(target).sp]
-                    self.win_reason = 0
-                else:
-                    self.destroy(sender, target, ef)
             # todo: 是特性，不是bug。
-            self.batch_sending('upd_vc', [target.vid, target.serialize()])
             self.batch_sending('dmg', [target.vid, damage], self.get_player(sender))
             self.enter_time_point(TimePoint(ETimePoint.DEALT_DAMAGE, ef, [sender, target, damage]))
 
@@ -1569,7 +1611,11 @@ class Game:
         self.enter_time_point(tp)
         if tp.args[-1]:
             sender, target = tp.args[:-1]
-            # todo: 是特性，不是bug。
-            self.batch_sending('crd_des', [target.vid], self.get_player(sender))
-            self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
-            self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
+            if target.type == ECardType.LEADER:
+                self.winner = self.players[self.get_player(target).sp]
+                self.win_reason = 0
+            else:
+                # todo: 是特性，不是bug。
+                self.batch_sending('crd_des', [target.vid], self.get_player(sender))
+                self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
+                self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
