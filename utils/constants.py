@@ -38,7 +38,7 @@ class EEffectDesc:
     HEAL = 2
     # 造成伤害
     CAUSE_DAMAGE = 3
-    # ATK暂时上升
+    # ATK上升
     PROPERTY_CHANGE = 30
     # 赋予效果
     REGISTER_EFFECT = 31
@@ -46,6 +46,10 @@ class EEffectDesc:
     BECOME_INVESTIGATE = 32
     # 弱调查筹码
     WEAK_INVESTIGATE = 33
+    # 影响力值/附加值变动
+    ADDV_CHANGE = 34
+    # 摧毁卡。
+    DESTROY = 35
 
 
 class ELocation:
@@ -110,9 +114,9 @@ class EErrorCode:
     DONT_EXIST = 3
     # 该位置上已存在筹码。
     INVALID_PUT = 4
-    # 无法进行这次雇员的入场。
+    # 无法进行这次雇员的入场。(不满足入场条件或被禁止)
     FORBIDDEN_SUMMON = 5
-    # 无法进行这次策略的发动。
+    # 无法进行这次策略的发动。(不满足发动条件或被禁止)
     FORBIDDEN_STRATEGY = 6
     # 反制策略必须先在场上盖放1回合才能发动。
     PLAY_COUNTER = 7
@@ -160,10 +164,11 @@ class ETimePoint:
     PH_EXTRA_DATA = 25
     # 附加值生成在某张卡时 在此时点发动效果的卡：
     # 愚者、魔术师
-    # args: 卡。
+    # args: 卡。 (args[1]: 生成的值)
     EXTRA_DATA_GENERATING = 27
     # 全部附加值生成后 在此时点发动效果的卡：
     # 皮亚娜……
+    # args: 卡
     EXTRA_DATA_GENERATED = 30
     # 调查筹码生成后 在此时点发动效果的卡：
     #
@@ -490,3 +495,15 @@ class ETimePoint:
     #
     # args[0]: 支付者 args[1]: 支付量
     HP_COST = 208
+    # 尝试为选择效果目标 在此时点发动效果的卡：
+    #
+    # args[0]: 预想目标
+    TRY_CHOOSE_TARGET = 209
+    # 选择为效果目标时 在此时点发动效果的卡：
+    #
+    # args[0]: 预想目标
+    CHOOSING_TARGET = 210
+    # 选择为效果目标后 在此时点发动效果的卡：
+    #
+    # args[0]: 预想目标
+    CHOSE_TARGET = 211

@@ -1,23 +1,14 @@
 # 狂欢
-from models.effect import Effect
-from utils.constants import EEffectDesc, EGamePhase, ECardType
+from utils.common_effects import CommonStrategyEffect
+from utils.constants import EEffectDesc, ECardType
 
 
-class E1(Effect):
+class E1(CommonStrategyEffect):
     """
-    询问。
+    ATK+EFF。
     """
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, act_phase=EGamePhase.PLAY_CARD,
-                         host=c)
-
-    def condition(self):
-        """
-        是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
-        触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
-        :return:
-        """
-        return True
+        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, c=c)
 
     def cost(self):
         """

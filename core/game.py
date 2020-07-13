@@ -59,8 +59,16 @@ class GamePlayer:
         self.strategy_times = 1
         # 是否为先手玩家。
         self.sp = 0
+        # 是否可继续连锁。
+        self.can_react = 1
 
-    def init_game(self, g, p_loc):
+    def init_game(self, g):
+        """
+        初始化/重置游戏
+        :param g:
+        :param p_loc:
+        :return:
+        """
         self.game_now = g
 
         self.sp = int(g.p1 is self)
@@ -70,11 +78,11 @@ class GamePlayer:
         for cid in self.ori_deck.keys():
             for i in range(self.ori_deck[cid][0]):
                 if int(self.ori_deck[cid][3]):
-                    gc = GameCard(g, cid, ELocation.SIDE + p_loc)
+                    gc = GameCard(g, cid, ELocation.SIDE + 2 - self.sp)
                     # self.vision.append(gc.vid)
                     sd.append(gc)
                 else:
-                    gc = GameCard(g, cid, ELocation.HAND + p_loc)
+                    gc = GameCard(g, cid, ELocation.HAND + 2 - self.sp)
                     # self.vision.append(gc.vid)
                     hd.append(gc)
         self.deck = list()
@@ -82,6 +90,9 @@ class GamePlayer:
         self.side = sd
         # 手牌
         self.hand = hd
+        self.on_field = [None, None, None, None, None, None]
+        self.grave = list()
+        self.exiled = list()
 
     def input(self, func, *args):
         return self.in_method(self, make_input(*args), func)
@@ -580,6 +591,9 @@ class GCIDManager:
     def get_card(self, gcid: int):
         return self.cards[gcid]
 
+    def get_cards(self):
+        return self.cards.values()
+
 
 class TimePoint:
     def __init__(self, tp_id, sender: Effect = None, args=None):
@@ -771,8 +785,8 @@ class Game:
         self.turn_player = self.p1
         self.op_player = self.p2
 
-        self.p1.init_game(self, ELocation.P1)
-        self.p2.init_game(self, ELocation.P2)
+        self.p1.init_game(self)
+        self.p2.init_game(self)
 
         self.p1.init_card_info()
         self.p2.init_card_info()
@@ -1030,8 +1044,8 @@ class Game:
             else:
                 return EErrorCode.INVALID_INPUT
 
-        def check_atk_tgt(ind):
-            if ind not in range(0, atk_tgt_len):
+        def check_atk_tgt(_ind):
+            if _ind not in range(0, atk_tgt_len):
                 return EErrorCode.OVERSTEP
             return 0
 
@@ -1043,7 +1057,7 @@ class Game:
             ntp = self.next_turn_phase()
             self.next_turn(ntp)
             while (self.turn_phase != ETurnPhase.ENDING) & (self.winner is None):
-                cmd = self.turn_player.input(check, 'req_op')
+                cmd = list(self.turn_player.input(check, 'req_op'))
                 # play card 打出手牌
                 if cmd[0] == 0:
                     c = self.turn_player.hand[cmd[1]]
@@ -1186,10 +1200,10 @@ class Game:
         if tp.sender is None:
             # 先询问对方。
             self.react(self.op_player)
-            self.react(self.turn_player)
+            self.react(self.turn_player, False)
         else:
             self.react(self.players[self.get_player(tp.sender.host).sp])
-            self.react(self.get_player(tp.sender.host))
+            self.react(self.get_player(tp.sender.host), False)
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
@@ -1204,15 +1218,16 @@ class Game:
         self.temp_tp_stack.clear()
         # 先询问对方。
         self.react(self.players[p.sp])
-        self.react(p)
+        self.react(p, False)
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
 
-    def react(self, p: GamePlayer):
+    def react(self, p: GamePlayer, itor=True):
         """
         询问p是否连锁。先询问对手。
         :param p: 连锁发起者，被最后询问的人。
+        :param itor: 是否继续迭代
         :return:
         """
         def check_yn(yn):
@@ -1221,14 +1236,16 @@ class Game:
         def check_eff_ind(ind):
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
 
-        p_react_list = list()
-        for ef in self.ef_listener:
-            if ef.condition():
-                if self.get_player(ef.host) is p:
-                    if ef.force_exec:
-                        self.activate_effect(ef)
-                    else:
-                        p_react_list.append(ef)
+        if p.can_react:
+            self.react_times += 1
+            p_react_list = list()
+            for ef in self.ef_listener:
+                if ef.condition():
+                    if self.get_player(ef.host) is p:
+                        if ef.force_exec:
+                            self.activate_effect(ef)
+                        else:
+                            p_react_list.append(ef)
             if len(p_react_list) > 0 or not p.auto_skip:
                 p.output('req_rct')
                 if p.input(check_yn, 'req_yn'):
@@ -1237,8 +1254,20 @@ class Game:
                         check_eff_ind,
                         'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
                     if p_react_ef_ind is not None:
+                        # 有人连锁，重置可连锁状态
+                        for p in self.players:
+                            p.can_react = 1
                         # 响应了效果。
                         self.activate_effect(p_react_list[p_react_ef_ind])
+                else:
+                    p.can_react = 0
+            if itor:
+                self.react(self.players[p.sp], False)
+            self.react_times -= 1
+        # 连锁完成，重置可连锁状态
+        if self.react_times == 0:
+            for p in self.players:
+                p.can_react = 1
 
     def req4block(self, sender: GameCard, target: GameCard):
         """
@@ -1291,9 +1320,9 @@ class Game:
             self.enter_time_points()
             if tp.args[-1]:
                 ef.execute()
-                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, None, ef))
+                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, ef, ef))
             else:
-                self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE, None, ef))
+                self.temp_tp_stack.append(TimePoint(ETimePoint.FAIL_EFFECT_ACTIVATE, ef, ef))
             self.enter_time_points()
 
     def update_ef_list(self):
@@ -1608,3 +1637,41 @@ class Game:
                 self.batch_sending('crd_des', [target.vid], self.get_player(sender))
                 self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
                 self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
+
+    def choose_target(self, func, ef: Effect, force=False) -> GameCard:
+        """
+        选择效果目标。效果的host(宿主)一定是效果的发动者。
+        :param func:  筛选函数。
+        :param ef:
+        :param force: 是否强制
+        :return:
+        """
+        def check_ind(_ind):
+            if _ind not in range(0, _len):
+                return EErrorCode.OVERSTEP
+            return 0
+
+        cs = list()
+        for c in self.vid_manager.get_cards():
+            if func(c):
+                # 模拟选择。
+                tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, 1])
+                self.enter_time_point(tp)
+                if tp.args[-1]:
+                    cs.append(c.vid)
+        _len = len(cs)
+        # 询问选项
+        if force:
+            ind = self.get_player(ef.host).input(check_ind, 'req_chs_tgt_f', [cs, 1])
+        else:
+            ind = self.get_player(ef.host).free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+            if ind is None:
+                return None
+
+        c = self.vid_manager.get_card(cs[ind])
+        tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
+            return c
+        return None

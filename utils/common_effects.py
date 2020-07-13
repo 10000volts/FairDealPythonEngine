@@ -56,3 +56,14 @@ class EffInvestigator(Effect):
                 if (g.chessboard[c].location - sd.sp) % 2:
                     g.show_card(sd, g.chessboard[c].vid, self)
         self.host.remove_effect(self)
+
+
+class CommonStrategyEffect(Effect):
+    """
+    常规策略的缺省效果。
+    """
+    def __init__(self, desc, c):
+        super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD, host=c)
+
+    def condition(self):
+        return True
