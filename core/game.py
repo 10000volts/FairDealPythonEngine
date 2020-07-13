@@ -1183,7 +1183,13 @@ class Game:
         self.tp_stack.append(tp)
         if out:
             self.batch_sending('ent_tp', [tp.tp])
-        self.react(self.turn_player if tp.sender is None else self.get_player(tp.sender.host))
+        if tp.sender is None:
+            # 先询问对方。
+            self.react(self.op_player)
+            self.react(self.turn_player)
+        else:
+            self.react(self.players[self.get_player(tp.sender.host).sp])
+            self.react(self.get_player(tp.sender.host))
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
@@ -1196,6 +1202,8 @@ class Game:
         self.batch_sending('ent_tp', [t.tp for t in tts])
 
         self.temp_tp_stack.clear()
+        # 先询问对方。
+        self.react(self.players[p.sp])
         self.react(p)
         # 不需要倒序移除。
         for t in tts:
@@ -1203,7 +1211,7 @@ class Game:
 
     def react(self, p: GamePlayer):
         """
-        询问连锁。先询问对手。
+        询问p是否连锁。先询问对手。
         :param p: 连锁发起者，被最后询问的人。
         :return:
         """
@@ -1213,47 +1221,24 @@ class Game:
         def check_eff_ind(ind):
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
 
-        op = self.players[p.sp]
-        self.react_times += 1
-        op_react_list = list()
-        tr_react_list = list()
+        p_react_list = list()
         for ef in self.ef_listener:
             if ef.condition():
-                if self.get_player(ef.host) is op:
+                if self.get_player(ef.host) is p:
                     if ef.force_exec:
                         self.activate_effect(ef)
                     else:
-                        op_react_list.append(ef)
-                else:
-                    if ef.force_exec:
-                        self.activate_effect(ef)
-                    else:
-                        tr_react_list.append(ef)
-        while True:
-            if len(op_react_list) > 0 or not op.auto_skip:
-                op.output('req_rct')
-                if op.input(check_yn, 'req_yn'):
-                    ind_max = len(op_react_list)
-                    op_react_ef_ind = op.free_input(
-                        check_eff_ind,
-                        'req_chs_eff', [[[ef.host.vid, ef.description] for ef in op_react_list]])
-                    if op_react_ef_ind is not None:
-                        # 对方响应了效果。
-                        self.activate_effect(op_react_list[op_react_ef_ind])
-            if self.react_times > 1:
-                break
-            if len(tr_react_list) > 0 or not p.auto_skip:
+                        p_react_list.append(ef)
+            if len(p_react_list) > 0 or not p.auto_skip:
                 p.output('req_rct')
                 if p.input(check_yn, 'req_yn'):
-                    ind_max = len(tr_react_list)
-                    tr_react_ef_ind = p.free_input(
+                    ind_max = len(p_react_list)
+                    p_react_ef_ind = p.free_input(
                         check_eff_ind,
-                        'req_chs_eff', [[[ef.host.vid, ef.description] for ef in tr_react_list]])
-                    if tr_react_ef_ind is not None:
-                        # 回合持有者响应了效果。
-                        self.activate_effect(tr_react_list[tr_react_ef_ind])
-            break
-        self.react_times -= 1
+                        'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
+                    if p_react_ef_ind is not None:
+                        # 响应了效果。
+                        self.activate_effect(p_react_list[p_react_ef_ind])
 
     def req4block(self, sender: GameCard, target: GameCard):
         """
