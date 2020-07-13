@@ -523,7 +523,7 @@ class GameCard:
             if (loc & ELocation.ON_FIELD) == 0:
                 _to.append(self)
             tp3 = TimePoint(etp3, ef, self)
-            tp4 = TimePoint(etp3, ef, self)
+            tp4 = TimePoint(etp4, ef, self)
             self.game.temp_tp_stack.append(tp3)
             self.game.temp_tp_stack.append(tp4)
             yield True
@@ -1255,8 +1255,8 @@ class Game:
                         'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
                     if p_react_ef_ind is not None:
                         # 有人连锁，重置可连锁状态
-                        for p in self.players:
-                            p.can_react = 1
+                        for pi in self.players:
+                            pi.can_react = 1
                         # 响应了效果。
                         self.activate_effect(p_react_list[p_react_ef_ind])
                 else:
@@ -1266,8 +1266,8 @@ class Game:
             self.react_times -= 1
         # 连锁完成，重置可连锁状态
         if self.react_times == 0:
-            for p in self.players:
-                p.can_react = 1
+            for pi in self.players:
+                pi.can_react = 1
 
     def req4block(self, sender: GameCard, target: GameCard):
         """
