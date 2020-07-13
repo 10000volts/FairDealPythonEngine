@@ -29,7 +29,10 @@ class E1(CommonStrategyEffect):
         p = self.game.get_player(self.host)
         for em in p.on_field:
             if em is not None and em.type == ECardType.EMPLOYEE:
-                em.ATK.gain(self.host.ATK.value)
+                if self.host.ATK.value < 800:
+                    em.ATK.gain(self.host.ATK.value)
+                else:
+                    em.ATK.gain(800)
 
 
 def give(c):
