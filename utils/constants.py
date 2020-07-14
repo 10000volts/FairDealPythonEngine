@@ -134,6 +134,14 @@ class EErrorCode:
     FORBIDDEN_ATTACK = 13
     # 不能在战斗阶段外攻击/不能在主要阶段外主动使用非触发的效果。
     WRONG_PHASE = 14
+    # 已经处于明置状态。
+    ALREADY_UNCOVERED = 15
+    # 这次明置状态的改变被禁止。
+    FORBIDDEN_UNCOVER = 16
+    # 这次姿态的改变被禁止。
+    FORBIDDEN_CP = 17
+    # 防御姿态不能攻击。
+    DEFEND_POSTURE = 18
 
 
 class ETimePoint:
@@ -507,3 +515,39 @@ class ETimePoint:
     #
     # args[0]: 预想目标
     CHOSE_TARGET = 211
+    # 尝试发动场上盖放的策略 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    TRY_UNCOVER_STRATEGY = 212
+    # 发动场上盖放的策略时 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    UNCOVERING_STRATEGY = 213
+    # 发动场上盖放的策略后 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    UNCOVERED_STRATEGY = 214
+    # 尝试主动明置场上盖放的雇员 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    TRY_UNCOVER_EM = 215
+    # 主动明置场上盖放的雇员时 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    UNCOVERING_EM = 216
+    # 主动明置场上盖放的雇员后 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    UNCOVERED_EM = 217
+    # 尝试改变雇员姿态 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    TRY_CHANGE_POSTURE = 218
+    # 改变雇员姿态时 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    CHANGING_POSTURE = 219
+    # 改变雇员姿态后 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    CHANGED_POSTURE = 220

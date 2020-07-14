@@ -450,7 +450,7 @@ class GameCard:
     def reset_times(self):
         self.attack_times = 1
         self.block_times = 1
-        if self.game.phase_now == ETurnPhase.BEGINNING:
+        if self.game.turn_phase == ETurnPhase.BEGINNING:
             self.posture_times = 1
         self.game.enter_time_point(TimePoint(ETimePoint.RESET_TIMES, None, self))
 
@@ -964,7 +964,7 @@ class Game:
                     self.temp_tp_stack.append(_tp1)
                     self.temp_tp_stack.append(_tp2)
                     self.enter_time_points()
-                    if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(self.tp_stack[-1])):
+                    if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(None)):
                         return EErrorCode.FORBIDDEN_STRATEGY
                     # 是否还有剩余的使用次数
                     if self.turn_player.strategy_times == 0:
@@ -1027,6 +1027,9 @@ class Game:
                 _c = self.turn_player.on_field[_args[1]]
                 if _c is None:
                     return EErrorCode.DONT_EXIST
+                # 防御姿态不能攻击。
+                if _c.posture:
+                    return EErrorCode.DEFEND_POSTURE
                 # 为负数可以无限攻击。
                 if _c.attack_times == 0:
                     return EErrorCode.TIMES_LIMIT
@@ -1038,14 +1041,49 @@ class Game:
             # next phase 主动进行自己回合的下个阶段
             elif _args[0] == 4:
                 return 0
-            # 单局认输
+            # good game 单局认输
             elif _args[0] == 5:
                 return 0
+            # change posture 转变形态
+            elif _args[0] == 6:
+                # 雇员
+                if _args[1] in range(0, 3):
+                    _c = self.turn_player.on_field[_args[1]]
+                    if _c is None:
+                        return EErrorCode.DONT_EXIST
+                    if _c.cover:
+                        _tp = TimePoint(ETimePoint.TRY_UNCOVER_EM, None, [c, 1])
+                        self.enter_time_point(_tp)
+                        if not _tp.args[-1]:
+                            return EErrorCode.FORBIDDEN_UNCOVER
+                    else:
+                        # 还有剩余的转换次数，为负数可以无限次数转换
+                        if _c.posture_times == 0:
+                            return EErrorCode.TIMES_LIMIT
+                        _tp = TimePoint(ETimePoint.TRY_CHANGE_POSTURE, None, [c, 1])
+                        self.enter_time_point(_tp)
+                        if not _tp.args[-1]:
+                            return EErrorCode.FORBIDDEN_CP
+                    return 0
+                # 策略
+                elif _args[1] in range(3, 6):
+                    _c = self.turn_player.on_field[_args[1]]
+                    if _c is None:
+                        return EErrorCode.DONT_EXIST
+                    if _c.cover:
+                        _tp = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [c, 1])
+                        self.enter_time_point(_tp)
+                        if not _tp.args[-1]:
+                            return EErrorCode.FORBIDDEN_UNCOVER
+                        return 0
+                    return EErrorCode.ALREADY_UNCOVERED
+                else:
+                    return EErrorCode.OVERSTEP
             else:
                 return EErrorCode.INVALID_INPUT
 
-        def check_atk_tgt(_ind):
-            if _ind not in range(0, atk_tgt_len):
+        def check_ind(_ind):
+            if _ind not in range(0, _len):
                 return EErrorCode.OVERSTEP
             return 0
 
@@ -1073,7 +1111,25 @@ class Game:
                         self.activate_strategy(self.turn_player, self.turn_player, c, cmd[2])
                 # act 询问可发动的效果
                 elif cmd[0] == 1:
-                    pass
+                    efs = list()
+                    for c in self.vid_manager.get_cards():
+                        # 场上盖放的策略不在这里处理
+                        if (self.get_player(c) is self.turn_player) & \
+                                (not ((c.type == ECardType.STRATEGY) & (c.location & ELocation.ON_FIELD > 0) &
+                                 c.cover)):
+                            for ef in c.effects:
+                                if (not ef.trigger) & ef.condition(None):
+                                    efs.append(ef)
+                    _len = len(efs)
+                    if _len:
+                        self.turn_player.output('req_rct')
+                        if self.turn_player.input(lambda yn: True, 'req_yn'):
+                            ef_ind = self.turn_player.free_input(
+                                check_ind,
+                                'req_chs_eff', [[[ef.host.vid, ef.description] for ef in efs]])
+                            # 发动了效果。
+                            if ef_ind is not None:
+                                self.activate_effect(efs[ef_ind])
                 # set 将手牌盖放到场上
                 elif cmd[0] == 2:
                     c = self.turn_player.hand[cmd[1]]
@@ -1099,8 +1155,8 @@ class Game:
                     # 入场回合默认不能直接攻击对方领袖。
                     if tp.args[-1] & ((attacker.charge | attacker.turns) > 0):
                         atk_tgt.append(self.op_player.leader.vid)
-                    atk_tgt_len = len(atk_tgt)
-                    tgt_ind = self.turn_player.free_input(check_atk_tgt, 'req_atk', [atk_tgt])
+                    _len = len(atk_tgt)
+                    tgt_ind = self.turn_player.free_input(check_ind, 'req_atk', [atk_tgt])
                     if tgt_ind is None:
                         continue
                     tgt = self.vid_manager.get_card(atk_tgt[tgt_ind])
@@ -1120,11 +1176,40 @@ class Game:
                 # next phase 主动进行自己回合的下个阶段(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
                 elif cmd[0] == 4:
                     self.enter_turn_phase(next(ntp))
-                # give up 单局认输
+                # good game 单局认输
                 elif cmd[0] == 5:
                     self.win_reason = 2
                     self.winner = self.op_player
                     break
+                # change posture 改变形态
+                elif cmd[0] == 6:
+                    c: GameCard = self.turn_player.on_field[cmd[1]]
+                    if c.type == ECardType.EMPLOYEE:
+                        if c.cover:
+                            tp = TimePoint(ETimePoint.UNCOVERING_EM, None, [c, 1])
+                            self.batch_sending('upd_vc', [c.vid, c.serialize_anonymous()])
+                            self.batch_sending('cp', [c.vid])
+                            self.enter_time_point(tp)
+                            if tp.args[-1]:
+                                c.cover = 0
+                            self.enter_time_point(TimePoint(ETimePoint.UNCOVERED_EM, None, [c]))
+                        else:
+                            # 先消耗次数
+                            c.posture_times -= 1
+                            tp = TimePoint(ETimePoint.CHANGING_POSTURE, None, [c, 1])
+                            self.batch_sending('upd_vc', [c.vid, c.serialize_anonymous()])
+                            self.batch_sending('cp', [c.vid])
+                            self.enter_time_point(tp)
+                            if tp.args[-1]:
+                                c.posture = not c.posture
+                            self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))
+                    elif c.type == ECardType.STRATEGY:
+                        self.turn_player.strategy_times -= 1
+                        tp = TimePoint(ETimePoint.UNCOVERING_STRATEGY, None, [c, 1])
+                        self.enter_time_point(tp)
+                        if tp.args[-1]:
+                            self.activate_strategy(self.turn_player, self.turn_player, c, cmd[1])
+                        self.enter_time_point(TimePoint(ETimePoint.UNCOVERED_EM, None, [c]))
 
     def next_turn_phase(self):
         for p in self.turn_process:
@@ -1315,7 +1400,11 @@ class Game:
         :param ef:
         :return:
         """
-        if ef.cost(self.tp_stack[-1]):
+        if len(self.tp_stack):
+            tp = self.tp_stack[-1]
+        else:
+            tp = None
+        if ef.cost(tp):
             if ef.secret:
                 ef.execute()
                 return
