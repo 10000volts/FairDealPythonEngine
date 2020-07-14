@@ -8,7 +8,7 @@ class Effect:
 
     def __init__(self, desc: EEffectDesc, act_phase: EGamePhase,
                  host, trigger=False, force_exec=False,
-                 secret=False, scr_arg=False, no_src=False, no_reset=False):
+                 secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None):
         """
 
         :param desc:
@@ -20,6 +20,7 @@ class Effect:
         :param scr_arg: 秘密参数。
         :param no_src:
         :param no_reset: 不会被重置。
+        :param ef_id: 效果id，用于限制发动。
         """
         self.description = desc
         # 该效果能发动的阶段
@@ -39,6 +40,7 @@ class Effect:
         self.no_reset = no_reset
         # 已经连锁过的时点。每个效果不能重复连锁单一时点。
         self.reacted = list()
+        self.ef_id = ef_id
 
     def condition(self, tp):
         """

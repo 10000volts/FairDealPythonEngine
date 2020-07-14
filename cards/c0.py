@@ -30,7 +30,7 @@ class E2(Effect):
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
-        if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
+        if self.condition(tp):
             self.reacted.append(tp)
             return True
         return False

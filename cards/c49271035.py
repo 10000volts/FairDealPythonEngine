@@ -32,8 +32,7 @@ class E2(Effect):
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
-        if tp.tp == ETimePoint.CARD_PUT and tp.args[2] is self.host \
-                and tp not in self.reacted:
+        if self.condition(tp):
             self.reacted.append(tp)
             return True
         return False
@@ -100,7 +99,7 @@ class E1(Effect):
         :return:
         """
         sd = self.game.get_player(self.host)
-        if tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted:
+        if self.condition(tp):
             self.reacted.append(tp)
             # 支付1000生命力
             f = sd.leader.hp_cost(1000, self)

@@ -1,9 +1,9 @@
 # 末路抉择
-from utils.common_effects import CommonStrategyEffect
+from utils.common_effects import EffCommonStrategy
 from utils.constants import EEffectDesc, ELocation
 
 
-class E1(CommonStrategyEffect):
+class E1(EffCommonStrategy):
     """
     摧毁指定的卡。
     """
