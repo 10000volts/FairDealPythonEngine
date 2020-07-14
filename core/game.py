@@ -1050,8 +1050,8 @@ class Game:
             return 0
 
         # 重置先后手
-        self.turn_player = self.p1
-        self.op_player = self.p2
+        self.turn_player = self.p2
+        self.op_player = self.p1
         while self.winner is None:
             if self.turns >= 50:
                 self.win_reason = 3
