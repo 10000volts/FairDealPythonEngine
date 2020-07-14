@@ -12,29 +12,27 @@ class E2(Effect):
                          c, True, True)
         self.scr_arg = [op, v]
 
-    def condition(self):
+    def condition(self, tp):
         """
         是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if not super().condition():
+        if not super().condition(tp):
             return False
 
-        for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
-                return True
+        if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
+            return True
         return False
 
-    def cost(self):
+    def cost(self, tp):
         """
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
-        for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
-                self.reacted.append(tp)
-                return True
+        if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
+            self.reacted.append(tp)
+            return True
         return False
 
     def execute(self):
@@ -55,33 +53,31 @@ class E1(Effect):
         super().__init__(EEffectDesc.PROPERTY_CHANGE, EGamePhase.PLAY_CARD,
                          c, True, True)
 
-    def condition(self):
+    def condition(self, tp):
         """
         是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if not super().condition():
+        if not super().condition(tp):
             return False
 
         sd = self.game.get_player(self.host)
-        for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is sd\
-                    and tp not in self.reacted:
-                return True
+        if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is sd\
+                and tp not in self.reacted:
+            return True
         return False
 
-    def cost(self):
+    def cost(self, tp):
         """
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
         sd = self.game.get_player(self.host)
-        for tp in self.game.tp_stack[::-1]:
-            if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is sd\
-                    and tp not in self.reacted:
-                self.reacted.append(tp)
-                return True
+        if tp.tp == ETimePoint.SUCC_SUMMON and self.host.game.get_player(tp.args[0]) is sd\
+                and tp not in self.reacted:
+            self.reacted.append(tp)
+            return True
         return False
 
     def execute(self):

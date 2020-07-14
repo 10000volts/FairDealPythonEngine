@@ -10,7 +10,7 @@ class E1(CommonStrategyEffect):
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.DESTROY, c=c)
 
-    def condition(self):
+    def condition(self, tp):
         """
         是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。

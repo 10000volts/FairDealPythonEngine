@@ -10,13 +10,6 @@ class E1(CommonStrategyEffect):
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, c=c)
 
-    def cost(self):
-        """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
-        :return:
-        """
-        return True
-
     def execute(self):
         """
         执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。

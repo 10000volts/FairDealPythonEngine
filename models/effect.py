@@ -1,4 +1,4 @@
-from utils.constants import EGamePhase, ELocation, EEffectDesc
+from utils.constants import EGamePhase, EEffectDesc
 
 
 class Effect:
@@ -40,15 +40,22 @@ class Effect:
         # 已经连锁过的时点。每个效果不能重复连锁单一时点。
         self.reacted = list()
 
-    def condition(self):
+    def condition(self, tp):
         """
         是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
+        # if len(self.try_tp):
+        #     for tp in self.try_tp:
+        #         self.game.temp_tp_stack.append(tp)
+        #     self.game.enter_time_points()
+        #     for tp in self.try_tp:
+        #         if not tp.args[-1]:
+        #             return False
         return self.game.phase_now == self.act_phase
 
-    def cost(self):
+    def cost(self, tp):
         """
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:

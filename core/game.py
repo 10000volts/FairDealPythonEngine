@@ -24,7 +24,7 @@ class GamePlayer:
     游戏中的玩家。
     """
     def __init__(self, p: Player, deck: dict, leader_card_id: int):
-        self.game_now = None
+        self.game = None
 
         def method_convert(om):
             if om == 'local':
@@ -69,7 +69,7 @@ class GamePlayer:
         :param p_loc:
         :return:
         """
-        self.game_now = g
+        self.game = g
 
         self.sp = int(g.p1 is self)
         self.leader = GameCard(g, self.leader_id, 2 - self.sp)
@@ -103,8 +103,8 @@ class GamePlayer:
     def output(self, *args):
         msg = make_output(*args)
         # 与之对应，输入不需要记录。
-        if self.game_now is not None:
-            self.game_now.record(self, msg)
+        if self.game is not None:
+            self.game.record(self, msg)
         self.out_method(self.upstream, msg)
 
     def init_card_info(self):
@@ -116,7 +116,7 @@ class GamePlayer:
         self.update_vc(self.leader)
         for c in self.hand:
             self.update_vc(c)
-        for p in self.game_now.players:
+        for p in self.game.players:
             self.output('upd_vc', [p.leader.vid, p.leader.serialize()], self is p)
             if p != self:
                 for c in p.hand:
@@ -131,9 +131,9 @@ class GamePlayer:
         elif loc == ELocation.SIDE:
             cs = self.side
         for c in cs:
-            self.game_now.vid_manager.change(c.vid)
-        # g: Game = self.game_now
-        for p in self.game_now.players:
+            self.game.vid_manager.change(c.vid)
+        # g: Game = self.game
+        for p in self.game.players:
             p.output('shf', [loc + 2 - self.sp])
             if p is self:
                 for c in self.hand:
@@ -626,7 +626,7 @@ class Match:
         gp2 = GamePlayer(p2, p2deck, p2leader_id)
         self.players = [gp1, gp2]
         self.match_config = match_config
-        self.game_now = None
+        self.game = None
 
         self.wins = {gp1: 0, gp2: 0}
 
@@ -635,8 +635,8 @@ class Match:
         exec(self.match_config["match_init"])
         last_loser = None
         while True:
-            self.game_now = Game(self.players, self.match_config["game_config"], last_loser)
-            pl: tuple = self.game_now.start()
+            self.game = Game(self.players, self.match_config["game_config"], last_loser)
+            pl: tuple = self.game.start()
             self.wins[pl[0]] += 1
             last_loser = pl[1]
             winner: GamePlayer = self.end_check()
@@ -964,7 +964,7 @@ class Game:
                     self.temp_tp_stack.append(_tp1)
                     self.temp_tp_stack.append(_tp2)
                     self.enter_time_points()
-                    if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition()):
+                    if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(self.tp_stack[-1])):
                         return EErrorCode.FORBIDDEN_STRATEGY
                     # 是否还有剩余的使用次数
                     if self.turn_player.strategy_times == 0:
@@ -1049,6 +1049,9 @@ class Game:
                 return EErrorCode.OVERSTEP
             return 0
 
+        # 重置先后手
+        self.turn_player = self.p1
+        self.op_player = self.p2
         while self.winner is None:
             if self.turns >= 50:
                 self.win_reason = 3
@@ -1104,7 +1107,8 @@ class Game:
                     attacker.attack_times -= 1
                     tp = TimePoint(ETimePoint.ATTACKING, None, [attacker, tgt, 1])
                     self.enter_time_point(tp)
-                    if tp.args[-1]:
+                    # 攻击时离场导致攻击无效。
+                    if tp.args[-1] & ((attacker.location & ELocation.ON_FIELD) > 0):
                         tgt = tp.args[1]
                         self.batch_sending('atk', [attacker.vid, tgt.vid])
                         # 对领袖的攻击，询问阻挡
@@ -1199,34 +1203,32 @@ class Game:
             self.batch_sending('ent_tp', [tp.tp])
         if tp.sender is None:
             # 先询问对方。
-            self.react(self.op_player)
-            self.react(self.turn_player, False)
+            self.react(self.op_player, tp)
         else:
-            self.react(self.players[self.get_player(tp.sender.host).sp])
-            self.react(self.get_player(tp.sender.host), False)
+            self.react(self.players[self.get_player(tp.sender.host).sp], tp)
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
         tts = list()
         p = self.turn_player
-        for t in self.temp_tp_stack:
+        for t in self.temp_tp_stack[::-1]:
             self.tp_stack.append(t)
             tts.append(t)
             p = p if t.sender is None else self.get_player(t.sender.host)
-        self.batch_sending('ent_tp', [t.tp for t in tts])
+            self.batch_sending('ent_tp', [t.tp])
+            # 先询问对方。
+            self.react(self.players[p.sp], t)
 
         self.temp_tp_stack.clear()
-        # 先询问对方。
-        self.react(self.players[p.sp])
-        self.react(p, False)
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
 
-    def react(self, p: GamePlayer, itor=True):
+    def react(self, p: GamePlayer, tp: TimePoint, itor=True):
         """
         询问p是否连锁。先询问对手。
         :param p: 连锁发起者，被最后询问的人。
+        :param tp: 询问连锁的时点。
         :param itor: 是否继续迭代
         :return:
         """
@@ -1237,10 +1239,11 @@ class Game:
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
 
         if p.can_react:
+            f = False
             self.react_times += 1
             p_react_list = list()
             for ef in self.ef_listener:
-                if ef.condition():
+                if ef.condition(tp):
                     if self.get_player(ef.host) is p:
                         if ef.force_exec:
                             self.activate_effect(ef)
@@ -1259,10 +1262,11 @@ class Game:
                             pi.can_react = 1
                         # 响应了效果。
                         self.activate_effect(p_react_list[p_react_ef_ind])
+                        f = True
                 else:
                     p.can_react = 0
-            if itor:
-                self.react(self.players[p.sp], False)
+            if itor | f:
+                self.react(self.players[p.sp], tp, False)
             self.react_times -= 1
         # 连锁完成，重置可连锁状态
         if self.react_times == 0:
@@ -1311,7 +1315,7 @@ class Game:
         :param ef:
         :return:
         """
-        if ef.cost():
+        if ef.cost(self.tp_stack[-1]):
             if ef.secret:
                 ef.execute()
                 return

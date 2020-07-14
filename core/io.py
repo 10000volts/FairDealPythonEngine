@@ -56,6 +56,8 @@ def input_from_socket(p, msg, check_func, force=True):
         try:
             output_2_socket(p.upstream, msg)
             ans = terminal[p.upstream].recv(1024).decode()
+            # todo: del
+            print('ans ' + ans)
             # 判断是否为读取信息的指令。
             # info = g.get_info(p, ans)
             # if info is not None:
