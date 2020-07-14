@@ -3,6 +3,7 @@ from utils.hints import hints
 import socket
 import json
 import os
+import re
 
 # {'acceptor': socket, ...}
 terminal = dict()
@@ -57,7 +58,13 @@ def input_from_socket(p, msg, check_func, force=True):
             output_2_socket(p.upstream, msg)
             ans = terminal[p.upstream].recv(1024).decode()
             # todo: del
-            print('ans ' + ans)
+            # print('ans ' + ans)
+            if re.match('[0-9 ]+$', ans) is None:
+                if force:
+                    output_2_socket(p.upstream, make_output('in_err', [0]))
+                    continue
+                else:
+                    return None
             # 判断是否为读取信息的指令。
             # info = g.get_info(p, ans)
             # if info is not None:
