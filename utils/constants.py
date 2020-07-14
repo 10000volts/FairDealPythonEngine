@@ -142,6 +142,8 @@ class EErrorCode:
     FORBIDDEN_CP = 17
     # 防御姿态不能攻击。
     DEFEND_POSTURE = 18
+    # 没有剩余攻击次数时不能转换姿态。
+    NO_TIMES_REMAIN = 19
 
 
 class ETimePoint:

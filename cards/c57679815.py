@@ -1,9 +1,9 @@
 # 狂欢
-from utils.common_effects import CommonStrategyEffect
+from utils.common_effects import EffCommonStrategy
 from utils.constants import EEffectDesc, ECardType
 
 
-class E1(CommonStrategyEffect):
+class E1(EffCommonStrategy):
     """
     ATK+EFF。
     """

@@ -61,6 +61,10 @@ class GamePlayer:
         self.sp = 0
         # 是否可继续连锁。
         self.can_react = 1
+        # 回合效果限定器。{ef_id: times, ...}
+        self.ef_limiter = dict()
+        # 效果限定器。{ef_id: times, ...}
+        self.ef_g_limiter = dict()
 
     def init_game(self, g):
         """
@@ -93,6 +97,9 @@ class GamePlayer:
         self.on_field = [None, None, None, None, None, None]
         self.grave = list()
         self.exiled = list()
+        # 清空效果限制
+        self.ef_limiter = dict()
+        self.ef_g_limiter = dict()
 
     def input(self, func, *args):
         return self.in_method(self, make_input(*args), func)
@@ -1044,8 +1051,11 @@ class Game:
             # good game 单局认输
             elif _args[0] == 5:
                 return 0
-            # change posture 转变形态
+            # change posture 转变姿态
             elif _args[0] == 6:
+                # 主要阶段内才能转变姿态。
+                if (self.turn_phase != ETurnPhase.M1) & (self.turn_phase != ETurnPhase.M2):
+                    return EErrorCode.WRONG_PHASE
                 # 雇员
                 if _args[1] in range(0, 3):
                     _c = self.turn_player.on_field[_args[1]]
@@ -1057,6 +1067,9 @@ class Game:
                         if not _tp.args[-1]:
                             return EErrorCode.FORBIDDEN_UNCOVER
                     else:
+                        # 有剩余的攻击次数才能作姿态转换。
+                        if _c.attack_times == 0:
+                            return EErrorCode.NO_TIMES_REMAIN
                         # 还有剩余的转换次数，为负数可以无限次数转换
                         if _c.posture_times == 0:
                             return EErrorCode.TIMES_LIMIT
@@ -1181,27 +1194,27 @@ class Game:
                     self.win_reason = 2
                     self.winner = self.op_player
                     break
-                # change posture 改变形态
+                # change posture 转变姿态
                 elif cmd[0] == 6:
-                    c: GameCard = self.turn_player.on_field[cmd[1]]
+                    c = self.turn_player.on_field[cmd[1]]
                     if c.type == ECardType.EMPLOYEE:
                         if c.cover:
                             tp = TimePoint(ETimePoint.UNCOVERING_EM, None, [c, 1])
-                            self.batch_sending('upd_vc', [c.vid, c.serialize_anonymous()])
-                            self.batch_sending('cp', [c.vid])
+                            self.batch_sending('crd_cp', [c.vid])
                             self.enter_time_point(tp)
                             if tp.args[-1]:
                                 c.cover = 0
+                                self.batch_sending('upd_vc', [c.vid, c.serialize()])
                             self.enter_time_point(TimePoint(ETimePoint.UNCOVERED_EM, None, [c]))
                         else:
                             # 先消耗次数
                             c.posture_times -= 1
                             tp = TimePoint(ETimePoint.CHANGING_POSTURE, None, [c, 1])
-                            self.batch_sending('upd_vc', [c.vid, c.serialize_anonymous()])
-                            self.batch_sending('cp', [c.vid])
+                            self.batch_sending('crd_cp', [c.vid])
                             self.enter_time_point(tp)
                             if tp.args[-1]:
                                 c.posture = not c.posture
+                                self.batch_sending('upd_vc', [c.vid, c.serialize()])
                             self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))
                     elif c.type == ECardType.STRATEGY:
                         self.turn_player.strategy_times -= 1
@@ -1731,12 +1744,13 @@ class Game:
                 self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
                 self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
 
-    def choose_target(self, func, ef: Effect, force=False) -> GameCard:
+    def choose_target(self, func, ef: Effect, force=False, with_tp=True) -> GameCard:
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。
         :param func:  筛选函数。
         :param ef:
         :param force: 是否强制
+        :param with_tp:
         :return:
         """
         def check_ind(_ind):
@@ -1745,26 +1759,39 @@ class Game:
             return 0
 
         cs = list()
-        for c in self.vid_manager.get_cards():
-            if func(c):
-                # 模拟选择。
-                tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, 1])
-                self.enter_time_point(tp)
-                if tp.args[-1]:
-                    cs.append(c.vid)
-        _len = len(cs)
-        # 询问选项
-        if force:
-            ind = self.get_player(ef.host).input(check_ind, 'req_chs_tgt_f', [cs, 1])
+        if with_tp:
+            for c in self.vid_manager.get_cards():
+                if func(c):
+                    # 模拟选择。
+                    tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, 1])
+                    self.enter_time_point(tp)
+                    if tp.args[-1]:
+                        cs.append(c.vid)
+            _len = len(cs)
+            # 询问选项
+            if force:
+                ind = self.get_player(ef.host).input(check_ind, 'req_chs_tgt_f', [cs, 1])
+            else:
+                ind = self.get_player(ef.host).free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                if ind is None:
+                    return None
+            c = self.vid_manager.get_card(cs[ind])
+            tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
+                return c
         else:
-            ind = self.get_player(ef.host).free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
-            if ind is None:
-                return None
-
-        c = self.vid_manager.get_card(cs[ind])
-        tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
-        self.enter_time_point(tp)
-        if tp.args[-1]:
-            self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
-            return c
+            for c in self.vid_manager.get_cards():
+                if func(c):
+                    cs.append(c.vid)
+            _len = len(cs)
+            # 询问选项
+            if force:
+                ind = self.get_player(ef.host).input(check_ind, 'req_chs_tgt_f', [cs, 1])
+            else:
+                ind = self.get_player(ef.host).free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                if ind is None:
+                    return None
+            return self.vid_manager.get_card(cs[ind])
         return None

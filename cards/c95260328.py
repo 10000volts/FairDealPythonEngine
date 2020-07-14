@@ -1,6 +1,6 @@
 # 密灵西
 from models.effect import Effect
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint
+from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation
 
 
 class E1(Effect):
@@ -29,7 +29,7 @@ class E1(Effect):
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
-        if tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted:
+        if self.condition(tp):
             self.reacted.append(tp)
             return True
         return False
@@ -40,9 +40,15 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 秘密效果，不输出
-        # 变成调查筹码后影响力值归零
-        self.host.ATK.add_val = 500
+        def check(c):
+            return (self.game.get_player(c) is self.game.get_player(self.host)) & \
+                   ((c.location & ELocation.HAND) > 0)
+
+        super().execute()
+
+        tgt = self.game.choose_target(check, self, False, False)
+        if tgt is not None:
+            tgt.ATK.add_val = 1000
 
 
 def give(c):
