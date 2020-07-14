@@ -1,6 +1,6 @@
 # 暴风新人
 from utils.common_effects import EffCommonSummon
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint
+from utils.constants import EEffectDesc, ELocation, ECardType
 
 
 class E1(EffCommonSummon):
@@ -18,7 +18,9 @@ class E1(EffCommonSummon):
         """
         # 输出
         super().execute()
-        # todo: 摧毁场上全部策略
+        for c in self.game.vid_manager.get_cards():
+            if ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.STRATEGY):
+                self.game.destroy(self.host, c, self)
 
 
 def give(c):

@@ -281,6 +281,10 @@ class CardProperty:
         self.val_st.remove(v)
         self.update()
 
+    def change_adv(self, adv):
+        self.add_val = adv
+        self.update()
+
 
 class HPProperty(CardProperty):
     def update(self):
@@ -945,7 +949,7 @@ class Game:
                         return EErrorCode.OVERSTEP
                     if self.turn_player.on_field[_args[2]] is not None:
                         return EErrorCode.INVALID_PUT
-                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, _args[2], _args[3], None, 1])
+                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, _args[2], _args[3], 1])
                     self.enter_time_point(_tp)
                     # 换掉_c的效果不会出，太奇怪了
                     if not _tp.args[-1]:
@@ -953,7 +957,7 @@ class Game:
                     # 是否还有剩余的入场次数
                     if self.turn_player.summon_times == 0:
                         return EErrorCode.TIMES_LIMIT
-                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, _args[2], _args[3], None, _tp.args[-1]])
+                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, _args[2], _args[3], _tp.args[-1]])
                     self.enter_time_point(_tp)
                     return 0
                 elif _c.type == ECardType.STRATEGY:
@@ -1131,12 +1135,12 @@ class Game:
                                 (not ((c.type == ECardType.STRATEGY) & (c.location & ELocation.ON_FIELD > 0) &
                                  c.cover)):
                             for ef in c.effects:
-                                if (not ef.trigger) & ef.condition(None):
+                                if (not ef.trigger) and ef.condition(None):
                                     efs.append(ef)
                     _len = len(efs)
                     if _len:
                         self.turn_player.output('req_rct')
-                        if self.turn_player.input(lambda yn: True, 'req_yn'):
+                        if self.turn_player.input(lambda yn: 0, 'req_yn'):
                             ef_ind = self.turn_player.free_input(
                                 check_ind,
                                 'req_chs_eff', [[[ef.host.vid, ef.description] for ef in efs]])
@@ -1575,7 +1579,7 @@ class Game:
         if next(cm):
             self.enter_time_points()
             if next(cm):
-                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, pos, posture, ef, 1])
+                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, pos, posture, 1])
                 self.enter_time_point(tp)
                 if tp.args[-1]:
                     pos, posture = tp.args[1:3]
@@ -1585,12 +1589,42 @@ class Game:
                     em.posture = (posture == 1)
                     next(cm)
                     # todo: 换em的效果不会出。
-                    self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, [em, pos, posture, ef]))
+                    self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, [em, pos, posture]))
                     self.batch_sending('upd_vc', [em.vid, em.serialize()])
                     self.batch_sending('smn', [em.vid, int(ef is None)], p)
                     self.enter_time_points()
                     # 重置攻击、阻挡次数
                     em.reset_times()
+
+    def special_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard, ef: Effect):
+        """
+        雇员请求特殊入场。
+        :param p: 发起召唤的玩家
+        :param pt: player target 召唤到
+        :param em: 雇员
+        :param ef:
+        :return:
+        """
+        def check_pos(_pos):
+            if _pos not in range(0, 3):
+                return EErrorCode.OVERSTEP
+            if pt.on_field[_pos] is not None:
+                return EErrorCode.INVALID_PUT
+            return 0
+
+        for posture in range(0, 2):
+            for pos in range(0, 3):
+                if pt.on_field[pos] is None:
+                    tp = TimePoint(ETimePoint.TRY_SUMMON, ef, [em, pos, posture, 1])
+                    self.enter_time_point(tp)
+                    # 入场被允许
+                    if tp.args[-1]:
+                        # 询问入场位置、姿态
+                        pos = p.input(check_pos, 'req_num', [0, 3])
+                        if pos is not None:
+                            posture = p.input(lambda x: 0, 'req_num', [0, 2]) > 0
+                            self.summon(p, pt, em, pos, posture, ef)
+                            return
             
     def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos):
         """

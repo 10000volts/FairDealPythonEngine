@@ -48,7 +48,7 @@ class E1(Effect):
 
         tgt = self.game.choose_target(check, self, False, False)
         if tgt is not None:
-            tgt.ATK.add_val = 1000
+            tgt.ATK.change_adv(1000)
 
 
 def give(c):

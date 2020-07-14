@@ -43,7 +43,7 @@ class E1(Effect):
         # 输出
         super().execute()
         # 变成调查筹码后影响力值归零
-        self.host.ATK.add_val = 500
+        self.host.ATK.change_adv(500)
 
 
 def give(c):
