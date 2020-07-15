@@ -9,7 +9,7 @@ class EffInvestigator(Effect):
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.INVESTIGATE, act_phase=EGamePhase.PUT_CARD,
-                         host=host, trigger=True, force_exec=True)
+                         host=host, trigger=True, force=True)
 
     def condition(self, tp):
         """
@@ -70,9 +70,9 @@ class EffSummon(Effect):
     """
     入场后效果模板。
     """
-    def __init__(self, desc, c):
+    def __init__(self, desc, host):
         super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD,
-                         host=c, trigger=True)
+                         host=host, trigger=True)
 
     def condition(self, tp):
         """

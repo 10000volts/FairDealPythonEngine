@@ -7,7 +7,7 @@ class Effect:
     """
 
     def __init__(self, desc: EEffectDesc, act_phase: EGamePhase,
-                 host, trigger=False, force_exec=False,
+                 host, trigger=False, force=False,
                  secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None):
         """
 
@@ -15,7 +15,7 @@ class Effect:
         :param act_phase:
         :param host:
         :param trigger: 是否为触发式效果(触发效果需加入检查队列)。
-        :param force_exec:
+        :param force:
         :param secret: 是否为秘密效果(发动对玩家不可见)。
         :param scr_arg: 秘密参数。
         :param no_src:
@@ -35,7 +35,7 @@ class Effect:
         # 是否为无源效果(这时，发动的位置与其所属的卡目前所在地无关)。
         self.no_source = no_src
         # 满足条件时是否强制发动。
-        self.force_exec = force_exec
+        self.force = force
         self.trigger = trigger
         self.no_reset = no_reset
         # 已经连锁过的时点。每个效果不能重复连锁单一时点。

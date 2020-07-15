@@ -38,6 +38,8 @@ class EEffectDesc:
     HEAL = 2
     # 造成伤害
     CAUSE_DAMAGE = 3
+    # 伤害增减
+    DAMAGE_CHANGE = 4
     # ATK上升
     PROPERTY_CHANGE = 30
     # 赋予效果
@@ -52,6 +54,8 @@ class EEffectDesc:
     DESTROY = 35
     # 特殊入场。
     SPECIAL_SUMMON = 36
+    # 移除效果
+    REMOVE_EFFECT = 37
 
 
 class ELocation:
@@ -179,7 +183,7 @@ class ETimePoint:
     # args: 卡。 (args[1]: 生成的值)
     EXTRA_DATA_GENERATING = 27
     # 全部附加值生成后 在此时点发动效果的卡：
-    # 皮亚娜……
+    # 皮亚娜、密灵西……
     # args: 卡
     EXTRA_DATA_GENERATED = 30
     # 调查筹码生成后 在此时点发动效果的卡：

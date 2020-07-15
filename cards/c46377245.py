@@ -7,8 +7,8 @@ class E1(EffSummon):
     """
     询问。
     """
-    def __init__(self, c):
-        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, c=c)
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host)
 
     def execute(self):
         """

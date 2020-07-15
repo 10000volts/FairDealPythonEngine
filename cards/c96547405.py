@@ -9,7 +9,7 @@ class E1(Effect):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.ADDV_CHANGE, act_phase=EGamePhase.EXTRA_DATA,
-                         host=c, trigger=True, force_exec=True)
+                         host=c, trigger=True, force=True)
 
     def condition(self, tp):
         """

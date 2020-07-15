@@ -4,6 +4,61 @@ from core.game import TimePoint
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation
 
 
+class E3(Effect):
+    """
+    回合结束时效果消失。
+    """
+    def __init__(self, ef, c):
+        super().__init__(desc=EEffectDesc.REMOVE_EFFECT, act_phase=EGamePhase.PLAY_CARD,
+                         host=c, trigger=True, force=True, scr_arg=ef)
+
+    def condition(self, tp):
+        if not super().condition(tp):
+            return False
+
+        if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
+            return True
+        return False
+
+    def cost(self, tp):
+        if self.condition(tp):
+            self.reacted.append(tp)
+            return True
+        return False
+
+    def execute(self):
+        self.host.remove_effect(self.scr_arg, False)
+
+
+class E2(Effect):
+    """
+    对方受到的伤害减半。
+    """
+    def __init__(self, p, c):
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, act_phase=EGamePhase.PLAY_CARD,
+                         host=c, trigger=True, force=True, scr_arg=p)
+
+    def condition(self, tp):
+        if not super().condition(tp):
+            return False
+
+        if tp.tp == ETimePoint.DEALING_DAMAGE and tp.args[1] is self.scr_arg and tp not in self.reacted:
+            return True
+        return False
+
+    def cost(self, tp):
+        if self.condition(tp):
+            self.reacted.append(tp)
+            return True
+        return False
+
+    def execute(self):
+        # 输出
+        super().execute()
+        tp = self.reacted.pop()
+        tp.args[2] = int(tp.args[2] / 2)
+
+
 class E1(Effect):
     """
     从场下入场。
@@ -48,10 +103,15 @@ class E1(Effect):
         """
         # 输出
         super().execute()
-        # 入场
+        # 从场下入场
         if self.host.location & ELocation.GRAVE:
-            self.game.special_summon(self.game.get_player(self.host), self.game.get_player(self.host), self.host,
-                                     self)
+            p = self.game.get_player(self.host)
+            self.game.special_summon(p, p, self.host, self)
+            # 对方本回合受到的伤害减半
+            e2 = E2(self.host, self.game.players[p.sp])
+            self.host.register_effect(e2)
+            e3 = E3(self.host, e2)
+            self.host.register_effect(e3)
 
 
 def give(c):

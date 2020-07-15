@@ -986,7 +986,9 @@ class Game:
                 return EErrorCode.UNKNOWN_CARD
             # act 询问可发动的效果
             elif _args[0] == 1:
-                return 0
+                if (self.turn_phase == ETurnPhase.M1) | (self.turn_phase == ETurnPhase.M2):
+                    return 0
+                return EErrorCode.WRONG_PHASE
             # set 将手牌盖放到场上
             elif _args[0] == 2:
                 # 只能在主要阶段打出手牌。
@@ -1347,7 +1349,7 @@ class Game:
             for ef in self.ef_listener:
                 if ef.condition(tp):
                     if self.get_player(ef.host) is p:
-                        if ef.force_exec:
+                        if ef.force:
                             self.activate_effect(ef)
                         else:
                             p_react_list.append(ef)

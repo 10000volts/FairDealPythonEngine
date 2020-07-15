@@ -11,7 +11,7 @@ class E2(Effect):
     """
     def __init__(self, ef):
         super().__init__(desc=EEffectDesc.WEAK_INVESTIGATE, act_phase=EGamePhase.PUT_CARD,
-                         host=ef.host, trigger=True, force_exec=True)
+                         host=ef.host, trigger=True, force=True)
 
     def condition(self, tp):
         """

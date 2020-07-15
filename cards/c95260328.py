@@ -20,7 +20,7 @@ class E1(Effect):
         if not super().condition(tp):
             return False
 
-        if tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted:
+        if tp.tp == ETimePoint.EXTRA_DATA_GENERATED and tp not in self.reacted:
             return True
         return False
 
