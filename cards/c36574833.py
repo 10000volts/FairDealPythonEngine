@@ -5,7 +5,7 @@ from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation, ECar
 from utils.common_effects import EffAttackLimit, EffTriggerCostMixin
 
 
-class E2(Effect):
+class E2(EffTriggerCostMixin):
     """
     不能通过自身效果以外的方式常规入场。
     """
@@ -20,13 +20,6 @@ class E2(Effect):
                 return True
         return False
 
-    def cost(self, tp):
-        if self.condition(tp):
-            self.scr_arg = 1
-            self.reacted.append(tp)
-            return True
-        return False
-
     def execute(self):
         # 禁止入场。
         self.reacted.pop().args[-1] = 0
@@ -37,7 +30,7 @@ class E1(Effect):
     支付生命力以常规入场。
     """
     def __init__(self, c, ef):
-        super().__init__(desc=EEffectDesc.SUMMON, host=c, trigger=True, scr_arg=ef)
+        super().__init__(desc=EEffectDesc.SUMMON, host=c, scr_arg=ef)
 
     def condition(self, tp):
         """
@@ -47,19 +40,25 @@ class E1(Effect):
         """
         if tp.tp == ETimePoint.ASK4EFFECT and tp not in self.reacted:
             p = self.game.get_player(self.host)
-            tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, int(p.leader.DEF.value / 2), 1])
-            self.game.enter_time_point(tp2)
-            if tp2.args[-1]:
-                if p.summon_times == 0:
-                    return False
-                for posture in range(0, 2):
-                    for pos in range(0, 3):
-                        if p.on_field[pos] is None:
-                            tp = TimePoint(ETimePoint.TRY_SUMMON, None, [self.host, p, pos, posture, 1])
-                            self.game.enter_time_point(tp)
-                            # 入场被允许
-                            if tp.args[-1]:
-                                return True
+            if self.host in p.hand:
+                tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, int(p.leader.DEF.value / 2), 1])
+                self.game.enter_time_point(tp2)
+                if tp2.args[-1]:
+                    if p.summon_times == 0:
+                        return False
+                    for posture in range(0, 2):
+                        for pos in range(0, 3):
+                            if p.on_field[pos] is None:
+                                print(pos)
+                                self.scr_arg.scr_arg = 0
+                                print(type(self.scr_arg))
+                                print(self.scr_arg.scr_arg)
+                                tp = TimePoint(ETimePoint.TRY_SUMMON, None, [self.host, p, pos, posture, 1])
+                                self.game.enter_time_point(tp)
+                                # 入场被允许
+                                if tp.args[-1]:
+                                    self.scr_arg.scr_arg = 1
+                                    return True
         return False
 
     def cost(self, tp):
@@ -87,6 +86,7 @@ class E1(Effect):
         p = self.game.get_player(self.host)
         self.scr_arg.scr_arg = 0
         self.game.common_summon(p, p, self.host)
+        self.scr_arg.scr_arg = 1
 
 
 def give(c):

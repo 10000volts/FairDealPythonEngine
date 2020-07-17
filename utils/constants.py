@@ -1,5 +1,3 @@
-
-
 class ECardRank:
     COMMON = 0
     GOOD = 1
@@ -69,11 +67,11 @@ class EEffectDesc:
     # 持续时间结束
     EFFECT_END = 41
     # 复原
-    RESTORE = 39
+    RESTORE = 42
     # 禁止/封锁
-    FORBIDDEN = 40
+    FORBIDDEN = 43
     # 常规入场
-    SUMMON = 41
+    SUMMON = 44
 
 
 class ELocation:
@@ -202,7 +200,6 @@ class ETimePoint:
     EXTRA_DATA_GENERATING = 27
     # 全部附加值生成后 在此时点发动效果的卡：
     # 皮亚娜、密灵西……
-    # args: 卡
     EXTRA_DATA_GENERATED = 30
     # 调查筹码生成后 在此时点发动效果的卡：
     #

@@ -19,7 +19,7 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         # todo: 太麻烦了，不写了！
-        return tp.tp is None
+        return tp is None
 
     def execute(self):
         """
@@ -53,11 +53,12 @@ class E1(EffTriggerCostMixin):
                                 return True
                 return False
         tgt = self.game.choose_target(check, self, False, False)
-        if tgt is None:
+        if tgt is not None:
             atk = tgt.ATK.value
             self.game.special_summon(p, op, tgt, self)
-            c = GameCard(self.game, ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.COMMON,
-                         atk, 0)
+            c = GameCard(self.game)
+            c.create('随行者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.COMMON,
+                     atk, 0)
             self.game.special_summon(p, p, c, self)
 
 

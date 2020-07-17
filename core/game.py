@@ -305,7 +305,7 @@ class HPProperty(CardProperty):
 
 
 class GameCard:
-    def __init__(self, g, cid, ori_loc, is_token=False):
+    def __init__(self, g, cid=None, ori_loc=0, is_token=False):
         """
 
         :param cid:
@@ -313,49 +313,50 @@ class GameCard:
         :param is_token:
         """
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
-        self.vid = 0
         self.game = g
-        g.vid_manager.register(self)
-        self.cid = cid
-        self.name = rds.hget(cid, 'name').decode()
-        self.type = int(rds.hget(cid, 'type').decode())
-        self.subtype = int(rds.hget(cid, 'subtype').decode())
-        self.rank = int(rds.hget(cid, 'rank').decode())
-        # 不可修改。
-        self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
-        self.src_def = int(rds.hget(cid, 'def_hp').decode())
-        self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
-        if self.type == ECardType.LEADER:
-            self.DEF = HPProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
-            self.cover = 0
-        else:
-            self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
-            # 是否被暗置(背面朝上，对对方玩家不可见)。
-            self.cover = 1
-        self.series = json.loads(rds.hget(cid, 'series').decode())
-        self.is_token = is_token
-        self.effects = list()
-        self.location = ori_loc
-        # 在对局中获得的效果。{eff: desc}
-        self.buff_eff = dict()
-        # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区
-        self.inf_pos = 0
-        # 场上的姿态。非零表示防御姿态。
-        self.posture = 0
-        # 是否拥有"风行"效果
-        self.charge = False
-        # 剩余攻击次数(入场、回合开始时重置)。为负数则可无限次数攻击。
-        self.attack_times = 0
-        # 剩余阻挡次数(入场、回合开始时重置)。为负数则可无限次数阻挡。
-        self.block_times = 0
-        # 剩余可改变姿态次数(回合开始时重置)。为负数则可无限次数改变。
-        self.posture_times = 0
-        # 经历过的回合数(回合结束时自动+1)。
-        self.turns = 0
-        m = import_module('cards.c{}'.format(self.cid))
-        m.give(self)
+        if cid is not None:
+            self.vid = 0
+            g.vid_manager.register(self)
+            self.cid = cid
+            self.name = rds.hget(cid, 'name').decode()
+            self.type = int(rds.hget(cid, 'type').decode())
+            self.subtype = int(rds.hget(cid, 'subtype').decode())
+            self.rank = int(rds.hget(cid, 'rank').decode())
+            # 不可修改。
+            self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
+            self.src_def = int(rds.hget(cid, 'def_hp').decode())
+            self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
+            if self.type == ECardType.LEADER:
+                self.DEF = HPProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+                self.cover = 0
+            else:
+                self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+                # 是否被暗置(背面朝上，对对方玩家不可见)。
+                self.cover = 1
+            self.series = json.loads(rds.hget(cid, 'series').decode())
+            self.is_token = is_token
+            self.effects = list()
+            self.location = ori_loc
+            # 在对局中获得的效果。{eff: desc}
+            self.buff_eff = dict()
+            # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区
+            self.inf_pos = 0
+            # 场上的姿态。非零表示防御姿态。
+            self.posture = 0
+            # 是否拥有"风行"效果
+            self.charge = False
+            # 剩余攻击次数(入场、回合开始时重置)。为负数则可无限次数攻击。
+            self.attack_times = 0
+            # 剩余阻挡次数(入场、回合开始时重置)。为负数则可无限次数阻挡。
+            self.block_times = 0
+            # 剩余可改变姿态次数(回合开始时重置)。为负数则可无限次数改变。
+            self.posture_times = 0
+            # 经历过的回合数(回合结束时自动+1)。
+            self.turns = 0
+            m = import_module('cards.c{}'.format(self.cid))
+            m.give(self)
 
-    def __init__(self, g, name, ty, subtype, rank, src_atk, src_def):
+    def create(self, name, ty, subtype, rank, src_atk, src_def):
         """
         token的初始化
         :param g:
@@ -369,8 +370,7 @@ class GameCard:
         """
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
         self.vid = 0
-        self.game = g
-        g.vid_manager.register(self)
+        self.game.vid_manager.register(self)
         self.cid = None
         self.name = name
         self.type = ty
@@ -550,6 +550,7 @@ class GameCard:
                     return ETimePoint.OUT_GRAVE, ETimePoint.OUT_GRAVE_END, p.grave
                 if self.location & ELocation.EXILED:
                     return ETimePoint.OUT_EXILED, ETimePoint.OUT_EXILED_END, p.exiled
+                return None, None, None
 
             def enter():
                 if loc & ELocation.HAND:
@@ -578,24 +579,28 @@ class GameCard:
             # 离开我放半场去到对方半场不算离场，其他区域同理
             etp1, etp3, _from = leave()
             etp2, etp4, _to = enter()
-            tp1 = TimePoint(etp1, ef, [self, 1])
+            f = True
+            if etp1:
+                tp1 = TimePoint(etp1, ef, [self, 1])
+                self.game.temp_tp_stack.append(tp1)
+                f = tp1.args[-1]
             tp2 = TimePoint(etp2, ef, [self, 1])
-            self.game.temp_tp_stack.append(tp1)
             self.game.temp_tp_stack.append(tp2)
             yield True
-            yield tp1.args[-1] & tp2.args[-1]
+            yield f & tp2.args[-1]
             # 离开, 离场需特殊处理，不能直接remove
             if self.location & ELocation.ON_FIELD:
                 p.on_field[self.inf_pos] = None
-            else:
+            elif _from:
                 _from.remove(self)
             # 进入, 入场的具体位置不在这里处理
             self.location = loc
             if (loc & ELocation.ON_FIELD) == 0:
                 _to.append(self)
-            tp3 = TimePoint(etp3, ef, self)
+            if etp3:
+                tp3 = TimePoint(etp3, ef, self)
+                self.game.temp_tp_stack.append(tp3)
             tp4 = TimePoint(etp4, ef, self)
-            self.game.temp_tp_stack.append(tp3)
             self.game.temp_tp_stack.append(tp4)
             yield True
         else:
@@ -888,11 +893,11 @@ class Game:
     def __ph_extra_data(self):
         def gen(p: GamePlayer):
             for c in p.hand:
-                c.ATK.add_val = randint(-2, 2) * 500
+                c.ATK.change_adv(randint(-2, 2) * 500)
                 self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
             # 调查筹码
             i = randint(0, len(p.hand) - 1)
-            p.hand[i].ATK.add_val = 0
+            p.hand[i].ATK.change_adv(0)
             p.hand[i].register_effect(EffInvestigator(p.hand[i]), True)
             self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
 
@@ -1650,7 +1655,7 @@ class Game:
                 tp = TimePoint(ETimePoint.SUMMONING, ef, [em, pt, pos, posture, 1])
                 self.enter_time_point(tp)
                 if tp.args[-1]:
-                    pos, posture = tp.args[1:3]
+                    pt, pos, posture = tp.args[1:4]
                     pt.on_field[pos] = em
                     em.inf_pos = pos
                     em.cover = 0

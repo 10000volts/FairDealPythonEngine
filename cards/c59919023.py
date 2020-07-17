@@ -100,7 +100,7 @@ def give(c):
     :param c:
     :return:
     """
-    c.host.register_effect(E1(c))
-    c.host.register_effect(E2(c))
-    c.host.register_effect(E3(c))
-    c.host.register_effect(E4(c))
+    c.register_effect(E1(c))
+    c.register_effect(E2(c))
+    c.register_effect(E3(c))
+    c.register_effect(E4(c))

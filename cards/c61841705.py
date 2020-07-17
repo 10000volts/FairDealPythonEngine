@@ -5,7 +5,7 @@ from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation, ECar
 from utils.common_effects import EffTriggerCostMixin
 
 
-class E1(Effect, EffTriggerCostMixin):
+class E1(EffTriggerCostMixin):
     """
     自伤
     """
@@ -45,4 +45,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(E1(c))

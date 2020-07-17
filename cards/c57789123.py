@@ -21,7 +21,8 @@ class E1(EffTriggerCostMixin):
         if tp.tp == ETimePoint.TURN_END:
             p = self.game.get_player(self.host)
             # 是我方回合，在场
-            if (self.game.turn_player is self.game.get_player(self.host)) & (self.host in p.on_field):
+            if (self.game.turn_player is self.game.get_player(self.host)) & (self.host in p.on_field) & \
+                    (tp not in self.reacted):
                 return True
         return False
 
@@ -53,7 +54,7 @@ class E2(EffTriggerCostMixin):
         if tp.tp == ETimePoint.TRY_ACTIVATE_STRATEGY:
             p = self.game.get_player(self.host)
             # 是对方的策略
-            if (tp.args[0].location & (self.game.get_player(self.host).sp + 1)) > 0:
+            if ((tp.args[0].location & (self.game.get_player(self.host).sp + 1)) > 0) & (tp not in self.reacted):
                 return True
         return False
 
@@ -96,5 +97,5 @@ def give(c):
     :param c:
     :return:
     """
-    c.host.register_effect(E1(c))
-    c.host.register_effect(E3(c))
+    c.register_effect(E1(c))
+    c.register_effect(E3(c))
