@@ -42,6 +42,8 @@ class EEffectDesc:
     DAMAGE_CHANGE = 4
     # 额外机会
     EXTRA_CHANCE = 10
+    # 重置次数
+    RESET_TIMES = 11
     # ATK上升
     ATK_GAIN = 30
     # 赋予效果
@@ -66,6 +68,12 @@ class EEffectDesc:
     PROTECT_PROTOCOL = 40
     # 持续时间结束
     EFFECT_END = 41
+    # 复原
+    RESTORE = 39
+    # 禁止/封锁
+    FORBIDDEN = 40
+    # 常规入场
+    SUMMON = 41
 
 
 class ELocation:
@@ -235,11 +243,13 @@ class ETimePoint:
     PH_PLAY_CARD = 115
     # 尝试使雇员入场 在此时点发动效果的卡：
     # 强力姐姐(的副作用效果) 不计入常规入场次数的雇员在此时点让可进行次数偷偷+1
-    # args[0]: 入场雇员 args[1]: 入场位置 args[2]: 入场姿态(非零表示防御姿态)args[3]: 是否成功
+    # args[0]: 入场雇员 args[1]: 要降临至其场地的玩家 args[2]: 入场位置
+    # args[3]: 入场姿态(非零表示防御姿态) args[4]: 是否成功
     TRY_SUMMON = 120
     # 雇员入场时 在此时点发动效果的卡：
     # 陷阱合同
-    # args[0]: 入场雇员 args[1]: 入场位置 args[2]: 入场姿态(非零表示防御姿态) args[3]: 是否成功
+    # args[0]: 入场雇员 args[1]: 要降临至其场地的玩家 args[2]: 入场位置
+    # args[3]: 入场姿态(非零表示防御姿态) args[4]: 是否成功
     SUMMONING = 121
     # 雇员入场成功 在此时点发动效果的卡：
     # 流量明星、帮派成员、奇利亚诺、信息大盗 杰拉德……
@@ -491,7 +501,7 @@ class ETimePoint:
     #
     ACTIVATING_STRATEGY = 199
     # 成功发动策略后 在此时点发动效果的卡：
-    #
+    # args[0]: 策略
     SUCC_ACTIVATE_STRATEGY = 200
     # 尝试从手牌常规入场结束 在此时点发动效果的卡：
     #

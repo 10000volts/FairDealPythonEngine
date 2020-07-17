@@ -50,7 +50,7 @@ class E1(Effect):
             for posture in range(0, 2):
                 for pos in range(0, 3):
                     if sd.on_field[pos] is None:
-                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, pos, posture, 1])
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
                         self.game.enter_time_point(tp)
                         # 入场被允许
                         if tp.args[-1]:

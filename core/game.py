@@ -355,6 +355,55 @@ class GameCard:
         m = import_module('cards.c{}'.format(self.cid))
         m.give(self)
 
+    def __init__(self, g, name, ty, subtype, rank, src_atk, src_def):
+        """
+        token的初始化
+        :param g:
+        :param name:
+        :param ty:
+        :param subtype:
+        :param rank:
+        :param src_atk:
+        :param src_def:
+        :param ori_loc:
+        """
+        # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
+        self.vid = 0
+        self.game = g
+        g.vid_manager.register(self)
+        self.cid = None
+        self.name = name
+        self.type = ty
+        self.subtype = subtype
+        self.rank = rank
+        # 不可修改。
+        self.src_atk = src_atk
+        self.src_def = src_def
+        self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
+        self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+        # 是否被暗置(背面朝上，对对方玩家不可见)。
+        self.cover = 0
+        self.series = list()
+        self.is_token = True
+        self.effects = list()
+        self.location = ELocation.UNKNOWN
+        # 在对局中获得的效果。{eff: desc}
+        self.buff_eff = dict()
+        # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区
+        self.inf_pos = 0
+        # 场上的姿态。非零表示防御姿态。
+        self.posture = 0
+        # 是否拥有"风行"效果
+        self.charge = False
+        # 剩余攻击次数(入场、回合开始时重置)。为负数则可无限次数攻击。
+        self.attack_times = 0
+        # 剩余阻挡次数(入场、回合开始时重置)。为负数则可无限次数阻挡。
+        self.block_times = 0
+        # 剩余可改变姿态次数(回合开始时重置)。为负数则可无限次数改变。
+        self.posture_times = 0
+        # 经历过的回合数(回合结束时自动+1)。
+        self.turns = 0
+
     def register_effect(self, e: Effect, buff_eff=False, out=True):
         """
 
@@ -960,7 +1009,7 @@ class Game:
                         return EErrorCode.OVERSTEP
                     if self.turn_player.on_field[_args[2]] is not None:
                         return EErrorCode.INVALID_PUT
-                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, _args[2], _args[3], 1])
+                    _tp = TimePoint(ETimePoint.TRY_SUMMON, None, [_c, self.turn_player, _args[2], _args[3], 1])
                     self.enter_time_point(_tp)
                     # 换掉_c的效果不会出，太奇怪了
                     if not _tp.args[-1]:
@@ -968,7 +1017,8 @@ class Game:
                     # 是否还有剩余的入场次数
                     if self.turn_player.summon_times == 0:
                         return EErrorCode.TIMES_LIMIT
-                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, _args[2], _args[3], _tp.args[-1]])
+                    _tp = TimePoint(ETimePoint.TRIED_SUMMON, None, [_c, self.turn_player, _args[2], _args[3],
+                                                                    _tp.args[-1]])
                     self.enter_time_point(_tp)
                     return 0
                 elif _c.type == ECardType.STRATEGY:
@@ -1597,7 +1647,7 @@ class Game:
         if next(cm):
             self.enter_time_points()
             if next(cm):
-                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, pos, posture, 1])
+                tp = TimePoint(ETimePoint.SUMMONING, ef, [em, pt, pos, posture, 1])
                 self.enter_time_point(tp)
                 if tp.args[-1]:
                     pos, posture = tp.args[1:3]
@@ -1633,7 +1683,7 @@ class Game:
         for posture in range(0, 2):
             for pos in range(0, 3):
                 if pt.on_field[pos] is None:
-                    tp = TimePoint(ETimePoint.TRY_SUMMON, ef, [em, pos, posture, 1])
+                    tp = TimePoint(ETimePoint.TRY_SUMMON, ef, [em, pt, pos, posture, 1])
                     self.enter_time_point(tp)
                     # 入场被允许
                     if tp.args[-1]:
@@ -1642,6 +1692,39 @@ class Game:
                         if pos is not None:
                             posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0
                             self.summon(p, pt, em, pos, posture, ef)
+                            return
+
+    def common_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard):
+        """
+        特殊条件下，雇员请求常规入场(如契约策略、成功之子等)。
+        :param p: 发起召唤的玩家
+        :param pt: player target 召唤到
+        :param em: 雇员
+        :param ef:
+        :return:
+        """
+        def check_pos(_pos):
+            if _pos not in range(0, 3):
+                return EErrorCode.OVERSTEP
+            if pt.on_field[_pos] is not None:
+                return EErrorCode.INVALID_PUT
+            return 0
+
+        if p.summon_times == 0:
+            return
+        for posture in range(0, 2):
+            for pos in range(0, 3):
+                if pt.on_field[pos] is None:
+                    tp = TimePoint(ETimePoint.TRY_SUMMON, None, [em, pt, pos, posture, 1])
+                    self.enter_time_point(tp)
+                    # 入场被允许
+                    if tp.args[-1]:
+                        p.summon_times -= 1
+                        # 询问入场位置、姿态
+                        pos = p.input(check_pos, 'req_pos', [0, 3])
+                        if pos is not None:
+                            posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0
+                            self.summon(p, pt, em, pos, posture, None)
                             return
             
     def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos):
@@ -1666,7 +1749,7 @@ class Game:
                 s.cover = 0
                 next(cm)
                 # todo: 换s的效果不会出。
-                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, s))
+                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, [s]))
                 self.batch_sending('upd_vc', [s.vid, s.serialize()])
                 self.batch_sending('act_stg', [s.vid], p)
                 self.enter_time_points()

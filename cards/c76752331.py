@@ -2,7 +2,7 @@
 from models.effect import Effect
 from core.game import TimePoint
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation, ECardType
-from utils.common_effects import EffAttackLimit
+from utils.common_effects import EffAttackLimit, EffTriggerCostMixin
 
 
 class E4(EffAttackLimit):
@@ -13,7 +13,7 @@ class E4(EffAttackLimit):
         super().__init__(host=c, can_invalid=False)
 
 
-class E3(Effect):
+class E3(EffTriggerCostMixin):
     """
     受到的伤害减半。
     """
@@ -23,12 +23,6 @@ class E3(Effect):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE and tp.args[1] is self.scr_arg and tp not in self.reacted:
-            return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
             return True
         return False
 
@@ -60,7 +54,7 @@ class E2(Effect):
             for posture in range(0, 2):
                 for pos in range(0, 3):
                     if sd.on_field[pos] is None:
-                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, pos, posture, 1])
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
                         self.game.enter_time_point(tp)
                         # 入场被允许
                         return tp.args[-1]
@@ -83,25 +77,19 @@ class E2(Effect):
             self.host.register_effect(e3, True)
 
 
-class E1(Effect):
+class E1(EffTriggerCostMixin):
     """
-    不能常规入场。
+    不能通过自身效果以外的方式入场。
     """
-    def __init__(self, c):
+    def __init__(self, c, ef):
         super().__init__(desc=EEffectDesc.INVALID, act_phase=EGamePhase.PLAY_CARD,
-                         host=c, trigger=True, force=True)
+                         host=c, trigger=True, force=True, scr_arg=ef)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
             if (tp.args[0] is self.host) & \
-                    (tp.sender is None) & (tp not in self.reacted):
+                    (tp.sender is self.scr_arg) & (tp not in self.reacted):
                 return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
         return False
 
     def execute(self):
@@ -115,6 +103,7 @@ def give(c):
     :param c:
     :return:
     """
-    c.register_effect(E1(c))
-    c.register_effect(E2(c))
+    e2 = E2(c)
+    c.register_effect(e2)
+    c.register_effect(E1(c, e2))
     c.register_effect(E4(c))

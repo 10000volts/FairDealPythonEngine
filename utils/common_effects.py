@@ -208,6 +208,36 @@ class EffProtectProtocol(Effect):
         self.host.remove_effect(self)
 
 
+class EffPerTurn(EffTriggerCostMixin):
+    """
+    每回合1次的效果。
+    """
+
+    def __init__(self, host, ef):
+        super().__init__(desc=EEffectDesc.RESET_TIMES, host=host, trigger=True, force=True,
+                         scr_arg=ef)
+
+    def condition(self, tp):
+        """
+        是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
+        触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
+        :return:
+        """
+        if tp.tp == ETimePoint.TURN_BEGIN:
+            if tp not in self.reacted:
+                return True
+        return False
+
+    def execute(self):
+        """
+        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        调用基类方法进行输出。
+        :return:
+        """
+        if self.scr_arg not in self.host.effects:
+            self.host.register_effect(self.scr_arg)
+
+
 class EffCommonStrategy(Effect):
     """
     常规策略的缺省效果。
