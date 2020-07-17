@@ -19,9 +19,6 @@ class E2(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if not super().condition(tp):
-            return False
-
         if tp.tp == ETimePoint.CARD_PUT and tp.args[2] is self.host\
                 and tp not in self.reacted:
             return True
@@ -39,7 +36,7 @@ class E2(Effect):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
@@ -84,8 +81,6 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if not super().condition(tp):
-            return False
         if tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted:
             tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [self.game.get_player(self.host), 1000, 1])
             self.game.enter_time_point(tp2)
@@ -110,7 +105,7 @@ class E1(Effect):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
@@ -127,5 +122,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

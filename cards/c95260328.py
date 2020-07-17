@@ -17,9 +17,6 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if not super().condition(tp):
-            return False
-
         if tp.tp == ETimePoint.EXTRA_DATA_GENERATED and tp not in self.reacted:
             return True
         return False
@@ -57,5 +54,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

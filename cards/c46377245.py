@@ -8,7 +8,7 @@ class E1(EffSummon):
     询问。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host)
+        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host)
 
     def execute(self):
         """
@@ -31,5 +31,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

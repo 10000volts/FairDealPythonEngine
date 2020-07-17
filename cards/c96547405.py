@@ -9,7 +9,7 @@ class E1(Effect):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.ADDV_CHANGE, act_phase=EGamePhase.EXTRA_DATA,
-                         host=c, trigger=True, force=True)
+                         host=c, trigger=True, force=True, secret=True)
 
     def condition(self, tp):
         """
@@ -17,10 +17,7 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if not super().condition(tp):
-            return False
-
-        if tp.tp == ETimePoint.EXTRA_DATA_GENERATING and tp not in self.reacted:
+        if tp.tp == ETimePoint.EXTRA_DATA_GENERATING and tp.args is self.host and tp not in self.reacted:
             return True
         return False
 
@@ -40,9 +37,7 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
         super().execute()
-        # 变成调查筹码后影响力值归零
         self.host.ATK.change_adv(500)
 
 
@@ -52,5 +47,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

@@ -7,8 +7,8 @@ class E1(EffCommonSummon):
     """
     摧毁场上全部策略。
     """
-    def __init__(self, c):
-        super().__init__(desc=EEffectDesc.DESTROY, c=c)
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.DESTROY, host=host)
 
     def execute(self):
         """
@@ -29,5 +29,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

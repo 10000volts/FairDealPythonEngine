@@ -130,6 +130,14 @@ class GamePlayer:
                     self.update_vc_ano(c)
 
     def shuffle(self, loc=ELocation.HAND):
+        def shu(ls):
+            _len = len(ls) - 1
+            for i in range(0, _len + 1):
+                ind = randint(0, _len)
+                temp = ls[i]
+                ls[i] = ls[ind]
+                ls[ind] = temp
+
         cs = list()
         if loc == ELocation.HAND:
             cs = self.hand
@@ -139,6 +147,7 @@ class GamePlayer:
             cs = self.side
         for c in cs:
             self.game.vid_manager.change(c.vid)
+        shu(cs)
         # g: Game = self.game
         for p in self.game.players:
             p.output('shf', [loc + 2 - self.sp])
@@ -187,11 +196,13 @@ class CardProperty:
         self.card = c
 
     def reset(self):
-        for i in range(0, len(self.op_st)):
+        i = 0
+        while i < len(self.op_st):
             if self.op_st[i] in '+*=+x*x=x':
                 self.op_st.pop(i)
                 self.val_st.pop(i)
                 i -= 1
+            i += 1
         self.update()
 
     def update(self):
@@ -262,14 +273,14 @@ class CardProperty:
         self.update()
         return new_op, x
 
-    def ratio(self, v, perm: bool = False):
+    def plus(self, v, perm: bool = False):
         new_op = '**' if perm else '*'
         self.op_st.append('**' if perm else '*')
         self.val_st.append(v)
         self.update()
         return new_op, v
 
-    def ration_x(self, x, perm: bool = False):
+    def plus_x(self, x, perm: bool = False):
         new_op = '**x' if perm else '*x'
         self.op_st.append('**x' if perm else '*x')
         self.val_st.append(x)
@@ -1090,6 +1101,8 @@ class Game:
                     if _c is None:
                         return EErrorCode.DONT_EXIST
                     if _c.cover:
+                        if not _c.effects[0].condition(None):
+                            return EErrorCode.FORBIDDEN_STRATEGY
                         _tp = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [c, 1])
                         self.enter_time_point(_tp)
                         if not _tp.args[-1]:
@@ -1137,11 +1150,11 @@ class Game:
                                 (not ((c.type == ECardType.STRATEGY) & (c.location & ELocation.ON_FIELD > 0) &
                                  c.cover)):
                             for ef in c.effects:
-                                if (not ef.trigger) and ef.condition(None):
+                                if (not ef.trigger) and ef.condition(TimePoint(ETimePoint.ASK4EFFECT)):
                                     efs.append(ef)
                     _len = len(efs)
                     if _len:
-                        self.turn_player.output('req_rct')
+                        self.turn_player.output('req_rct', [ETimePoint.ASK4EFFECT])
                         if self.turn_player.input(lambda yn: 0, 'req_yn'):
                             ef_ind = self.turn_player.free_input(
                                 check_ind,
@@ -1238,9 +1251,9 @@ class Game:
         self.batch_sending('ent_tph', [ph], self.turn_player)
         self.turn_phase = ph
         if ph == ETurnPhase.BEGINNING:
-            self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
             # 重置次数
             self.__beginning()
+            self.enter_time_point(TimePoint(ETimePoint.TURN_BEGIN))
         elif ph == ETurnPhase.DP:
             self.enter_time_point(TimePoint(ETimePoint.DP_BEGIN))
             self.__tph_draw_card()
@@ -1255,6 +1268,7 @@ class Game:
         elif ph == ETurnPhase.M2:
             self.enter_time_point(TimePoint(ETimePoint.M2_BEGIN))
         elif ph == ETurnPhase.ENDING:
+            self.enter_time_point(TimePoint(ETimePoint.TURN_ENDING))
             self.enter_time_point(TimePoint(ETimePoint.TURN_END))
             # 场上全部卡历经回合数+1
             self.__ending()
@@ -1262,12 +1276,11 @@ class Game:
     def __beginning(self):
         self.turns += 1
         # 重置可召唤、适用策略次数。
-        for p in self.players:
-            p.summon_times = 1
-            p.strategy_times = 1
-            for c in p.on_field:
-                if c is not None and c.type == ECardType.EMPLOYEE:
-                    c.reset_times()
+        self.turn_player.summon_times = 1
+        self.turn_player.strategy_times = 1
+        for c in self.turn_player.on_field:
+            if c is not None and c.type == ECardType.EMPLOYEE:
+                c.reset_times()
 
     def __ending(self):
         for p in self.players:
@@ -1354,7 +1367,7 @@ class Game:
                         else:
                             p_react_list.append(ef)
             if len(p_react_list) > 0 or not p.auto_skip:
-                p.output('req_rct')
+                p.output('req_rct', [tp.tp])
                 if p.input(check_yn, 'req_yn'):
                     ind_max = len(p_react_list)
                     p_react_ef_ind = p.free_input(
@@ -1369,8 +1382,11 @@ class Game:
                         f = True
                 else:
                     p.can_react = 0
-            if itor | f:
+            if itor:
                 self.react(self.players[p.sp], tp, False)
+            if f:
+                self.react(self.players[p.sp], tp, False)
+                self.react(p, tp, False)
             self.react_times -= 1
         # 连锁完成，重置可连锁状态
         if self.react_times == 0:
@@ -1590,13 +1606,13 @@ class Game:
                     em.cover = 0
                     em.posture = (posture == 1)
                     next(cm)
+                    # 重置攻击、阻挡次数
+                    em.reset_times()
                     # todo: 换em的效果不会出。
                     self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_SUMMON, ef, [em, pos, posture]))
                     self.batch_sending('upd_vc', [em.vid, em.serialize()])
                     self.batch_sending('smn', [em.vid, int(ef is None)], p)
                     self.enter_time_points()
-                    # 重置攻击、阻挡次数
-                    em.reset_times()
 
     def special_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard, ef: Effect):
         """
@@ -1622,9 +1638,9 @@ class Game:
                     # 入场被允许
                     if tp.args[-1]:
                         # 询问入场位置、姿态
-                        pos = p.input(check_pos, 'req_num', [0, 3])
+                        pos = p.input(check_pos, 'req_pos', [0, 3])
                         if pos is not None:
-                            posture = p.input(lambda x: 0, 'req_num', [0, 2]) > 0
+                            posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0
                             self.summon(p, pt, em, pos, posture, ef)
                             return
             
@@ -1742,7 +1758,7 @@ class Game:
 
     def deal_damage(self, sender: GameCard, target: GameCard, damage: int, ef: Effect = None):
         """
-        造成伤害。
+        造成伤害。注意：等于0时并不会被无效(因为需要呈现-0的伤害值给玩家作反馈)。
         :param sender: 伤害来源。
         :param target: 目标。
         :param damage: 伤害量。

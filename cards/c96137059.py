@@ -7,8 +7,8 @@ class E1(EffCommonStrategy):
     """
     摧毁指定的卡。
     """
-    def __init__(self, c):
-        super().__init__(desc=EEffectDesc.DESTROY, c=c)
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.DESTROY, host=host)
 
     def condition(self, tp):
         """
@@ -16,7 +16,7 @@ class E1(EffCommonStrategy):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        return self.game.get_player(self.host).leader.DEF.value <= self.host.ATK.value
+        return (tp is None) & (self.game.get_player(self.host).leader.DEF.value <= self.host.ATK.value)
 
     def execute(self):
         """
@@ -31,7 +31,7 @@ class E1(EffCommonStrategy):
             return c.location & ELocation.ON_FIELD
 
         # 摧毁选择的卡
-        tgt = self.game.choose_target(func, self.host, self)
+        tgt = self.game.choose_target(func, self)
         if tgt is not None:
             self.game.destroy(self.host, tgt, self)
 
@@ -42,5 +42,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

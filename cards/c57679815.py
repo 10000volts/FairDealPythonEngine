@@ -7,8 +7,8 @@ class E1(EffCommonStrategy):
     """
     ATK+EFF。
     """
-    def __init__(self, c):
-        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, c=c)
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host)
 
     def execute(self):
         """
@@ -34,5 +34,4 @@ def give(c):
     :param c:
     :return:
     """
-    e1 = E1(c)
-    c.register_effect(e1)
+    c.register_effect(E1(c))

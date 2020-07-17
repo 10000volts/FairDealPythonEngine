@@ -37,11 +37,13 @@ class EEffectDesc:
     # HP回复
     HEAL = 2
     # 造成伤害
-    CAUSE_DAMAGE = 3
+    DEAL_DAMAGE = 3
     # 伤害增减
     DAMAGE_CHANGE = 4
+    # 额外机会
+    EXTRA_CHANCE = 10
     # ATK上升
-    PROPERTY_CHANGE = 30
+    ATK_GAIN = 30
     # 赋予效果
     REGISTER_EFFECT = 31
     # 变为调查筹码
@@ -56,6 +58,14 @@ class EEffectDesc:
     SPECIAL_SUMMON = 36
     # 移除效果
     REMOVE_EFFECT = 37
+    # 无效化
+    INVALID = 38
+    # ATK变化
+    ATK_CHANGE = 39
+    # 保护协议
+    PROTECT_PROTOCOL = 40
+    # 持续时间结束
+    EFFECT_END = 41
 
 
 class ELocation:
@@ -279,16 +289,16 @@ class ETimePoint:
     M1_BEGIN = 136
     # 战斗阶段1开始时 在此时点发动效果的卡：
     #
-    BP1_BEGIN=137
+    BP1_BEGIN = 137
     # 主要阶段2开始时 在此时点发动效果的卡：
     #
-    M2_BEGIN=138
-    # 回合结束时 在此时点发动效果的卡：
-    # 巨额现金流……
+    M2_BEGIN = 138
+    # 回合将结束时 在此时点发动效果的卡：
+    # 传奇骇客 此时点中放置可选发动的触发效果，不然可能无法达成预期(比如传奇骇客+继承+超人老爹的combo)。
+    TURN_ENDING = 140
+    # 回合结束后 在此时点发动效果的卡：
+    # 巨额现金流…… 此时点中放置必发的触发效果。
     TURN_END = 139
-    # 游戏将结束时 在此时点发动效果的卡：
-    # 蓝图设计者
-    # GAME_ENDING = 140
     # 尝试攻击宣言 在此时点发动效果的卡：
     # 不能发动攻击的雇员
     # args[0]: 攻击者
@@ -313,6 +323,7 @@ class ETimePoint:
     # TRY_DESTROY=146
     # 被摧毁时 在此时点发动效果的卡：
     # 首席隐私执行官、高级易容、贴身保镖……
+    # args[0]: 摧毁者 args[1]: 目标
     DESTROYING = 146
     # 被摧毁后 在此时点发动效果的卡：
     # 救火队长……
@@ -493,11 +504,11 @@ class ETimePoint:
     RESET_TIMES = 203
     # 造成伤害时 在此时点发动效果的卡：
     # 减弱/增加伤害的卡
-    # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量
+    # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量，可能是0
     DEALING_DAMAGE = 204
     # 造成伤害后 在此时点发动效果的卡：
     # 事不过三
-    # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量
+    # args[0]: 伤害来源 args[1]: 目标 args[2]: 伤害量，可能是0
     DEALT_DAMAGE = 205
     # 尝试支付生命力 在此时点发动效果的卡：
     #
@@ -559,3 +570,7 @@ class ETimePoint:
     #
     # args[0]: 目标
     CHANGED_POSTURE = 220
+    # 询问主动效果 在此时点发动效果的卡：
+    # 洛斯(从场下入场)、轮休(从场下移除)……
+    # args[0]: 目标
+    ASK4EFFECT = 221

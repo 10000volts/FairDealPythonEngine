@@ -6,9 +6,9 @@ class Effect:
     单个卡片效果的抽象。
     """
 
-    def __init__(self, desc: EEffectDesc, act_phase: EGamePhase,
-                 host, trigger=False, force=False,
-                 secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None):
+    def __init__(self, desc: EEffectDesc, host,
+                 act_phase: EGamePhase=EGamePhase.PLAY_CARD, trigger=False, force=False,
+                 secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None, can_invalid=True):
         """
 
         :param desc:
@@ -19,8 +19,9 @@ class Effect:
         :param secret: 是否为秘密效果(发动对玩家不可见)。
         :param scr_arg: 秘密参数。
         :param no_src:
-        :param no_reset: 不会被重置。
+        :param no_reset: 不会被重置，且这类效果也不会被无效(这方面和can_invalid作用相同)。
         :param ef_id: 效果id，用于限制发动。
+        :param can_invalid: 是否能被无效
         """
         self.description = desc
         # 该效果能发动的阶段
@@ -41,6 +42,7 @@ class Effect:
         # 已经连锁过的时点。每个效果不能重复连锁单一时点。
         self.reacted = list()
         self.ef_id = ef_id
+        self.can_invalid = can_invalid
 
     def condition(self, tp):
         """
@@ -55,7 +57,7 @@ class Effect:
         #     for tp in self.try_tp:
         #         if not tp.args[-1]:
         #             return False
-        return self.game.phase_now == self.act_phase
+        return True
 
     def cost(self, tp):
         """
