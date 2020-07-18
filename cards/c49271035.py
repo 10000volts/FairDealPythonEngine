@@ -82,9 +82,10 @@ class E1(Effect):
         :return:
         """
         if tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted:
-            tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [self.game.get_player(self.host), 1000, 1])
+            p = self.game.get_player(self.host)
+            tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 1000, 1])
             self.game.enter_time_point(tp2)
-            if tp2.args[-1]:
+            if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
                 return True
         return False
 

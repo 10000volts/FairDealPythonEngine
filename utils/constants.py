@@ -72,6 +72,8 @@ class EEffectDesc:
     FORBIDDEN = 43
     # 常规入场
     SUMMON = 44
+    # 穿透
+    PIERCE = 45
 
 
 class ELocation:
@@ -337,75 +339,99 @@ class ETimePoint:
     DESTROYED = 147
     # 离场时 在此时点发动效果的卡：
     # 主要用于辅助判断如"从手牌入场时..."的条件
+    # args[0]: 卡 args[1]: 区域代码
     OUT_FIELD = 148
     # 离场后 在此时点发动效果的卡：
     # 堆笑推销员
+    # args[0]: 卡 args[1]: 区域代码
     OUT_FIELD_END = 149
     # 离开手牌时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_HAND = 150
     # 离开手牌后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_HAND_END = 151
     # 离开主卡组时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_DECK = 152
     # 离开主卡组后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_DECK_END = 153
     # 离开副卡组时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_SIDE = 154
     # 离开副卡组后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_SIDE_END = 155
     # 离开墓地时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_GRAVE = 156
     # 离开墓地后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_GRAVE_END = 157
     # 离开移除区时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_EXILED = 158
     # 离开移除区后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     OUT_EXILED_END = 159
     # 入场时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_FIELD = 160
     # 入场后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_FIELD_END = 161
     # 加入手牌时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_HAND = 162
     # 加入手牌后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_HAND_END = 163
     # 加入主卡组时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_DECK = 164
     # 加入主卡组后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_DECK_END = 165
     # 加入副卡组时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_SIDE = 166
     # 加入副卡组后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_SIDE_END = 167
     # 加入墓地时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_GRAVE = 168
     # 加入墓地后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_GRAVE_END = 169
     # 加入移除区时 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_EXILED = 170
     # 加入移除区后 在此时点发动效果的卡：
     #
+    # args[0]: 卡 args[1]: 区域代码
     IN_EXILED_END = 171
     # 尝试丢弃手牌 在此时点发动效果的卡：
     #

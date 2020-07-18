@@ -88,7 +88,7 @@ class E1(EffTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
             if (tp.args[0] is self.host) & \
-                    (tp.sender is self.scr_arg) & (tp not in self.reacted):
+                    (tp.sender is not self.scr_arg) & (tp not in self.reacted):
                 return True
         return False
 

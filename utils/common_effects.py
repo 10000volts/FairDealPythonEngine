@@ -278,7 +278,7 @@ class EffSummon(Effect):
         return False
 
 
-class EffCommonSummon(Effect):
+class EffCommonSummon(EffTriggerCostMixin):
     """
     常规入场后效果模板。
     """
@@ -297,12 +297,32 @@ class EffCommonSummon(Effect):
             return True
         return False
 
-    def cost(self, tp):
+
+class EffPierce(EffTriggerCostMixin):
+    """
+    常规入场后效果模板。
+    """
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.PIERCE, host=host, trigger=True, force=True)
+
+    def condition(self, tp):
         """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
+        是否满足该效果发动的前提条件。尝试进行……效果的时点应在此处进行。
+        触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if self.condition(tp):
-            self.reacted.append(tp)
+        if tp.tp == ETimePoint.ATTACK_DAMAGE_JUDGE and tp.args[0] is self.host and tp not in self.reacted:
             return True
         return False
+
+    def execute(self):
+        # 输出
+        super().execute()
+        tp = self.reacted.pop()
+        # 修改战斗伤害
+        tp.args[2] = self.host.ATK.value
+        # 防御姿态
+        if tp.args[1].posture:
+            tp.args[2] -= tp.args[1].DEF.value
+        else:
+            tp.args[2] -= tp.args[1].ATK.value

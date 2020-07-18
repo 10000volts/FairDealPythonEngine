@@ -1,4 +1,5 @@
 # 龙骑士 盖亚Coser
+from utils.common_effects import EffPierce
 
 
 def give(c):
@@ -7,4 +8,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(EffPierce(c))

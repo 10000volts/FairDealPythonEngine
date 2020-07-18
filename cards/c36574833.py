@@ -43,7 +43,7 @@ class E1(Effect):
             if self.host in p.hand:
                 tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, int(p.leader.DEF.value / 2), 1])
                 self.game.enter_time_point(tp2)
-                if tp2.args[-1]:
+                if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
                     if p.summon_times == 0:
                         return False
                     for posture in range(0, 2):

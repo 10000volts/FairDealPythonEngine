@@ -581,10 +581,10 @@ class GameCard:
             etp2, etp4, _to = enter()
             f = True
             if etp1:
-                tp1 = TimePoint(etp1, ef, [self, 1])
+                tp1 = TimePoint(etp1, ef, [self, self.location, 1])
                 self.game.temp_tp_stack.append(tp1)
                 f = tp1.args[-1]
-            tp2 = TimePoint(etp2, ef, [self, 1])
+            tp2 = TimePoint(etp2, ef, [self, loc, 1])
             self.game.temp_tp_stack.append(tp2)
             yield True
             yield f & tp2.args[-1]
@@ -594,13 +594,14 @@ class GameCard:
             elif _from:
                 _from.remove(self)
             # 进入, 入场的具体位置不在这里处理
+            pre_loc = self.location
             self.location = loc
             if (loc & ELocation.ON_FIELD) == 0:
                 _to.append(self)
             if etp3:
-                tp3 = TimePoint(etp3, ef, self)
+                tp3 = TimePoint(etp3, ef, [self, pre_loc])
                 self.game.temp_tp_stack.append(tp3)
-            tp4 = TimePoint(etp4, ef, self)
+            tp4 = TimePoint(etp4, ef, [self, loc])
             self.game.temp_tp_stack.append(tp4)
             yield True
         else:
@@ -1216,7 +1217,7 @@ class Game:
                                 'req_chs_eff', [[[ef.host.vid, ef.description] for ef in efs]])
                             # 发动了效果。
                             if ef_ind is not None:
-                                self.activate_effect(efs[ef_ind])
+                                self.activate_effect(efs[ef_ind], TimePoint(ETimePoint.ASK4EFFECT))
                 # set 将手牌盖放到场上
                 elif cmd[0] == 2:
                     c = self.turn_player.hand[cmd[1]]
@@ -1484,16 +1485,20 @@ class Game:
                 return c
         return target
 
-    def activate_effect(self, ef):
+    def activate_effect(self, ef, t: TimePoint = None):
         """
         启动效果。(cost+execute)
         :param ef:
+        :param t: 指定时点，用于询问主动效果。
         :return:
         """
-        if len(self.tp_stack):
-            tp = self.tp_stack[-1]
+        if t:
+            tp = t
         else:
-            tp = None
+            if len(self.tp_stack):
+                tp = self.tp_stack[-1]
+            else:
+                tp = None
         if ef.cost(tp):
             if ef.secret:
                 ef.execute()
