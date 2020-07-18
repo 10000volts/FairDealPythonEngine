@@ -1,5 +1,4 @@
 # 帮派成员
-from core.game import TimePoint
 from utils.constants import EEffectDesc, ETimePoint, ECardType, ELocation
 from utils.common_effects import EffCommonSummon
 
