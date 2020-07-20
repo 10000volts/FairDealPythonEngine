@@ -9,9 +9,9 @@ class E2(Effect):
     """
     调查筹码。
     """
-    def __init__(self, ef):
+    def __init__(self, host):
         super().__init__(desc=EEffectDesc.WEAK_INVESTIGATE, act_phase=EGamePhase.PUT_CARD,
-                         host=ef.host, trigger=True, force=True)
+                         host=host, trigger=True, force=True)
 
     def condition(self, tp):
         """
@@ -114,7 +114,7 @@ class E1(Effect):
         super().execute()
         # 变成调查筹码后影响力值归零
         self.host.ATK.add_val = 0
-        self.host.register_effect(E2(self), True)
+        self.host.register_effect(E2(self.host), True)
 
 
 def give(c):

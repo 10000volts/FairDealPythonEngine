@@ -1,5 +1,5 @@
 # 新人策划
-from utils.constants import EEffectDesc, ETimePoint
+from utils.constants import EEffectDesc
 from utils.common_effects import EffSummon, EffNextTurnMixin
 
 

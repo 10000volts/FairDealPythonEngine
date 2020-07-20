@@ -1,7 +1,5 @@
 # 净心禅师
-from models.effect import Effect
-from core.game import TimePoint
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation, ECardType
+from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 from utils.common_effects import EffTriggerCostMixin, EffPerTurn, EffSummon
 
 

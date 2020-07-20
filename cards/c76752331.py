@@ -1,7 +1,7 @@
 # 你的超人老爹
 from models.effect import Effect
 from core.game import TimePoint
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation, ECardType
+from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffAttackLimit, EffTriggerCostMixin
 
 
@@ -18,7 +18,7 @@ class E3(EffTriggerCostMixin):
     受到的伤害减半。
     """
     def __init__(self, c, p):
-        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, act_phase=EGamePhase.PLAY_CARD,
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE,
                          host=c, trigger=True, force=True, scr_arg=p, no_reset=True)
 
     def condition(self, tp):
@@ -38,8 +38,7 @@ class E2(Effect):
     从手牌入场。
     """
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, act_phase=EGamePhase.PLAY_CARD,
-                         host=c)
+        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=c)
 
     def condition(self, tp):
         """
@@ -82,7 +81,7 @@ class E1(EffTriggerCostMixin):
     不能通过自身效果以外的方式入场。
     """
     def __init__(self, c, ef):
-        super().__init__(desc=EEffectDesc.INVALID, act_phase=EGamePhase.PLAY_CARD,
+        super().__init__(desc=EEffectDesc.INVALID,
                          host=c, trigger=True, force=True, scr_arg=ef)
 
     def condition(self, tp):

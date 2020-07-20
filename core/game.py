@@ -1157,6 +1157,9 @@ class Game:
                     if _c is None:
                         return EErrorCode.DONT_EXIST
                     if _c.cover:
+                        # 反制策略不能直接发动。
+                        if _c.subtype & EStrategyType.COUNTER:
+                            return EErrorCode.PLAY_COUNTER
                         if not _c.effects[0].condition(None):
                             return EErrorCode.FORBIDDEN_STRATEGY
                         _tp = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [c, 1])
@@ -1284,20 +1287,13 @@ class Game:
                         else:
                             # 先消耗次数
                             c.posture_times -= 1
-                            tp = TimePoint(ETimePoint.CHANGING_POSTURE, None, [c, 1])
-                            self.batch_sending('crd_cp', [c.vid])
-                            self.enter_time_point(tp)
-                            if tp.args[-1]:
-                                c.posture = not c.posture
-                                self.batch_sending('upd_vc', [c.vid, c.serialize()])
-                            self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))
+                            self.change_posture(self.turn_player, c, not c.posture)
                     elif c.type == ECardType.STRATEGY:
-                        self.turn_player.strategy_times -= 1
                         tp = TimePoint(ETimePoint.UNCOVERING_STRATEGY, None, [c, 1])
                         self.enter_time_point(tp)
                         if tp.args[-1]:
                             self.activate_strategy(self.turn_player, self.turn_player, c, cmd[1])
-                        self.enter_time_point(TimePoint(ETimePoint.UNCOVERED_EM, None, [c]))
+                        self.enter_time_point(TimePoint(ETimePoint.UNCOVERED_STRATEGY, None, [c]))
 
     def next_turn_phase(self):
         for p in self.turn_process:
@@ -1849,6 +1845,31 @@ class Game:
             self.batch_sending('crd_snd2grv', [c.vid], p)
             self.enter_time_points()
 
+    def send2hand(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+        """
+        送去手牌。
+        :param p:
+        :param pt: 送去目标玩家的手牌。
+        :param c:
+        :param ef:
+        :return:
+        """
+        cov = c.cover
+        cm = c.move_to(ef, ELocation.HAND + 2 - pt.sp)
+        next(cm)
+        self.enter_time_points()
+        if next(cm):
+            next(cm)
+            for pi in self.players:
+                if (not cov) | (pi is pt):
+                    pi.output('upd_vc', [c.vid, c.serialize()])
+                else:
+                    pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+            # todo: 换c的效果不会出。
+            self.batch_sending('crd_snd2hnd', [c.vid], p)
+            self.enter_time_points()
+            pt.shuffle()
+
     def deal_damage(self, sender: GameCard, target: GameCard, damage: int, ef: Effect = None):
         """
         造成伤害。注意：等于0时并不会被无效(因为需要呈现-0的伤害值给玩家作反馈)。
@@ -1867,6 +1888,27 @@ class Game:
             # todo: 是特性，不是bug。
             self.batch_sending('dmg', [target.vid, damage], self.get_player(sender))
             self.enter_time_point(TimePoint(ETimePoint.DEALT_DAMAGE, ef, [sender, target, damage]))
+
+    def heal(self, sender: GameCard, target: GameCard, value: int, ef: Effect):
+        """
+        回复。注意：等于0时并不会被无效(因为需要呈现+0的值给玩家作反馈)。
+        :param sender: 来源。
+        :param target: 目标。
+        :param value: 回复量。
+        :param ef:
+        :return:
+        """
+        print('heal {}'.format(value))
+        tp = TimePoint(ETimePoint.HEALING, ef, [sender, target, value, 1])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            sender, target, value = tp.args[:-1]
+            print('hea {}'.format(value))
+            # gain会通知客户端。
+            target.DEF.gain(value)
+            # todo: 是特性，不是bug。
+            self.batch_sending('hea', [target.vid, value], self.get_player(sender))
+            self.enter_time_point(TimePoint(ETimePoint.HEALED, ef, [sender, target, value]))
 
     def destroy(self, sender: GameCard, target: GameCard, ef: Effect = None):
         """
@@ -1940,3 +1982,60 @@ class Game:
                     return None
             return self.vid_manager.get_card(cs[ind])
         return None
+
+    def discard(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect):
+        """
+        丢弃指定的手牌。
+        :param p: 效果发起者。
+        :param pt: 目标玩家
+        :param c: 要丢弃的卡。
+        :param ef:
+        :return:
+        """
+        tp = TimePoint(ETimePoint.DISCARDING, ef, [c, 1])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            if c in pt.hand:
+                self.send_to_grave(p, pt, c, ef)
+                self.enter_time_point(TimePoint(ETimePoint.DISCARDED, ef, [c]))
+                return True
+        return False
+
+    def req4discard(self, p: GamePlayer, count, ef: Effect):
+        """
+        选择指定的手牌丢弃。
+        :param p: 效果发起者。
+        :param count: 丢弃数量
+        :param ef:
+        :return:
+        """
+        def check_discard(c):
+            if c in p.hand:
+                tp = TimePoint(ETimePoint.TRY_DISCARD, ef, [c, 1])
+                self.enter_time_point(tp)
+                if tp.args[-1]:
+                    return True
+
+        # 选择1张卡丢弃
+        tgt = self.choose_target(check_discard, ef, False, False)
+        if tgt is not None:
+            self.discard(p, p, tgt, ef)
+            return True
+        return False
+
+    def change_posture(self, p: GamePlayer, c: GameCard, pst, ef: Effect = None):
+        """
+        改变至指定的姿态。
+        :param p: 效果发起者。
+        :param c: 要改变姿态的卡。
+        :param pst: 改变至……姿态。
+        :param ef:
+        :return:
+        """
+        tp = TimePoint(ETimePoint.CHANGING_POSTURE, None, [c, 1])
+        self.batch_sending('crd_cp', [c.vid])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            c.posture = pst
+            self.batch_sending('upd_vc', [c.vid, c.serialize()])
+        self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))

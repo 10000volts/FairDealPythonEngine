@@ -38,6 +38,8 @@ class EEffectDesc:
     DEAL_DAMAGE = 3
     # 伤害增减
     DAMAGE_CHANGE = 4
+    # HP减少
+    HP_LOST = 5
     # 额外机会
     EXTRA_CHANCE = 10
     # 重置次数
@@ -74,6 +76,20 @@ class EEffectDesc:
     SUMMON = 44
     # 穿透
     PIERCE = 45
+    # 送去场下
+    SEND2GRAVE = 46
+    # 加入手牌
+    SEND2HAND = 47
+    # 移除
+    SEND2EXILED = 48
+    # 加入卡组
+    SEND2DECK = 49
+    # 加入副卡组
+    SEND2SIDE = 50
+    # 丢弃手牌
+    DISCARD = 51
+    # 改变姿态
+    CHANGE_POSTURE = 52
 
 
 class ELocation:
@@ -142,7 +158,7 @@ class EErrorCode:
     FORBIDDEN_SUMMON = 5
     # 无法进行这次策略的发动。(不满足发动条件或被禁止)
     FORBIDDEN_STRATEGY = 6
-    # 反制策略必须先在场上盖放1回合才能发动。
+    # 反制策略需要满足一定条件才能发动。
     PLAY_COUNTER = 7
     # 使用超过次数限制。
     TIMES_LIMIT = 8
@@ -226,7 +242,7 @@ class ETimePoint:
     #
     PH_TAKE_CARD = 75
     # 对筹码的一次取走操作完成后 在此时点发动效果的卡：
-    #
+    # args: 卡
     CARD_TOOK = 80
     # 取走阶段结束时 在此时点发动效果的卡：
     #
@@ -435,12 +451,15 @@ class ETimePoint:
     IN_EXILED_END = 171
     # 尝试丢弃手牌 在此时点发动效果的卡：
     #
+    # args[0]: 丢弃的卡
     TRY_DISCARD = 172
     # 丢弃手牌时 在此时点发动效果的卡：
     #
+    # args[0]: 丢弃的卡
     DISCARDING = 173
     # 被丢弃后 在此时点发动效果的卡：
     #
+    # args[0]: 丢弃的卡
     DISCARDED = 174
     # 尝试奉献 在此时点发动效果的卡：
     #
@@ -607,3 +626,15 @@ class ETimePoint:
     # 洛斯(从场下入场)、轮休(从场下移除)……
     # args[0]: 目标
     ASK4EFFECT = 221
+    # 尝试回复生命 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    TRY_HEAL = 222
+    # 回复生命时 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    HEALING = 223
+    # 回复生命后 在此时点发动效果的卡：
+    #
+    # args[0]: 目标
+    HEALED = 224

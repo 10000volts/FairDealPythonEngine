@@ -249,6 +249,83 @@ class EffCommonStrategy(Effect):
         return tp is None
 
 
+class EffCounterStgE1Mixin(EffTriggerCostMixin):
+    """
+    反制策略的E2效果，用来触发其真正效果。
+    """
+    def condition(self, tp):
+        return tp is not None and tp.tp != ETimePoint.ASK4EFFECT
+
+
+class EffCounterStgE2Mixin(Effect):
+    """
+    反制策略的E2效果，用来触发其真正效果。
+    """
+    def execute(self):
+        from core.game import TimePoint
+        tp = TimePoint(ETimePoint.UNCOVERING_STRATEGY, None, [self.host, 1])
+        self.game.enter_time_point(tp)
+        if tp.args[-1]:
+            p = self.game.get_player(self.host)
+            # 向真正的效果传递时点信息
+            self.scr_arg[0].scr_arg[0] = tp
+            self.game.activate_strategy(p, p, self.host, self.host.inf_pos)
+        self.game.enter_time_point(TimePoint(ETimePoint.UNCOVERED_STRATEGY, None, [self.host]))
+
+
+class EffSingleStgE1Mixin(EffTriggerCostMixin):
+    """
+    单人策略的E1效果模板，代表其发动时必须指定1目标。
+    """
+    def condition(self, tp):
+        from core.game import TimePoint
+        if tp is None:
+            # 场上存在可以成为效果对象的雇员
+            for p in self.game.players:
+                for c in p.on_field:
+                    if c is not None:
+                        if c.type == ECardType.EMPLOYEE:
+                            # 模拟选择。
+                            t = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, self, [c, 1])
+                            self.game.enter_time_point(t)
+                            if t.args[-1]:
+                                return True
+        return False
+
+
+class EffSingleStgE2(EffTriggerCostMixin):
+    """
+    单人策略的E2效果，代表其所属雇员离场后其送去场下。
+    """
+    def __init__(self, host, scr_arg):
+        super().__init__(desc=EEffectDesc.SEND2GRAVE, host=host, trigger=True,
+                         force=True, can_invalid=False, scr_arg=scr_arg)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.OUT_FIELD_END:
+            print('con')
+            return (tp.args[0] is self.scr_arg[0]) & (tp not in self.reacted)
+        return False
+
+    def execute(self):
+        p = self.game.get_player(self.host)
+        self.game.send_to_grave(p, p, self.host)
+
+
+class EffSingleStgE3Mixin(EffTriggerCostMixin):
+    """
+    单人策略的E3效果，代表送去场下后移除之前生效的效果。
+    """
+    def __init__(self, host, scr_arg):
+        super().__init__(desc=EEffectDesc.EFFECT_END, host=host, trigger=True,
+                         force=True, scr_arg=scr_arg)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.OUT_FIELD_END:
+            return (tp.args[0] is self.host) & (tp not in self.reacted)
+        return False
+
+
 class EffSummon(Effect):
     """
     入场后效果模板。

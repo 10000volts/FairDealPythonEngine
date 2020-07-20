@@ -1,8 +1,6 @@
 # 涨薪
-from core.game import TimePoint
-from models.effect import Effect
-from utils.common_effects import EffCommonStrategy, EffTurnEndMixin
-from utils.constants import EEffectDesc, ECardType, ETimePoint, ELocation, EGamePhase
+from utils.common_effects import EffSingleStgE1Mixin, EffTurnEndMixin
+from utils.constants import EEffectDesc, ECardType, ELocation, EGamePhase
 
 
 class E2(EffTurnEndMixin):
@@ -18,26 +16,12 @@ class E2(EffTurnEndMixin):
         self.host.remove_effect(self)
 
 
-class E1(EffCommonStrategy):
+class E1(EffSingleStgE1Mixin):
     """
     ATK+EFF(至少500)。
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.ATK_GAIN, host=host)
-
-    def condition(self, tp):
-        if tp is None:
-            # 场上存在可以成为效果对象的雇员
-            for p in self.game.players:
-                for c in p.on_field:
-                    if c is not None:
-                        if c.type == ECardType.EMPLOYEE:
-                            # 模拟选择。
-                            t = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, self, [c, 1])
-                            self.game.enter_time_point(t)
-                            if t.args[-1]:
-                                return True
-        return False
 
     def execute(self):
         """
