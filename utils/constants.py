@@ -27,6 +27,17 @@ class EStrategyType:
     BACKGROUND = 32
 
 
+class EChoice:
+    # 影响攻击力(对症下药、人言可畏)
+    CHANGE_ATK = 0
+    # 影响防御力(对症下药)
+    CHANGE_DEF = 1
+    # 回复生命(人言可畏)
+    HEAL = 2
+    # 造成伤害(人言可畏)
+    DEAL_DAMAGE = 3
+
+
 class EEffectDesc:
     # 无法描述
     INDESCRIBABLE = 0
@@ -90,6 +101,8 @@ class EEffectDesc:
     DISCARD = 51
     # 改变姿态
     CHANGE_POSTURE = 52
+    # 属性变化
+    PROPERTY_CHANGE = 53
 
 
 class ELocation:
@@ -638,3 +651,7 @@ class ETimePoint:
     #
     # args[0]: 目标
     HEALED = 224
+    # 风行检查 在此时点发动效果的卡：
+    # 风行雇员
+    # 在此时点，风行雇员暂时把自己的charge属性设置为True。
+    CHARGE_CHECK = 224

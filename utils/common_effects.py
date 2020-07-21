@@ -268,7 +268,7 @@ class EffCounterStgE2Mixin(Effect):
         if tp.args[-1]:
             p = self.game.get_player(self.host)
             # 向真正的效果传递时点信息
-            self.scr_arg[0].scr_arg[0] = tp
+            self.scr_arg[0].scr_arg[0] = self.reacted.pop()
             self.game.activate_strategy(p, p, self.host, self.host.inf_pos)
         self.game.enter_time_point(TimePoint(ETimePoint.UNCOVERED_STRATEGY, None, [self.host]))
 

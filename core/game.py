@@ -129,6 +129,25 @@ class GamePlayer:
                 for c in p.hand:
                     self.update_vc_ano(c)
 
+    def req4option(self, option: list, count=1, force=False):
+        """
+        从给定的选项中选择。
+        :param count:
+        :param force:
+        :param option:
+        :return:
+        """
+        def check(*_ind):
+            for i in _ind:
+                if i not in range(0, _len):
+                    return EErrorCode.OVERSTEP
+            return 0
+        _len = len(option)
+        if force:
+            return self.input(check, 'req_chs', [option, count])
+        else:
+            return self.free_input(check, 'req_chs', [option, count])
+
     def shuffle(self, loc=ELocation.HAND):
         def shu(ls):
             _len = len(ls) - 1
@@ -1244,8 +1263,11 @@ class Game:
                     tp = TimePoint(ETimePoint.TRY_ATTACK, None, [attacker, self.op_player.leader, 1])
                     self.enter_time_point(tp)
                     # 入场回合默认不能直接攻击对方领袖。
+                    # 风行检查
+                    self.enter_time_point(TimePoint(ETimePoint.CHARGE_CHECK, None, attacker))
                     if tp.args[-1] & ((attacker.charge | attacker.turns) > 0):
                         atk_tgt.append(self.op_player.leader.vid)
+                        attacker.charge = False
                     _len = len(atk_tgt)
                     tgt_ind = self.turn_player.free_input(check_ind, 'req_atk', [atk_tgt])
                     if tgt_ind is None:
@@ -1702,11 +1724,11 @@ class Game:
 
     def common_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard):
         """
-        特殊条件下，雇员请求常规入场(如契约策略、成功之子等)。
+        特殊条件下，雇员请求常规入场(如契约策略、成功之子等)，不判断是否还有剩余次数(但会减少)。
         :param p: 发起召唤的玩家
         :param pt: player target 召唤到
         :param em: 雇员
-        :param ef:
+        :param force:
         :return:
         """
         def check_pos(_pos):
@@ -1715,9 +1737,7 @@ class Game:
             if pt.on_field[_pos] is not None:
                 return EErrorCode.INVALID_PUT
             return 0
-
-        if p.summon_times == 0:
-            return
+        p.summon_times -= 1
         for posture in range(0, 2):
             for pos in range(0, 3):
                 if pt.on_field[pos] is None:
@@ -1725,13 +1745,14 @@ class Game:
                     self.enter_time_point(tp)
                     # 入场被允许
                     if tp.args[-1]:
-                        p.summon_times -= 1
                         # 询问入场位置、姿态
                         pos = p.input(check_pos, 'req_pos', [0, 3])
                         if pos is not None:
                             posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0
                             self.summon(p, pt, em, pos, posture, None)
                             return
+        # 未成功，送去场下
+        self.send_to_grave(p, pt, em)
             
     def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos):
         """
@@ -1898,12 +1919,10 @@ class Game:
         :param ef:
         :return:
         """
-        print('heal {}'.format(value))
         tp = TimePoint(ETimePoint.HEALING, ef, [sender, target, value, 1])
         self.enter_time_point(tp)
         if tp.args[-1]:
             sender, target, value = tp.args[:-1]
-            print('hea {}'.format(value))
             # gain会通知客户端。
             target.DEF.gain(value)
             # todo: 是特性，不是bug。
@@ -1931,9 +1950,12 @@ class Game:
                 self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
                 self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
 
-    def choose_target(self, func, ef: Effect, force=False, with_tp=True) -> GameCard:
+    def choose_target(self, p: GamePlayer, pt: GamePlayer, func,
+                      ef: Effect, force=False, with_tp=True) -> GameCard:
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。
+        :param p:
+        :param pt:
         :param func:  筛选函数。
         :param ef:
         :param force: 是否强制
@@ -1957,9 +1979,9 @@ class Game:
             _len = len(cs)
             # 询问选项
             if force:
-                ind = self.get_player(ef.host).input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
             else:
-                ind = self.get_player(ef.host).free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
                 if ind is None:
                     return None
             c = self.vid_manager.get_card(cs[ind])
@@ -1975,9 +1997,9 @@ class Game:
             _len = len(cs)
             # 询问选项
             if force:
-                ind = self.get_player(ef.host).input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
             else:
-                ind = self.get_player(ef.host).free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
                 if ind is None:
                     return None
             return self.vid_manager.get_card(cs[ind])
@@ -2004,7 +2026,7 @@ class Game:
     def req4discard(self, p: GamePlayer, count, ef: Effect):
         """
         选择指定的手牌丢弃。
-        :param p: 效果发起者。
+        :param p: 。
         :param count: 丢弃数量
         :param ef:
         :return:
@@ -2017,7 +2039,7 @@ class Game:
                     return True
 
         # 选择1张卡丢弃
-        tgt = self.choose_target(check_discard, ef, False, False)
+        tgt = self.choose_target(p, p, check_discard, ef, False, False)
         if tgt is not None:
             self.discard(p, p, tgt, ef)
             return True

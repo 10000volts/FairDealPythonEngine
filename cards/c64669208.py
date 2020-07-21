@@ -36,7 +36,8 @@ class E1(EffCommonStrategy):
             return ((c.location & ELocation.GRAVE) > 0) & (c.ATK.value == self.host.ATK.value)
 
         # 选择的卡回到手牌
-        tgt = self.game.choose_target(check, self, False, False)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self, False, False)
         p = self.game.get_player(self.host)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)

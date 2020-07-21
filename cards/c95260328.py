@@ -43,7 +43,8 @@ class E1(Effect):
 
         super().execute()
 
-        tgt = self.game.choose_target(check, self, False, False)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:
             tgt.ATK.change_adv(1000)
 

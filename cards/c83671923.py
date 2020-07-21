@@ -52,7 +52,7 @@ class E1(EffTriggerCostMixin):
                             if tp.args[-1]:
                                 return True
                 return False
-        tgt = self.game.choose_target(check, self, False, False)
+        tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:
             atk = tgt.ATK.value
             self.game.special_summon(p, op, tgt, self)

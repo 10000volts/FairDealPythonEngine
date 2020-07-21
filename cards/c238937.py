@@ -28,9 +28,11 @@ class E1(EffSingleStgE1Mixin):
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择1雇员ATK+EFF
-        tgt = self.game.choose_target(check, self, True)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self, True)
         if tgt is not None:
-            op, v = tgt.ATK.gain(self.host.ATK.value)
+            eff = 1000 if self.host.ATK.value > 1000 else self.host.ATK.value
+            op, v = tgt.ATK.gain(eff)
             self.host.register_effect(E3(self.host, tgt, op, v))
             tgt.register_effect(EffSingleStgE2(self.host, [tgt]))
 

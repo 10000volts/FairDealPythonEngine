@@ -1,6 +1,7 @@
 # 威吓
-from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin
+from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin, EffTriggerCostMixin
 from utils.constants import ETimePoint, EEffectDesc, ELocation
+from core.game import Effect
 
 
 class E1(EffCounterStgE1Mixin):
@@ -14,7 +15,7 @@ class E1(EffCounterStgE1Mixin):
         self.scr_arg[0].args[-1] = 0
 
 
-class E2(EffCounterStgE2Mixin):
+class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
     """
     我方玩家被攻击或正对的对方雇员发动攻击时
     """

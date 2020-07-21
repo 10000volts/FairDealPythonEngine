@@ -21,7 +21,8 @@ class E1(EffCommonSummon):
 
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
-        tgt = self.game.choose_target(check, self)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
             self.game.get_player(self.host).leader.DEF.gain(-tgt.ATK.value)
             self.game.destroy(self.host, tgt, self)

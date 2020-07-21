@@ -1,5 +1,5 @@
 # 挫折大师
-from utils.constants import EEffectDesc, ELocation, ETimePoint
+from utils.constants import EEffectDesc, ETimePoint
 from models.effect import Effect
 from core.game import TimePoint
 
@@ -23,9 +23,9 @@ class E1(Effect):
 
     def cost(self, tp):
         # 选择1手牌丢弃
-        if self.game.req4discard(self.game.get_player(self.host), 1, self):
+        if tp not in self.reacted:
             self.reacted.append(tp)
-            return True
+            return self.game.req4discard(self.game.get_player(self.host), 1, self)
         return False
 
     def execute(self):
@@ -41,7 +41,7 @@ class E1(Effect):
 
         def check(c):
             return c in p.grave
-        tgt = self.game.choose_target(check, self, False, False)
+        tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)
 

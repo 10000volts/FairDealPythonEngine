@@ -10,14 +10,19 @@ class E3(EffNextTurnMixin):
     """
     def __init__(self, host, c):
         super().__init__(desc=EEffectDesc.HP_LOST,
-                         host=host, trigger=True, force=True, scr_arg=[c], no_reset=True)
+                         host=host, trigger=True, force=True, scr_arg=[c, 0], no_reset=True)
 
     def execute(self):
-        if self.scr_arg[0].DEF.value > 4000:
-            self.scr_arg[0].DEF.gain(-4000)
-        else:
-            self.scr_arg[0].DEF.become(1)
-        self.host.remove_effect(self)
+        # 跳过被附加上效果的回合
+        if self.scr_arg[1] == 1:
+            super().execute()
+
+            if self.scr_arg[0].DEF.value > 4000:
+                self.scr_arg[0].DEF.gain(-4000)
+            else:
+                self.scr_arg[0].DEF.become(1)
+            self.host.remove_effect(self)
+        self.scr_arg[1] += 1
 
 
 class E2(EffNextTurnMixin):
@@ -29,6 +34,8 @@ class E2(EffNextTurnMixin):
                          host=host, trigger=True, force=True, scr_arg=[c, v, 0], no_reset=True)
 
     def execute(self):
+        super().execute()
+
         tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, self.scr_arg[0], self.scr_arg[1], 1])
         self.game.enter_time_point(tp)
         if tp.args[-1]:

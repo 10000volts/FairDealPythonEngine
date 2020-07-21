@@ -18,23 +18,23 @@ class E3(Effect):
         :return:
         """
         if tp.tp == ETimePoint.ASK4EFFECT:
-            sd = self.game.get_player(self.host)
-            for posture in range(0, 2):
-                for pos in range(0, 3):
-                    if sd.on_field[pos] is None:
-                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
-                        self.game.enter_time_point(tp)
-                        # 入场被允许
-                        return tp.args[-1]
+            if self.host.location & ELocation.HAND:
+                sd = self.game.get_player(self.host)
+                for posture in range(0, 2):
+                    for pos in range(0, 3):
+                        if sd.on_field[pos] is None:
+                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
+                            self.game.enter_time_point(tp)
+                            # 入场被允许
+                            return tp.args[-1]
         return False
 
     def execute(self):
         # 输出
         super().execute()
         # 从手牌入场
-        if self.host.location & ELocation.HAND:
-            p = self.game.get_player(self.host)
-            self.game.special_summon(p, p, self.host, self)
+        p = self.game.get_player(self.host)
+        self.game.special_summon(p, p, self.host, self)
 
 
 class E2(EffNextTurnMixin):
@@ -46,10 +46,10 @@ class E2(EffNextTurnMixin):
                          no_reset=True)
 
     def execute(self):
-        super().execute()
         e3 = E3(self.host)
         self.host.register_effect(e3)
         self.host.register_effect(EffUntil(self.host, e3, lambda tp: tp.tp == ETimePoint.TURN_END))
+        self.host.remove_effect(self)
 
 
 class E1(EffTriggerCostMixin):
@@ -60,7 +60,7 @@ class E1(EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.REGISTER_EFFECT, host=host, trigger=True, force=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.BLOCKED:
+        if (tp.tp == ETimePoint.BLOCKED) & (tp not in self.reacted) :
             return self.game.op_player is self.game.get_player(tp.args[1])
 
     def execute(self):

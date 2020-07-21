@@ -86,7 +86,8 @@ class E4(EffSummon):
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择目标，复原其属性
-        tgt = self.game.choose_target(check, self)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
             tgt.ATK.reset()
             tgt.DEF.reset()

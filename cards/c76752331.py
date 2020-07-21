@@ -47,16 +47,17 @@ class E2(Effect):
         :return:
         """
         if tp.tp == ETimePoint.ASK4EFFECT:
-            sd = self.game.get_player(self.host)
-            if (sd.leader.DEF.value > 1000) | (self.host not in sd.hand):
-                return False
-            for posture in range(0, 2):
-                for pos in range(0, 3):
-                    if sd.on_field[pos] is None:
-                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
-                        self.game.enter_time_point(tp)
-                        # 入场被允许
-                        return tp.args[-1]
+            if self.host.location & ELocation.HAND:
+                sd = self.game.get_player(self.host)
+                if (sd.leader.DEF.value > 1000) | (self.host not in sd.hand):
+                    return False
+                for posture in range(0, 2):
+                    for pos in range(0, 3):
+                        if sd.on_field[pos] is None:
+                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
+                            self.game.enter_time_point(tp)
+                            # 入场被允许
+                            return tp.args[-1]
         return False
 
     def execute(self):
@@ -67,13 +68,12 @@ class E2(Effect):
         """
         # 输出
         super().execute()
-        # 从手牌入场
-        if self.host.location & ELocation.HAND:
-            p = self.game.get_player(self.host)
-            self.game.special_summon(p, p, self.host, self)
-            # 我方受到的伤害减半
-            e3 = E3(self.host, p.leader)
-            self.host.register_effect(e3, True)
+        # 入场
+        p = self.game.get_player(self.host)
+        self.game.special_summon(p, p, self.host, self)
+        # 我方受到的伤害减半
+        e3 = E3(self.host, p.leader)
+        self.host.register_effect(e3, True)
 
 
 class E1(EffTriggerCostMixin):

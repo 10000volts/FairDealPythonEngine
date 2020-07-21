@@ -23,7 +23,7 @@ class E1(EffCommonSummon):
 
         def check(c):
             return c in p.grave
-        tgt = self.game.choose_target(check, self, False, False)
+        tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)
 

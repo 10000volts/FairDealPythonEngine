@@ -1,6 +1,6 @@
 # 涨薪
 from utils.common_effects import EffSingleStgE1Mixin, EffTurnEndMixin
-from utils.constants import EEffectDesc, ECardType, ELocation, EGamePhase
+from utils.constants import EEffectDesc, ECardType, ELocation
 
 
 class E2(EffTurnEndMixin):
@@ -8,7 +8,7 @@ class E2(EffTurnEndMixin):
     回合结束时回复攻击力。
     """
     def __init__(self, host, c, op, v):
-        super().__init__(desc=EEffectDesc.EFFECT_END, act_phase=EGamePhase.PLAY_CARD,
+        super().__init__(desc=EEffectDesc.EFFECT_END,
                          host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True)
 
     def execute(self):
@@ -35,7 +35,8 @@ class E1(EffSingleStgE1Mixin):
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择1雇员ATK+EFF(至少500)直到回合结束
-        tgt = self.game.choose_target(check, self)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
             op, v = tgt.ATK.gain(500 if self.host.ATK.value < 500 else self.host.ATK.value)
             self.host.register_effect(E2(self.host, tgt, op, v))
