@@ -148,6 +148,24 @@ class GamePlayer:
         else:
             return self.free_input(check, 'req_chs', [option, count])
 
+    def req4num(self, min, max, force=False):
+        """
+        从给定的数字中选择。
+        :param min:
+        :param max:
+        :param force:
+        :return:
+        """
+        def check(*_ind):
+            for i in _ind:
+                if i not in range(min, max + 1):
+                    return EErrorCode.OVERSTEP
+            return 0
+        if force:
+            return self.input(check, 'req_num', [min, max])
+        else:
+            return self.free_input(check, 'req_num', [min, max])
+
     def shuffle(self, loc=ELocation.HAND):
         def shu(ls):
             _len = len(ls) - 1

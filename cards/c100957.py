@@ -1,7 +1,6 @@
 # 威吓
 from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin, EffTriggerCostMixin
 from utils.constants import ETimePoint, EEffectDesc, ELocation
-from core.game import Effect
 
 
 class E1(EffCounterStgE1Mixin):

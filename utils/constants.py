@@ -476,6 +476,7 @@ class ETimePoint:
     DISCARDED = 174
     # 尝试奉献 在此时点发动效果的卡：
     #
+    # args[0]: 卡
     TRY_DEVOTRE = 175
     # 奉献时 在此时点发动效果的卡：
     #

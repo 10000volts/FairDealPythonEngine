@@ -24,7 +24,6 @@ class E1(EffSingleStgE1Mixin):
         # 选择1雇员ATK+EFF(至少500)直到回合结束
         p = self.game.get_player(self.host)
         r = p.req4option([EChoice.CHANGE_ATK, EChoice.CHANGE_DEF])
-        print(r)
         if r == EChoice.CHANGE_ATK:
             tgt = self.game.choose_target(p, p, check, self)
             if tgt is not None:
