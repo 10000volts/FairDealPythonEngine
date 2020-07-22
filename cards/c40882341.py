@@ -2,19 +2,41 @@
 from models.effect import Effect
 from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 from core.game import TimePoint
-from utils.common_effects import EffNextTurnMixin
+from utils.common_effects import EffNextTurnMixin, EffTriggerCostMixin
+
+
+class E3(EffTriggerCostMixin):
+    """
+    造成的战斗伤害减半。
+    """
+    def __init__(self, c):
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE,
+                         host=c, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DEALING_DAMAGE:
+            if (tp.args[0] is self.host) & (tp.sender is None) & (tp not in self.reacted):
+                return True
+        return False
+
+    def execute(self):
+        # 输出
+        super().execute()
+        tp = self.reacted.pop()
+        tp.args[2] = int(tp.args[2] / 2)
 
 
 class E2(EffNextTurnMixin):
     """
-    回合结束时回复攻击力。
+    回合开始时时回复攻击力和造成战斗伤害减半效果。
     """
-    def __init__(self, host, c, op, v):
+    def __init__(self, host, c, op, v, ef):
         super().__init__(desc=EEffectDesc.EFFECT_END,
-                         host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True)
+                         host=host, trigger=True, force=True, scr_arg=[c, op, v, ef], no_reset=True)
 
     def execute(self):
         self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
+        self.host.remove_effect(self.scr_arg[3])
         self.host.remove_effect(self)
 
 
@@ -69,7 +91,9 @@ class E1(Effect):
                                                       (c.type == ECardType.EMPLOYEE)), self)
         if tgt is not None:
             op, v = tgt.ATK.gain(self.scr_arg)
-            self.host.register_effect(E2(self.host, tgt, op, v))
+            e3 = E3(self.host)
+            self.host.register_effect(e3)
+            self.host.register_effect(E2(self.host, tgt, op, v, e3))
 
 
 def give(c):

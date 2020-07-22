@@ -1,7 +1,7 @@
 # 洛斯
 from models.effect import Effect
 from core.game import TimePoint
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation
+from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffUntil
 
 
@@ -10,7 +10,7 @@ class E2(Effect):
     对方受到的伤害减半。
     """
     def __init__(self, c, p):
-        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, act_phase=EGamePhase.PLAY_CARD,
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE,
                          host=c, trigger=True, force=True, scr_arg=p, no_reset=True)
 
     def condition(self, tp):
@@ -36,7 +36,7 @@ class E1(Effect):
     从场下入场。
     """
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, act_phase=EGamePhase.PLAY_CARD,
+        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON,
                          host=c)
 
     def condition(self, tp):
