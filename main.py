@@ -11,7 +11,6 @@ def main():
     from core.game import Match
     with open(sys.argv[1]) as f:
         j = json.loads(f.read())
-    print(j)
     p1j = json.loads(j[2])
     p1 = Player(p1j['info']['op_method'], j[0], p1j['auto_skip'])
     p2j = json.loads(j[3])

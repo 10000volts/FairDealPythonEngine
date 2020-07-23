@@ -1,5 +1,5 @@
 from models.effect import Effect
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ECardType
+from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ECardType, ELocation
 from utils.common import adj_pos
 
 
@@ -52,6 +52,15 @@ class EffInvestigator(Effect):
         self.host.remove_effect(self)
 
 
+class EffLazyTriggerCostMixin(Effect):
+    """
+    默认的触发式效果cost行为。
+    """
+    def cost(self, tp):
+        self.reacted.append(tp)
+        return True
+
+
 class EffTriggerCostMixin(Effect):
     """
     默认的触发式效果cost行为。
@@ -63,7 +72,7 @@ class EffTriggerCostMixin(Effect):
         return False
 
 
-class EffNextTurnMixin(EffTriggerCostMixin):
+class EffNextTurnMixin(EffLazyTriggerCostMixin):
     """
     到自己的下回合时发动
     """
@@ -74,7 +83,7 @@ class EffNextTurnMixin(EffTriggerCostMixin):
         return False
 
 
-class EffTurnEndMixin(EffTriggerCostMixin):
+class EffTurnEndMixin(EffLazyTriggerCostMixin):
     """
     到回合结束时发动
     """
@@ -208,7 +217,7 @@ class EffProtectProtocol(Effect):
         self.host.remove_effect(self)
 
 
-class EffPerTurn(EffTriggerCostMixin):
+class EffPerTurn(EffLazyTriggerCostMixin):
     """
     每回合1次的效果。
     """
@@ -224,7 +233,7 @@ class EffPerTurn(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TURN_BEGIN:
-            if tp not in self.reacted:
+            if (tp not in self.reacted) & ((self.host.location & ELocation.ON_FIELD) > 0):
                 return True
         return False
 
@@ -249,7 +258,7 @@ class EffCommonStrategy(Effect):
         return tp is None
 
 
-class EffCounterStgE1Mixin(EffTriggerCostMixin):
+class EffCounterStgE1Mixin(EffLazyTriggerCostMixin):
     """
     反制策略的E2效果，用来触发其真正效果。
     """
@@ -293,7 +302,7 @@ class EffSingleStgE1Mixin(EffTriggerCostMixin):
         return False
 
 
-class EffSingleStgE2(EffTriggerCostMixin):
+class EffSingleStgE2(EffLazyTriggerCostMixin):
     """
     单人策略的E2效果，代表其所属雇员离场后其送去场下。
     """
@@ -303,7 +312,6 @@ class EffSingleStgE2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
-            print('con')
             return (tp.args[0] is self.scr_arg[0]) & (tp not in self.reacted)
         return False
 
@@ -312,7 +320,7 @@ class EffSingleStgE2(EffTriggerCostMixin):
         self.game.send_to_grave(p, p, self.host)
 
 
-class EffSingleStgE3Mixin(EffTriggerCostMixin):
+class EffSingleStgE3Mixin(EffLazyTriggerCostMixin):
     """
     单人策略的E3效果，代表送去场下后移除之前生效的效果。
     """
@@ -326,7 +334,7 @@ class EffSingleStgE3Mixin(EffTriggerCostMixin):
         return False
 
 
-class EffSummon(Effect):
+class EffSummon(EffLazyTriggerCostMixin):
     """
     入场后效果模板。
     """
@@ -344,18 +352,8 @@ class EffSummon(Effect):
             return True
         return False
 
-    def cost(self, tp):
-        """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
-        :return:
-        """
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
-        return False
 
-
-class EffCommonSummon(EffTriggerCostMixin):
+class EffCommonSummon(EffLazyTriggerCostMixin):
     """
     常规入场后效果模板。
     """
@@ -375,7 +373,7 @@ class EffCommonSummon(EffTriggerCostMixin):
         return False
 
 
-class EffPierce(EffTriggerCostMixin):
+class EffPierce(EffLazyTriggerCostMixin):
     """
     常规入场后效果模板。
     """

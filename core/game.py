@@ -579,8 +579,6 @@ class GameCard:
                 if self.location & ELocation.SIDE:
                     return ETimePoint.OUT_SIDE, ETimePoint.OUT_SIDE_END, p.side
                 if self.location & ELocation.ON_FIELD:
-                    # 离场时重置
-                    self.reset()
                     return ETimePoint.OUT_FIELD, ETimePoint.OUT_FIELD_END, p.on_field
                 if self.location & ELocation.GRAVE:
                     return ETimePoint.OUT_GRAVE, ETimePoint.OUT_GRAVE_END, p.grave
@@ -590,26 +588,16 @@ class GameCard:
 
             def enter():
                 if loc & ELocation.HAND:
-                    self.turns = 0
-                    self.cover = 1
                     return ETimePoint.IN_HAND, ETimePoint.IN_HAND_END, p.hand
                 if loc & ELocation.DECK:
-                    self.turns = 0
-                    self.cover = 1
                     return ETimePoint.IN_DECK, ETimePoint.IN_DECK_END, p.deck
                 if loc & ELocation.SIDE:
-                    self.turns = 0
-                    self.cover = 1
                     return ETimePoint.IN_SIDE, ETimePoint.IN_SIDE_END, p.side
                 if loc & ELocation.ON_FIELD:
-                    self.turns = 0
                     return ETimePoint.IN_FIELD, ETimePoint.IN_FIELD_END, p.on_field
                 if loc & ELocation.GRAVE:
-                    self.turns = 0
-                    self.cover = 0
                     return ETimePoint.IN_GRAVE, ETimePoint.IN_GRAVE_END, p.grave
                 if loc & ELocation.EXILED:
-                    self.turns = 0
                     return ETimePoint.IN_EXILED, ETimePoint.IN_EXILED_END, p.exiled
 
             # 离开我放半场去到对方半场不算离场，其他区域同理
@@ -635,8 +623,20 @@ class GameCard:
             if (loc & ELocation.ON_FIELD) == 0:
                 _to.append(self)
             if etp3:
+                if etp3 == ETimePoint.OUT_FIELD_END:
+                    # 离场后重置
+                    self.reset()
                 tp3 = TimePoint(etp3, ef, [self, pre_loc])
                 self.game.temp_tp_stack.append(tp3)
+            if (etp4 == ETimePoint.IN_HAND_END) | (etp4 == ETimePoint.IN_DECK_END) | \
+                    (etp4 == ETimePoint.IN_SIDE_END):
+                self.turns = 0
+                self.cover = 1
+            elif etp4 == ETimePoint.IN_GRAVE_END:
+                self.turns = 0
+                self.cover = 0
+            else:
+                self.turns = 0
             tp4 = TimePoint(etp4, ef, [self, loc])
             self.game.temp_tp_stack.append(tp4)
             yield True
@@ -817,7 +817,8 @@ class Game:
         self.win_reason = 0
         self.start_time = datetime.now()
         self.loser: GamePlayer = None
-
+        # 连锁计数。
+        self.react_times = 0
         self.turn_process = self.game_config['turn_process']
         # 在当前阶段所有需要检查是否满足了触发条件的效果
         self.ef_listener = list()
@@ -1409,9 +1410,11 @@ class Game:
             self.batch_sending('ent_tp', [tp.tp])
         if tp.sender is None:
             # 先询问对方。
-            self.react(self.op_player, tp)
+            self.react_times += 2
+            self.react(self.op_player, tp, self.react_times - 2)
         else:
-            self.react(self.players[self.get_player(tp.sender.host).sp], tp)
+            self.react_times += 2
+            self.react(self.players[self.get_player(tp.sender.host).sp], tp, self.react_times - 2)
         self.tp_stack.remove(tp)
 
     def enter_time_points(self):
@@ -1423,51 +1426,50 @@ class Game:
             p = p if t.sender is None else self.get_player(t.sender.host)
             self.batch_sending('ent_tp', [t.tp])
             # 先询问对方。
-            self.react(self.players[p.sp], t)
+            self.react_times += 2
+            self.react(self.players[p.sp], t, self.react_times - 2)
 
         self.temp_tp_stack.clear()
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
 
-    def react(self, p: GamePlayer, tp: TimePoint, itor=True):
+    def react(self, p: GamePlayer, tp: TimePoint, rt):
         """
         询问p是否连锁。先询问对手。
         :param p: 连锁发起者，被最后询问的人。
         :param tp: 询问连锁的时点。
-        :param itor: 是否继续迭代
+        :param rt: 进入时的连锁计数，计数值少于这个数值时跳出
         :return:
         """
-        def check_yn(yn):
-            return 0
-
         def check_eff_ind(ind):
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
-        f = False
         p_react_list = list()
         for ef in self.ef_listener:
             if ef.condition(tp):
                 if self.get_player(ef.host) is p:
                     if ef.force:
-                        self.activate_effect(ef)
+                        self.activate_effect(ef, tp)
                     else:
                         p_react_list.append(ef)
         if len(p_react_list) > 0 or not p.auto_skip:
             p.output('req_rct', [tp.tp])
-            if p.input(check_yn, 'req_yn'):
+            if p.input(lambda yn: 0, 'req_yn'):
                 ind_max = len(p_react_list)
                 p_react_ef_ind = p.free_input(
                     check_eff_ind,
                     'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
                 if p_react_ef_ind is not None:
                     # 响应了效果。
-                    self.activate_effect(p_react_list[p_react_ef_ind])
-                    f = True
-        if itor:
-            self.react(self.players[p.sp], tp, False)
-        if f:
-            self.react(self.players[p.sp], tp, False)
-            self.react(p, tp, False)
+                    self.activate_effect(p_react_list[p_react_ef_ind], tp)
+                    # 3 - 1 = 2
+                    self.react_times = rt + 3
+        self.react_times -= 1
+        if self.react_times > rt:
+            self.react(self.players[p.sp], tp, rt)
+        elif self.react_times == 0:
+            for ef in self.ef_listener:
+                ef.reacted.clear()
 
     def req4block(self, sender: GameCard, target: GameCard):
         """
@@ -1512,14 +1514,7 @@ class Game:
         :param t: 指定时点，用于询问主动效果。
         :return:
         """
-        if t:
-            tp = t
-        else:
-            if len(self.tp_stack):
-                tp = self.tp_stack[-1]
-            else:
-                tp = None
-        if ef.cost(tp):
+        if ef.cost(t):
             if ef.secret:
                 ef.execute()
                 return
@@ -1955,7 +1950,7 @@ class Game:
     def choose_target(self, p: GamePlayer, pt: GamePlayer, func,
                       ef: Effect, force=False, with_tp=True) -> GameCard:
         """
-        选择效果目标。效果的host(宿主)一定是效果的发动者。
+        选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
         :param pt:
         :param func:  筛选函数。

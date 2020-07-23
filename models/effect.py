@@ -1,13 +1,52 @@
 from utils.constants import EGamePhase, EEffectDesc
 
 
+class DetachList():
+    """
+    pop变为软删除，成员不能直接访问的列表。
+    """
+    def __init__(self):
+        super().__init__()
+        self._index = -1
+        self._iter_index = 0
+        self._list = list()
+
+    def __iter__(self):
+        self._iter_index = 0
+        return self
+
+    def __next__(self):
+        if self._iter_index >= len(self._list):
+            raise StopIteration()
+        i = self._list[self._iter_index]
+        self._iter_index += 1
+        return i
+
+    def append(self, e):
+        self._list.append(e)
+
+    def pop(self, index: int = -1):
+        """
+        index只能是-1。
+        :param index:
+        :return:
+        """
+        r = self._list[self._index]
+        self._index -= 1
+        return r
+
+    def clear(self):
+        self._list.clear()
+        self._index = -1
+
+
 class Effect:
     """
     单个卡片效果的抽象。
     """
 
     def __init__(self, desc: EEffectDesc, host,
-                 act_phase: EGamePhase=EGamePhase.PLAY_CARD, trigger=False, force=False,
+                 act_phase: EGamePhase = EGamePhase.PLAY_CARD, trigger=False, force=False,
                  secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None, can_invalid=True):
         """
 
@@ -40,9 +79,10 @@ class Effect:
         self.trigger = trigger
         self.no_reset = no_reset
         # 已经连锁过的时点。每个效果不能重复连锁单一时点。
-        self.reacted = list()
+        self.reacted = DetachList()
         self.ef_id = ef_id
         self.can_invalid = can_invalid
+        self.react_index = -1
 
     def condition(self, tp):
         """

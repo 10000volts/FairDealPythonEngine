@@ -1,6 +1,6 @@
 # 勇敢的记者
 from utils.constants import EEffectDesc, ETimePoint, ELocation
-from utils.common_effects import EffTriggerCostMixin, EffNextTurnMixin, EffUntil
+from utils.common_effects import EffLazyTriggerCostMixin, EffNextTurnMixin, EffUntil
 from core.game import TimePoint, Effect
 
 
@@ -52,12 +52,13 @@ class E2(EffNextTurnMixin):
         self.host.remove_effect(self)
 
 
-class E1(EffTriggerCostMixin):
+class E1(EffLazyTriggerCostMixin):
     """
     下次我方回合开始时获得效果。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.REGISTER_EFFECT, host=host, trigger=True, force=True)
+        super().__init__(desc=EEffectDesc.REGISTER_EFFECT, host=host, trigger=True, force=True,
+                         no_reset=True)
 
     def condition(self, tp):
         if (tp.tp == ETimePoint.BLOCKED) & (tp not in self.reacted) :

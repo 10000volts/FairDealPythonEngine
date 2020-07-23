@@ -2,10 +2,10 @@
 from models.effect import Effect
 from core.game import TimePoint
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint
-from utils.common_effects import EffTriggerCostMixin
+from utils.common_effects import EffLazyTriggerCostMixin
 
 
-class E2(EffTriggerCostMixin):
+class E2(EffLazyTriggerCostMixin):
     """
     不能通过自身效果以外的方式常规入场。
     """
