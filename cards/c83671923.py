@@ -1,5 +1,4 @@
 # 伪造推荐信
-from models.effect import Effect
 from core.game import TimePoint, GameCard
 from utils.constants import EEffectDesc, EEmployeeType, ETimePoint, ELocation, ECardType, ECardRank
 from utils.common_effects import EffTriggerCostMixin

@@ -59,8 +59,6 @@ class GamePlayer:
         self.strategy_times = 1
         # 是否为先手玩家。
         self.sp = 0
-        # 是否可继续连锁。
-        self.can_react = 1
         # 回合效果限定器。{ef_id: times, ...}
         self.ef_limiter = dict()
         # 效果限定器。{ef_id: times, ...}
@@ -484,8 +482,9 @@ class GameCard:
         for e in self.effects:
             if not e.no_reset:
                 self.remove_effect(e)  # , False)
-        m = import_module('cards.c{}'.format(self.cid))
-        m.give(self)
+        if self.cid is not None:
+            m = import_module('cards.c{}'.format(self.cid))
+            m.give(self)
         # self.attack_times = 0
         # self.block_times = 0
         self.ATK.reset()
@@ -814,8 +813,6 @@ class Game:
         self.chessboard = [None for x in range(0, self.scale ** 2)]
         self.last_loser = last_loser
         self.phase_now = None
-        # 连锁计数
-        self.react_times = 0
         self.winner: GamePlayer = None
         self.win_reason = 0
         self.start_time = datetime.now()
@@ -1446,44 +1443,31 @@ class Game:
 
         def check_eff_ind(ind):
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
-
-        if p.can_react:
-            f = False
-            self.react_times += 1
-            p_react_list = list()
-            for ef in self.ef_listener:
-                if ef.condition(tp):
-                    if self.get_player(ef.host) is p:
-                        if ef.force:
-                            self.activate_effect(ef)
-                        else:
-                            p_react_list.append(ef)
-            if len(p_react_list) > 0 or not p.auto_skip:
-                p.output('req_rct', [tp.tp])
-                if p.input(check_yn, 'req_yn'):
-                    ind_max = len(p_react_list)
-                    p_react_ef_ind = p.free_input(
-                        check_eff_ind,
-                        'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
-                    if p_react_ef_ind is not None:
-                        # 有人连锁，重置可连锁状态
-                        for pi in self.players:
-                            pi.can_react = 1
-                        # 响应了效果。
-                        self.activate_effect(p_react_list[p_react_ef_ind])
-                        f = True
-                else:
-                    p.can_react = 0
-            if itor:
-                self.react(self.players[p.sp], tp, False)
-            if f:
-                self.react(self.players[p.sp], tp, False)
-                self.react(p, tp, False)
-            self.react_times -= 1
-        # 连锁完成，重置可连锁状态
-        if self.react_times == 0:
-            for pi in self.players:
-                pi.can_react = 1
+        f = False
+        p_react_list = list()
+        for ef in self.ef_listener:
+            if ef.condition(tp):
+                if self.get_player(ef.host) is p:
+                    if ef.force:
+                        self.activate_effect(ef)
+                    else:
+                        p_react_list.append(ef)
+        if len(p_react_list) > 0 or not p.auto_skip:
+            p.output('req_rct', [tp.tp])
+            if p.input(check_yn, 'req_yn'):
+                ind_max = len(p_react_list)
+                p_react_ef_ind = p.free_input(
+                    check_eff_ind,
+                    'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
+                if p_react_ef_ind is not None:
+                    # 响应了效果。
+                    self.activate_effect(p_react_list[p_react_ef_ind])
+                    f = True
+        if itor:
+            self.react(self.players[p.sp], tp, False)
+        if f:
+            self.react(self.players[p.sp], tp, False)
+            self.react(p, tp, False)
 
     def req4block(self, sender: GameCard, target: GameCard):
         """

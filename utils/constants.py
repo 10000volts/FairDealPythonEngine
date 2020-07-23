@@ -103,6 +103,8 @@ class EEffectDesc:
     CHANGE_POSTURE = 52
     # 属性变化
     PROPERTY_CHANGE = 53
+    # ATK下降
+    ATK_LOSE = 54
 
 
 class ELocation:
