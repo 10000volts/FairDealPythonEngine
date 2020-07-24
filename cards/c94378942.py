@@ -9,7 +9,7 @@ class E2(EffTurnEndMixin):
     """
     def __init__(self, host, c, op, v):
         super().__init__(desc=EEffectDesc.EFFECT_END,
-                         host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True)
+                         host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True, passive=True)
 
     def execute(self):
         self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
@@ -29,9 +29,6 @@ class E1(EffSingleStgE1Mixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择1雇员ATK+EFF(至少500)直到回合结束

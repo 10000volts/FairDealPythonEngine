@@ -30,8 +30,6 @@ class E3(Effect):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
         # 从手牌入场
         p = self.game.get_player(self.host)
         self.game.special_summon(p, p, self.host, self)
@@ -43,7 +41,7 @@ class E2(EffNextTurnMixin):
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=host, trigger=True, force=True,
-                         no_reset=True)
+                         no_reset=True, passive=True)
 
     def execute(self):
         e3 = E3(self.host)
@@ -58,7 +56,7 @@ class E1(EffLazyTriggerCostMixin):
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.REGISTER_EFFECT, host=host, trigger=True, force=True,
-                         no_reset=True)
+                         no_reset=True, passive=True)
 
     def condition(self, tp):
         if (tp.tp == ETimePoint.BLOCKED) & (tp not in self.reacted) :

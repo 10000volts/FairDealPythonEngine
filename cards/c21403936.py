@@ -19,9 +19,6 @@ class E3(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
-
         p = self.game.get_player(self.host)
         tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, 500, 1])
         self.game.enter_time_point(tp)
@@ -35,7 +32,7 @@ class E2(EffTriggerCostMixin):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.INVALID, act_phase=EGamePhase.PLAY_CARD,
-                         host=c, trigger=True, force=True, scr_arg=1)
+                         host=c, trigger=True, force=True, scr_arg=1, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:

@@ -5,6 +5,31 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffAttackLimit, EffTriggerCostMixin
 
 
+class E5(EffTriggerCostMixin):
+    """
+    击溃对方雇员时给予伤害并回复生命力。
+    """
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DESTROYED:
+            return (tp.args[0] is self.host) & \
+                   (self.game.get_player(tp.args[1]) is not self.game.get_player(self.host)) & \
+                   (tp not in self.reacted)
+        return False
+
+    def execute(self):
+        # todo: 应该不会在效果发动时转移控制权吧？
+        self.game.deal_damage(self.host, self.game.get_player(self.reacted.pop().args[1]).leader,
+                              1000, self)
+        p = self.game.get_player(self.host)
+        tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, 1000, 1])
+        self.game.enter_time_point(tp)
+        if tp.args[-1]:
+            self.game.heal(self.host, p.leader, 1000, self)
+
+
 class E4(EffAttackLimit):
     """
     不能直接攻击
@@ -27,8 +52,6 @@ class E3(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
         tp = self.reacted.pop()
         tp.args[2] = int(tp.args[2] / 2)
 
@@ -66,8 +89,6 @@ class E2(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 入场
         p = self.game.get_player(self.host)
         self.game.special_summon(p, p, self.host, self)
@@ -82,7 +103,7 @@ class E1(EffTriggerCostMixin):
     """
     def __init__(self, c, ef):
         super().__init__(desc=EEffectDesc.INVALID,
-                         host=c, trigger=True, force=True, scr_arg=ef)
+                         host=c, trigger=True, force=True, scr_arg=ef, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
@@ -106,3 +127,4 @@ def give(c):
     c.register_effect(e2)
     c.register_effect(E1(c, e2))
     c.register_effect(E4(c))
+    c.register_effect(E5(c))

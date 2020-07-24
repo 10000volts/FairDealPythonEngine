@@ -8,7 +8,7 @@ class E1(EffTriggerCostMixin):
     不能攻击
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.INVALID, host=host, trigger=True, force=True)
+        super().__init__(desc=EEffectDesc.INVALID, host=host, trigger=True, force=True, passive=True)
 
     def condition(self, tp):
         """
@@ -32,7 +32,7 @@ class E2(EffPerTurn):
     重置每回合的防止击溃次数。
     """
     def __init__(self, host):
-        super().__init__(host=host, ef=E3(host))
+        super().__init__(host=host, ef=E3(host), passive=False)
 
 
 class E3(EffTriggerCostMixin):
@@ -60,8 +60,6 @@ class E3(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 无效
         self.reacted.pop().args[-1] = 0
         self.host.remove_effect(self)
@@ -80,9 +78,6 @@ class E4(EffSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择目标，复原其属性

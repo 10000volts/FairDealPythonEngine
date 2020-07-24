@@ -16,8 +16,6 @@ class E1(EffCommonStrategy):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 对双方造成EFF伤害。
         for p in self.game.players:
             self.game.deal_damage(self.host, p.leader, self.host.ATK.value)

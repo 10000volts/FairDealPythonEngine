@@ -47,7 +47,8 @@ class Effect:
 
     def __init__(self, desc: EEffectDesc, host,
                  act_phase: EGamePhase = EGamePhase.PLAY_CARD, trigger=False, force=False,
-                 secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None, can_invalid=True):
+                 secret=False, scr_arg=False, no_src=False, no_reset=False, ef_id=None, can_invalid=True,
+                 passive=False):
         """
 
         :param desc:
@@ -61,6 +62,7 @@ class Effect:
         :param no_reset: 不会被重置，且这类效果也不会被无效(这方面和can_invalid作用相同)。
         :param ef_id: 效果id，用于限制发动。
         :param can_invalid: 是否能被无效
+        :param passive: 被动效果，不输出。
         """
         self.description = desc
         # 该效果能发动的阶段
@@ -83,6 +85,7 @@ class Effect:
         self.ef_id = ef_id
         self.can_invalid = can_invalid
         self.react_index = -1
+        self.passive = passive
 
     def condition(self, tp):
         """
@@ -90,13 +93,6 @@ class Effect:
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        # if len(self.try_tp):
-        #     for tp in self.try_tp:
-        #         self.game.temp_tp_stack.append(tp)
-        #     self.game.enter_time_points()
-        #     for tp in self.try_tp:
-        #         if not tp.args[-1]:
-        #             return False
         return True
 
     def cost(self, tp):
@@ -112,8 +108,3 @@ class Effect:
         调用基类方法进行输出。
         :return:
         """
-        for p in self.game.players:
-            sd = self.game.get_player(self.host)
-            if (not self.secret) | (p is sd):
-                p.update_vc(self.host)
-                p.output('act_eff', [None if self.no_source else self.host.vid], p is sd)

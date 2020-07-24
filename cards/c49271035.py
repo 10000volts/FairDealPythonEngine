@@ -44,9 +44,6 @@ class E2(Effect):
             if _ind not in range(0, chs_len):
                 return EErrorCode.OVERSTEP
             return 0
-
-        # 输出
-        super().execute()
         g = self.game
         tp = self.reacted.pop()
         x = tp.args[0]
@@ -110,8 +107,6 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 变成调查筹码后影响力值归零
         self.host.ATK.add_val = 0
         self.host.register_effect(E2(self.host), True)

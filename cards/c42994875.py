@@ -34,9 +34,6 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         p = self.game.get_player(self.host)
 
         def check(c):

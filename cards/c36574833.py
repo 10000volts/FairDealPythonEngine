@@ -11,7 +11,7 @@ class E2(EffLazyTriggerCostMixin):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.INVALID, act_phase=EGamePhase.PLAY_CARD,
-                         host=c, trigger=True, force=True, scr_arg=1)
+                         host=c, trigger=True, force=True, scr_arg=1, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:

@@ -5,11 +5,9 @@ from utils.constants import ETimePoint, EEffectDesc, ELocation
 
 class E1(EffCounterStgE1Mixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.INVALID, host=host, scr_arg=[None])
+        super().__init__(desc=EEffectDesc.INVALID, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
-        # 输出
-        super().execute()
         # 无效攻击。
         self.scr_arg[0].args[-1] = 0
 

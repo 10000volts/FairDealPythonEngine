@@ -41,8 +41,6 @@ class E2(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 攻击力减半
         tp = self.reacted.pop()
         tp.args[0].ATK.plus(0.5)
@@ -78,8 +76,6 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 摧毁无效
         self.reacted.pop().args[-1] = 0
         self.host.remove_effect(self)

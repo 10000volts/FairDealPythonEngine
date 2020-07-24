@@ -12,7 +12,6 @@ class E2(EffNextTurnMixin):
                          no_reset=True)
 
     def execute(self):
-        super().execute()
         self.game.get_player(self.host).strategy_times += 1
         self.host.remove_effect(self)
 
@@ -30,8 +29,6 @@ class E1(EffSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 注册效果
         self.host.register_effect(E2(self.host), True)
 

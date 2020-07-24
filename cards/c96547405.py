@@ -37,7 +37,6 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        super().execute()
         self.host.ATK.change_adv(500)
 
 

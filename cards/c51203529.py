@@ -1,7 +1,6 @@
 # 违约金
-from models.effect import Effect
 from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
-from utils.common_effects import EffTriggerCostMixin, EffCommonStrategy
+from utils.common_effects import EffCommonStrategy, EffLazyTriggerCostMixin
 
 
 class E1(EffCommonStrategy):
@@ -15,7 +14,7 @@ class E1(EffCommonStrategy):
         pass
 
 
-class E2(Effect):
+class E2(EffLazyTriggerCostMixin):
     """
     给予伤害。
     """
@@ -29,14 +28,7 @@ class E2(Effect):
                 return True
         return False
 
-    def cost(self, tp):
-        self.reacted.append(tp)
-        return True
-
     def execute(self):
-        # 输出
-        super().execute()
-
         c = self.reacted.pop().args[0]
         pt = self.game.get_player(c)
         self.game.deal_damage(self.host, pt.leader, int(c.ATK.value / 2), self)

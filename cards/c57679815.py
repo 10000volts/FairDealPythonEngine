@@ -16,8 +16,6 @@ class E1(EffCommonStrategy):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 我方场上全部雇员ATK+EFF
         p = self.game.get_player(self.host)
         for em in p.on_field:

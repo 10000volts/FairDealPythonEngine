@@ -17,9 +17,6 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             if ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE):
                 tp = TimePoint(ETimePoint.TRY_CHANGE_POSTURE, self, [c, 1])

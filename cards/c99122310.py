@@ -16,8 +16,6 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 给予对方500伤害
         p = self.game.players[self.game.get_player(self.host).sp]
         self.game.deal_damage(self.host, p.leader, 500, self)

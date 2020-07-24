@@ -24,9 +24,6 @@ class E1(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
-
         p = self.game.get_player(self.host)
         # todo: 不会出现不能被丢弃的卡。
         if len(p.hand):

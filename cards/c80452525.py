@@ -29,9 +29,6 @@ class E1(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return (c in op.on_field) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)

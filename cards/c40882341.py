@@ -20,8 +20,6 @@ class E3(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
         tp = self.reacted.pop()
         tp.args[2] = int(tp.args[2] / 2)
 
@@ -32,7 +30,8 @@ class E2(EffNextTurnMixin):
     """
     def __init__(self, host, c, op, v, ef):
         super().__init__(desc=EEffectDesc.EFFECT_END,
-                         host=host, trigger=True, force=True, scr_arg=[c, op, v, ef], no_reset=True)
+                         host=host, trigger=True, force=True, scr_arg=[c, op, v, ef], no_reset=True,
+                         passive=True)
 
     def execute(self):
         self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
@@ -84,8 +83,6 @@ class E1(Effect):
             return False
 
     def execute(self):
-        super().execute()
-
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
                                                       (c.type == ECardType.EMPLOYEE)), self)

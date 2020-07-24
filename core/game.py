@@ -261,6 +261,8 @@ class CardProperty:
             elif (op == '=x') | (op == '==x'):
                 x = self.val_st[i]
                 v = x(self.card)
+            if v < 0:
+                v = 0
             i += 1
         self.value = v if v > 0 else 0
         t1 = TimePoint(self.tp1, None, self.value)
@@ -388,6 +390,8 @@ class GameCard:
             self.posture_times = 0
             # 经历过的回合数(回合结束时自动+1)。
             self.turns = 0
+            # 标识
+            self.sign = dict()
             m = import_module('cards.c{}'.format(self.cid))
             m.give(self)
 
@@ -438,6 +442,8 @@ class GameCard:
         self.posture_times = 0
         # 经历过的回合数(回合结束时自动+1)。
         self.turns = 0
+        # 标识
+        self.sign = dict()
 
     def register_effect(self, e: Effect, buff_eff=False, out=True):
         """
@@ -485,11 +491,10 @@ class GameCard:
         if self.cid is not None:
             m = import_module('cards.c{}'.format(self.cid))
             m.give(self)
-        # self.attack_times = 0
-        # self.block_times = 0
         self.ATK.reset()
         self.DEF.reset()
         self.turns = 0
+        self.sign = dict()
 
     def hp_cost(self, v, ef: Effect = None):
         """
@@ -664,6 +669,7 @@ class GameCard:
             'inf_pos': self.inf_pos,
             'posture': self.posture,
             'cover': self.cover,
+            'sign': self.sign,
                            }
 
     def serialize_anonymous(self):
@@ -675,6 +681,7 @@ class GameCard:
             'inf_pos': self.inf_pos,
             'posture': self.posture,
             'cover': self.cover,
+            'sign': self.sign,
                            }
 
 
@@ -1036,6 +1043,8 @@ class Game:
 
     def __ph_play_card(self):
         def check(*_args):
+            if len(_args) == 1:
+                return EErrorCode.INVALID_INPUT
             # play card 打出手牌
             if _args[0] == 0:
                 # 只能在主要阶段打出手牌。
@@ -1224,7 +1233,7 @@ class Game:
             ntp = self.next_turn_phase()
             self.next_turn(ntp)
             while (self.turn_phase != ETurnPhase.ENDING) & (self.winner is None):
-                cmd = list(self.turn_player.input(check, 'req_op'))
+                cmd = self.turn_player.input(check, 'req_op')
                 # play card 打出手牌
                 if cmd[0] == 0:
                     c = self.turn_player.hand[cmd[1]]
@@ -1255,7 +1264,7 @@ class Game:
                                 'req_chs_eff', [[[ef.host.vid, ef.description] for ef in efs]])
                             # 发动了效果。
                             if ef_ind is not None:
-                                self.activate_effect(efs[ef_ind], TimePoint(ETimePoint.ASK4EFFECT))
+                                self.activate_effect(efs[ef_ind], self.turn_player, TimePoint(ETimePoint.ASK4EFFECT))
                 # set 将手牌盖放到场上
                 elif cmd[0] == 2:
                     c = self.turn_player.hand[cmd[1]]
@@ -1368,6 +1377,8 @@ class Game:
         # 重置可召唤、适用策略次数。
         self.turn_player.summon_times = 1
         self.turn_player.strategy_times = 1
+        for p in self.players:
+            p.ef_limiter = dict()
         for c in self.turn_player.on_field:
             if c is not None and c.type == ECardType.EMPLOYEE:
                 c.reset_times()
@@ -1425,11 +1436,11 @@ class Game:
             tts.append(t)
             p = p if t.sender is None else self.get_player(t.sender.host)
             self.batch_sending('ent_tp', [t.tp])
+            self.temp_tp_stack.remove(t)
             # 先询问对方。
             self.react_times += 2
             self.react(self.players[p.sp], t, self.react_times - 2)
-
-        self.temp_tp_stack.clear()
+        
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
@@ -1449,7 +1460,7 @@ class Game:
             if ef.condition(tp):
                 if self.get_player(ef.host) is p:
                     if ef.force:
-                        self.activate_effect(ef, tp)
+                        self.activate_effect(ef, p, tp)
                     else:
                         p_react_list.append(ef)
         if len(p_react_list) > 0 or not p.auto_skip:
@@ -1461,7 +1472,7 @@ class Game:
                     'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
                 if p_react_ef_ind is not None:
                     # 响应了效果。
-                    self.activate_effect(p_react_list[p_react_ef_ind], tp)
+                    self.activate_effect(p_react_list[p_react_ef_ind], p, tp)
                     # 3 - 1 = 2
                     self.react_times = rt + 3
         self.react_times -= 1
@@ -1507,21 +1518,35 @@ class Game:
                 return c
         return target
 
-    def activate_effect(self, ef, t: TimePoint = None):
+    def activate_effect(self, ef: Effect, p: GamePlayer, t: TimePoint = None):
         """
         启动效果。(cost+execute)
         :param ef:
+        :param p: 效果发动者。
         :param t: 指定时点，用于询问主动效果。
         :return:
         """
-        if ef.cost(t):
-            if ef.secret:
+        # 输出。
+        if ef.secret:
+            p.output('cst_eff', [None if ef.no_source else ef.host.vid], True)
+            if ef.cost(t):
+                p.output('act_eff', [None if ef.no_source else ef.host.vid], True)
                 ef.execute()
                 return
+        if not ef.passive:
+            for pi in self.players:
+                if (not ef.secret) | (pi is p):
+                    pi.output('cst_eff', [None if ef.no_source else ef.host.vid], pi is p)
+        if ef.cost(t):
             tp = TimePoint(ETimePoint.PAID_COST, ef, [1])
             self.temp_tp_stack.append(tp)
             self.enter_time_points()
             if tp.args[-1]:
+                # 输出
+                if not ef.passive:
+                    for pi in self.players:
+                        if (not ef.secret) | (pi is p):
+                            pi.output('act_eff', [None if ef.no_source else ef.host.vid], pi is p)
                 ef.execute()
                 self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, ef, ef))
             else:
@@ -1778,7 +1803,7 @@ class Game:
                 self.batch_sending('act_stg', [s.vid], p)
                 self.enter_time_points()
                 # 策略使用时自动发动效果。
-                self.activate_effect(s.effects[0])
+                self.activate_effect(s.effects[0], p)
                 # 非持续/单人策略发动后离场
                 if not ((s.subtype & EStrategyType.LASTING) |
                          (s.subtype & EStrategyType.ATTACHMENT)):
@@ -1843,6 +1868,27 @@ class Game:
                 self.batch_sending('set_crd', [s.vid], p)
                 self.enter_time_points()
 
+    # def send_to(self, loc, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+    #     cm = c.move_to(ef, loc)
+    #     next(cm)
+    #     self.enter_time_points()
+    #     if next(cm):
+    #         next(cm)
+    #         if loc & ELocation.GRAVE:
+    #             self.batch_sending('upd_vc', [c.vid, c.serialize()])
+    #         else:
+    #             cov = c.cover
+    #             for pi in self.players:
+    #                 if (not cov) | (pi is pt):
+    #                     pi.output('upd_vc', [c.vid, c.serialize()])
+    #                 else:
+    #                     pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+    #             # todo: 换c的效果不会出。
+    #             self.batch_sending('crd_snd', [c.vid, loc], p)
+    #             self.enter_time_points()
+    #             if (loc & ELocation.EXILED) == 0:
+    #                 pt.shuffle()
+
     def send_to_grave(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
         送去墓地。
@@ -1887,6 +1933,30 @@ class Game:
             self.batch_sending('crd_snd2hnd', [c.vid], p)
             self.enter_time_points()
             pt.shuffle()
+
+    def send2exiled(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+        """
+        送去移除区。
+        :param p:
+        :param pt: 送去目标玩家的移除区。
+        :param c:
+        :param ef:
+        :return:
+        """
+        cov = c.cover
+        cm = c.move_to(ef, ELocation.EXILED + 2 - pt.sp)
+        next(cm)
+        self.enter_time_points()
+        if next(cm):
+            next(cm)
+            for pi in self.players:
+                if (not cov) | (pi is pt):
+                    pi.output('upd_vc', [c.vid, c.serialize()])
+                else:
+                    pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+            # todo: 换c的效果不会出。
+            self.batch_sending('crd_snd2exd', [c.vid], p)
+            self.enter_time_points()
 
     def deal_damage(self, sender: GameCard, target: GameCard, damage: int, ef: Effect = None):
         """
@@ -2042,6 +2112,28 @@ class Game:
             return True
         return False
 
+    def req4exile(self, func, p: GamePlayer, count, ef: Effect):
+        """
+        选择指定的牌移除。
+        :param p: 。
+        :param func: 检查函数
+        :param count: 移除数量
+        :param ef:
+        :return:
+        """
+        def check(c):
+            tp = TimePoint(ETimePoint.IN_EXILED, ef, [c, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                return func(c)
+
+        # 选择1张卡移除
+        tgt = self.choose_target(p, p, check, ef, False, False)
+        if tgt is not None:
+            self.send2exiled(p, p, tgt, ef)
+            return True
+        return False
+
     def change_posture(self, p: GamePlayer, c: GameCard, pst, ef: Effect = None):
         """
         改变至指定的姿态。
@@ -2058,3 +2150,19 @@ class Game:
             c.posture = pst
             self.batch_sending('upd_vc', [c.vid, c.serialize()])
         self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))
+
+    def count(self, c: GameCard, name, count=1):
+        """
+        为卡片增加指定种类的计数。
+        :param c:
+        :param name:
+        :param count:
+        :return:
+        """
+        if name in c.sign:
+            c.sign[name] += count
+        else:
+            c.sign[name] = count
+        for p in self.players:
+            if (p is self.get_player(c)) | (not c.cover):
+                p.update_vc(c)

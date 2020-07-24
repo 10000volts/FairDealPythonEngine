@@ -5,18 +5,16 @@ from utils.constants import ETimePoint, EEffectDesc, ELocation
 
 class E1(EffCounterStgE1Mixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[None])
+        super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
-        # 输出
-        super().execute()
         # 攻击力下降
         self.scr_arg[0].args[0].ATK.gain(-self.host.ATK.value)
 
 
 class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
     """
-    我方玩家被攻击时
+    下降500攻击力
     """
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[ef], trigger=True)

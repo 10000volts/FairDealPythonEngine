@@ -32,8 +32,6 @@ class E1(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         p = self.game.get_player(self.host)
         self.game.deal_damage(self.host, self.game.players[p.sp].leader, int(self.host.ATK.value / 2))
 
@@ -64,8 +62,6 @@ class E2(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 无效
         self.reacted.pop().args[-1] = 0
 
@@ -83,8 +79,6 @@ class E3(EffSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 赋予效果
         e2 = E2(self.host)
         self.host.register_effect(e2, True)

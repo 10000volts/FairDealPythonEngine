@@ -16,9 +16,6 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)

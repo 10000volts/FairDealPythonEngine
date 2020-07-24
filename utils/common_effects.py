@@ -3,13 +3,24 @@ from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ECardType, ELoc
 from utils.common import adj_pos
 
 
-class EffInvestigator(Effect):
+class EffTriggerCostMixin(Effect):
+    """
+    默认的触发式效果cost行为。
+    """
+    def cost(self, tp):
+        if self.condition(tp):
+            self.reacted.append(tp)
+            return True
+        return False
+
+
+class EffInvestigator(EffTriggerCostMixin):
     """
     调查筹码的效果。
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.INVESTIGATE, act_phase=EGamePhase.PUT_CARD,
-                         host=host, trigger=True, force=True)
+                         host=host, trigger=True, force=True, passive=True)
 
     def condition(self, tp):
         """
@@ -19,16 +30,6 @@ class EffInvestigator(Effect):
         """
         if (tp.tp == ETimePoint.CARD_PUT) and (tp.args[2] is self.host) \
                 and (tp not in self.reacted):
-            return True
-        return False
-
-    def cost(self, tp):
-        """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
-        :return:
-        """
-        if self.condition(tp):
-            self.reacted.append(tp)
             return True
         return False
 
@@ -52,6 +53,29 @@ class EffInvestigator(Effect):
         self.host.remove_effect(self)
 
 
+class EffTurnCostMixin(Effect):
+    """
+    默认的回合限定cost行为。
+    """
+    def cost(self, tp):
+        if self.condition(tp):
+            p = self.game.get_player(self.host)
+            if self.ef_id in self.game.ef_listener:
+                p.ef_limiter[self.ef_id] += 1
+            else:
+                p.ef_limiter[self.ef_id] = 1
+            return True
+        return False
+
+
+class EffCostMixin(Effect):
+    """
+    默认的cost行为。
+    """
+    def cost(self, tp):
+        return self.condition(tp)
+
+
 class EffLazyTriggerCostMixin(Effect):
     """
     默认的触发式效果cost行为。
@@ -59,17 +83,6 @@ class EffLazyTriggerCostMixin(Effect):
     def cost(self, tp):
         self.reacted.append(tp)
         return True
-
-
-class EffTriggerCostMixin(Effect):
-    """
-    默认的触发式效果cost行为。
-    """
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
-        return False
 
 
 class EffNextTurnMixin(EffLazyTriggerCostMixin):
@@ -93,23 +106,17 @@ class EffTurnEndMixin(EffLazyTriggerCostMixin):
         return False
 
 
-class EffUntil(Effect):
+class EffUntil(EffTriggerCostMixin):
     """
     满足条件时删除效果。
     """
     def __init__(self, host, ef, until):
         super().__init__(desc=EEffectDesc.REMOVE_EFFECT, act_phase=EGamePhase.PLAY_CARD,
-                         host=host, trigger=True, force=True, scr_arg=ef, no_reset=True)
+                         host=host, trigger=True, force=True, scr_arg=ef, no_reset=True, passive=True)
         self.until = until
 
     def condition(self, tp):
         if self.until(tp) and tp not in self.reacted:
-            return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
             return True
         return False
 
@@ -118,13 +125,14 @@ class EffUntil(Effect):
         self.host.remove_effect(self)
 
 
-class EffAttackLimit(Effect):
+class EffAttackLimit(EffTriggerCostMixin):
     """
     不能直接攻击
     """
     def __init__(self, host, can_invalid):
         super().__init__(desc=EEffectDesc.INVALID, act_phase=EGamePhase.PLAY_CARD,
-                         host=host, trigger=True, force=True, can_invalid=can_invalid)
+                         host=host, trigger=True, force=True, can_invalid=can_invalid,
+                         passive=True)
 
     def condition(self, tp):
         """
@@ -136,12 +144,6 @@ class EffAttackLimit(Effect):
             # 攻击者是自己
             if (tp.args[1].type == ECardType.LEADER) & (tp.args[0] is self.host) & (tp not in self.reacted):
                 return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
         return False
 
     def execute(self):
@@ -170,7 +172,6 @@ class EffProtect(Effect):
         return False
 
     def execute(self):
-        super().execute()
         # 无效摧毁
         self.reacted.pop().args[-1] = 0
 
@@ -199,9 +200,6 @@ class EffProtectProtocol(Effect):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
-
         c = self.reacted.pop().args[0]
         e = EffProtect(c, False)
         # 直到下次我方回合开始时不会被摧毁
@@ -222,9 +220,9 @@ class EffPerTurn(EffLazyTriggerCostMixin):
     每回合1次的效果。
     """
 
-    def __init__(self, host, ef):
+    def __init__(self, host, ef, **kwargs):
         super().__init__(desc=EEffectDesc.RESET_TIMES, host=host, trigger=True, force=True,
-                         scr_arg=ef)
+                         scr_arg=ef, **kwargs)
 
     def condition(self, tp):
         """
@@ -251,8 +249,8 @@ class EffCommonStrategy(Effect):
     """
     常规策略的缺省效果。
     """
-    def __init__(self, desc, host):
-        super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD, host=host)
+    def __init__(self, desc, host, **kwargs):
+        super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD, host=host, **kwargs)
 
     def condition(self, tp):
         return tp is None
@@ -260,7 +258,7 @@ class EffCommonStrategy(Effect):
 
 class EffCounterStgE1Mixin(EffLazyTriggerCostMixin):
     """
-    反制策略的E2效果，用来触发其真正效果。
+    反制策略的E2效果，用来触发其真正效果。请将passive置为True。
     """
     def condition(self, tp):
         return tp is not None and tp.tp != ETimePoint.ASK4EFFECT
@@ -308,7 +306,7 @@ class EffSingleStgE2(EffLazyTriggerCostMixin):
     """
     def __init__(self, host, scr_arg):
         super().__init__(desc=EEffectDesc.SEND2GRAVE, host=host, trigger=True,
-                         force=True, can_invalid=False, scr_arg=scr_arg)
+                         force=True, can_invalid=False, scr_arg=scr_arg, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
@@ -326,7 +324,7 @@ class EffSingleStgE3Mixin(EffLazyTriggerCostMixin):
     """
     def __init__(self, host, scr_arg):
         super().__init__(desc=EEffectDesc.EFFECT_END, host=host, trigger=True,
-                         force=True, scr_arg=scr_arg)
+                         force=True, scr_arg=scr_arg, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
@@ -391,8 +389,6 @@ class EffPierce(EffLazyTriggerCostMixin):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
         tp = self.reacted.pop()
         # 修改战斗伤害
         tp.args[2] = self.host.ATK.value

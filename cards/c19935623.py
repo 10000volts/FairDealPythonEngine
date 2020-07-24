@@ -11,7 +11,7 @@ class E2(EffLazyTriggerCostMixin):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.INVALID, act_phase=EGamePhase.PLAY_CARD,
-                         host=c, trigger=True, force=True, scr_arg=1)
+                         host=c, trigger=True, force=True, scr_arg=1, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
@@ -63,6 +63,7 @@ class E1(Effect):
         支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
         :return:
         """
+        # 输出。
         sd = self.game.get_player(self.host)
         if self.condition(tp):
             self.reacted.append(tp)

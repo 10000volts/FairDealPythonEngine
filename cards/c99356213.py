@@ -16,8 +16,6 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         for c in self.game.vid_manager.get_cards():
             if ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.STRATEGY):
                 self.game.destroy(self.host, c, self)

@@ -17,9 +17,6 @@ class E1(EffSingleStgE1Mixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         p = self.game.get_player(self.host)
         tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, self.host.ATK.value, 1])
         self.game.enter_time_point(tp)

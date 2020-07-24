@@ -28,8 +28,6 @@ class E1(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 给予取走者1000伤害。
         self.game.deal_damage(self.host, self.game.get_player(self.host).leader,
                               1000, self)

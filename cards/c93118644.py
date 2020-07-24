@@ -16,8 +16,6 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         pos = self.host.inf_pos
         op = self.game.players[self.game.get_player(self.host).sp]
         if (op.on_field[pos] is not None) & (op.on_field[pos + 3] is not None):

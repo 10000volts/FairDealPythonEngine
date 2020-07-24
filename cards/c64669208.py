@@ -29,9 +29,6 @@ class E1(EffCommonStrategy):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return ((c.location & ELocation.GRAVE) > 0) & (c.ATK.value == self.host.ATK.value)
 

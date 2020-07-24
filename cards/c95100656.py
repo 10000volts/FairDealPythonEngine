@@ -25,8 +25,6 @@ class E2(Effect):
         return False
 
     def execute(self):
-        # 输出
-        super().execute()
         tp = self.reacted.pop()
         tp.args[2] = int(tp.args[2] / 2)
 
@@ -71,8 +69,6 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 从场下入场
         if self.host.location & ELocation.GRAVE:
             p = self.game.get_player(self.host)

@@ -24,9 +24,6 @@ class E1(EffCommonStrategy):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return c.location & ELocation.ON_FIELD
 

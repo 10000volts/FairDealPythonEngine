@@ -40,9 +40,6 @@ class E1(Effect):
         def check(c):
             return (self.game.get_player(c) is self.game.get_player(self.host)) & \
                    ((c.location & ELocation.HAND) > 0)
-
-        super().execute()
-
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:

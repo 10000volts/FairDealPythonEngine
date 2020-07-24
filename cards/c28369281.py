@@ -10,7 +10,7 @@ class E1(Effect):
     """
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True, force=True,
-                         no_reset=True, scr_arg=[0, 0, ef])
+                         no_reset=True, scr_arg=[0, 0, ef], passive=True)
 
     def condition(self, tp):
         """
@@ -40,7 +40,6 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        super().execute()
 
 
 def give(c):

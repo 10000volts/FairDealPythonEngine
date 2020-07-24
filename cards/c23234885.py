@@ -24,9 +24,6 @@ class E1(EffSingleStgE1Mixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
-
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择1雇员本回合可最多3次向雇员攻击

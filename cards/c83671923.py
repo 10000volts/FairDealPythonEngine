@@ -1,10 +1,10 @@
 # 伪造推荐信
 from core.game import TimePoint, GameCard
 from utils.constants import EEffectDesc, EEmployeeType, ETimePoint, ELocation, ECardType, ECardRank
-from utils.common_effects import EffTriggerCostMixin
+from utils.common_effects import EffCostMixin
 
 
-class E1(EffTriggerCostMixin):
+class E1(EffCostMixin):
     """
     特召。
     """
@@ -17,8 +17,21 @@ class E1(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        # todo: 太麻烦了，不写了！
-        return tp is None
+        if tp is None:
+            p = self.game.get_player(self.host)
+            op = self.game.players[p.sp]
+            for c in p.hand:
+                if (c.type == ECardType.EMPLOYEE) & (c.rank == ECardRank.COMMON):
+                    for posture in range(0, 2):
+                        for pos in range(0, 3):
+                            if op.on_field[pos] is None:
+                                tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, op, pos, posture, 1])
+                                self.game.enter_time_point(tp)
+                                if tp.args[-1]:
+                                    for pos2 in range(0, 3):
+                                        if op.on_field[pos2] is None:
+                                            return True
+        return False
 
     def execute(self):
         """
@@ -26,8 +39,6 @@ class E1(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        # 输出
-        super().execute()
         # 选手牌1雇员进入对方场地
         p = self.game.get_player(self.host)
         op = self.game.players[p.sp]

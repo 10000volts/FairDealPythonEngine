@@ -1,9 +1,9 @@
 # 愚者
-from models.effect import Effect
+from utils.common_effects import EffTriggerCostMixin
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint
 
 
-class E1(Effect):
+class E1(EffTriggerCostMixin):
     """
     附加值变成-500。
     """
@@ -21,23 +21,12 @@ class E1(Effect):
             return True
         return False
 
-    def cost(self, tp):
-        """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
-        :return:
-        """
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
-        return False
-
     def execute(self):
         """
         执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
         调用基类方法进行输出。
         :return:
         """
-        super().execute()
         self.host.ATK.change_adv(-500)
 
 
