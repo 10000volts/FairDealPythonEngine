@@ -1431,7 +1431,8 @@ class Game:
     def enter_time_points(self):
         tts = list()
         p = self.turn_player
-        for t in self.temp_tp_stack[::-1]:
+        while len(self.temp_tp_stack):
+            t = self.temp_tp_stack[0]
             self.tp_stack.append(t)
             tts.append(t)
             p = p if t.sender is None else self.get_player(t.sender.host)
@@ -1440,7 +1441,7 @@ class Game:
             # 先询问对方。
             self.react_times += 2
             self.react(self.players[p.sp], t, self.react_times - 2)
-        
+
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
