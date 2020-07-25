@@ -71,6 +71,7 @@ class E1(Effect):
             self.game.enter_time_point(tp1)
             return tp1.args[1]
         # 奉献是cost，不取对象
+        # 有特殊处理，不能使用默认的奉献函数
         c1 = self.game.choose_target(p, p, check, self, False, False)
         if c1 is not None:
             tp = TimePoint(ETimePoint.DEVOTING, self, [c1, 1])

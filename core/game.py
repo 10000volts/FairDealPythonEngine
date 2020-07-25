@@ -2073,6 +2073,22 @@ class Game:
             return self.vid_manager.get_card(cs[ind])
         return None
 
+    def devote(self, p: GamePlayer, c: GameCard, ef: Effect):
+        """
+        奉献。
+        :param p:
+        :param c:
+        :param ef:
+        :return:
+        """
+        tp = TimePoint(ETimePoint.DEVOTING, ef, [c, 1])
+        self.enter_time_point(tp)
+        if tp.args[-1]:
+            self.send_to_grave(p, p, c, ef)
+            self.enter_time_point(TimePoint(ETimePoint.DEVOTED, ef, [c]))
+            return True
+        return False
+
     def discard(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect):
         """
         丢弃指定的手牌。
