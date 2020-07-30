@@ -81,7 +81,7 @@ class E1(Effect):
                 self.game.send_to_grave(p, p, c1, self)
                 self.game.enter_time_point(TimePoint(ETimePoint.DEVOTED, self, [c1]))
                 return True
-            return False
+        return False
 
     def execute(self):
         p = self.game.get_player(self.host)

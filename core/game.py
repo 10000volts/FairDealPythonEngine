@@ -1958,6 +1958,8 @@ class Game:
             # todo: 换c的效果不会出。
             self.batch_sending('crd_snd2exd', [c.vid], p)
             self.enter_time_points()
+            return True
+        return False
 
     def deal_damage(self, sender: GameCard, target: GameCard, damage: int, ef: Effect = None):
         """
