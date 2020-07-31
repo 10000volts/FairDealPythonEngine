@@ -105,6 +105,8 @@ class EEffectDesc:
     PROPERTY_CHANGE = 53
     # ATK下降
     ATK_LOSE = 54
+    # 奉献
+    DEVOTE = 55
 
 
 class ELocation:
@@ -491,7 +493,7 @@ class ETimePoint:
     TRY_CONTRACT = 178
     # 进行契约时 在此时点发动效果的卡：
     #
-    TRY_CONTRACTING = 179
+    CONTRACTING = 179
     # 进行契约后 在此时点发动效果的卡：
     #
     CONTRACTED = 180

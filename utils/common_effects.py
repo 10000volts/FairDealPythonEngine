@@ -264,6 +264,20 @@ class EffCounterStgE1Mixin(EffLazyTriggerCostMixin):
         return tp is not None and tp.tp != ETimePoint.ASK4EFFECT
 
 
+class EffExile(Effect):
+    """
+    以从场下移除作为COST。
+    """
+    def condition(self, tp):
+        if tp.tp == ETimePoint.ASK4EFFECT:
+            # todo: 不会做禁止场下移除的效果。
+            return (self.host.location & ELocation.GRAVE) > 0
+
+    def cost(self, tp):
+        p = self.game.get_player(self.host)
+        return self.game.send2exiled(p, p, self.host, self)
+
+
 class EffCounterStgE2Mixin(Effect):
     """
     反制策略的E2效果，用来触发其真正效果。

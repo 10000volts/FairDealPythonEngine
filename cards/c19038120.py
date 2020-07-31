@@ -40,7 +40,7 @@ class E1(EffTurnCostMixin):
         p = self.game.get_player(self.host)
 
         def check(c):
-            if (c.location & (2 - p.sp + ELocation.HAND)) & (c.type == ECardType.EMPLOYEE) & \
+            if ((c.location & (2 - p.sp + ELocation.HAND)) > 0) & (c.type == ECardType.EMPLOYEE) & \
                     (c.rank == ECardRank.COMMON):
                 for posture in range(0, 2):
                     for pos in range(0, 3):

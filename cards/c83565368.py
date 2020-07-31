@@ -35,9 +35,10 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_ACTIVATE_STRATEGY:
+            sd = self.game.get_player(self.host)
             if ((self.host.location & ELocation.HAND) > 0) &\
-                    (tp not in self.reacted) & ((tp.args[0].subtype & EStrategyType.COUNTER) > 0):
-                sd = self.game.get_player(self.host)
+                    (tp not in self.reacted) & ((tp.args[0].subtype & EStrategyType.COUNTER) > 0) & \
+                    ((tp.args[0].location & (2 - sd.sp)) > 0):
                 for posture in range(0, 2):
                     for pos in range(0, 3):
                         if sd.on_field[pos] is None:

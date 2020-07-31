@@ -485,12 +485,18 @@ class GameCard:
         离场时，清除所有非永久的buff，效果复原。
         :return:
         """
-        for e in self.effects:
-            if not e.no_reset:
-                self.remove_effect(e)  # , False)
+        i = 0
+        while i < len(self.effects):
+            if not self.effects[i].no_reset:
+                self.remove_effect(self.effects[i])  # , False)
+            else:
+                i += 1
         if self.cid is not None:
             m = import_module('cards.c{}'.format(self.cid))
             m.give(self)
+        self.attack_times = 0
+        self.block_times = 0
+        self.posture_times = 0
         self.ATK.reset()
         self.DEF.reset()
         self.turns = 0
@@ -1190,9 +1196,9 @@ class Game:
                         # 还有剩余的转换次数，为负数可以无限次数转换
                         if _c.posture_times == 0:
                             return EErrorCode.TIMES_LIMIT
-                        _tp = TimePoint(ETimePoint.TRY_CHANGE_POSTURE, None, [c, 1])
+                        _tp = TimePoint(ETimePoint.TRY_CHANGE_POSTURE, None, [_c, 1])
                         self.enter_time_point(_tp)
-                        if not _tp.args[-1]:
+                        if _tp.args[-1] == 0:
                             return EErrorCode.FORBIDDEN_CP
                     return 0
                 # 策略
@@ -1206,7 +1212,7 @@ class Game:
                             return EErrorCode.PLAY_COUNTER
                         if not _c.effects[0].condition(None):
                             return EErrorCode.FORBIDDEN_STRATEGY
-                        _tp = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [c, 1])
+                        _tp = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [_c, 1])
                         self.enter_time_point(_tp)
                         if not _tp.args[-1]:
                             return EErrorCode.FORBIDDEN_UNCOVER
@@ -1435,13 +1441,13 @@ class Game:
             t = self.temp_tp_stack[0]
             self.tp_stack.append(t)
             tts.append(t)
+            self.temp_tp_stack.pop(0)
+        for t in tts:
             p = p if t.sender is None else self.get_player(t.sender.host)
             self.batch_sending('ent_tp', [t.tp])
-            self.temp_tp_stack.remove(t)
             # 先询问对方。
             self.react_times += 2
             self.react(self.players[p.sp], t, self.react_times - 2)
-
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
@@ -1715,13 +1721,14 @@ class Game:
                     self.batch_sending('smn', [em.vid, int(ef is None)], p)
                     self.enter_time_points()
 
-    def special_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard, ef: Effect):
+    def special_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard, ef: Effect, posture=None):
         """
         雇员请求特殊入场。
         :param p: 发起召唤的玩家
         :param pt: player target 召唤到
         :param em: 雇员
         :param ef:
+        :param posture
         :return:
         """
         def check_pos(_pos):
@@ -1731,19 +1738,12 @@ class Game:
                 return EErrorCode.INVALID_PUT
             return 0
 
-        for posture in range(0, 2):
-            for pos in range(0, 3):
-                if pt.on_field[pos] is None:
-                    tp = TimePoint(ETimePoint.TRY_SUMMON, ef, [em, pt, pos, posture, 1])
-                    self.enter_time_point(tp)
-                    # 入场被允许
-                    if tp.args[-1]:
-                        # 询问入场位置、姿态
-                        pos = p.input(check_pos, 'req_pos', [0, 3])
-                        if pos is not None:
-                            posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0
-                            self.summon(p, pt, em, pos, posture, ef)
-                            return
+        # 询问入场位置、姿态
+        pos = p.input(check_pos, 'req_pos', [0, 3])
+        if pos is not None:
+            posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0 if posture is None else posture
+            self.summon(p, pt, em, pos, posture, ef)
+            return
 
     def common_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard):
         """
@@ -1869,26 +1869,28 @@ class Game:
                 self.batch_sending('set_crd', [s.vid], p)
                 self.enter_time_points()
 
-    # def send_to(self, loc, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
-    #     cm = c.move_to(ef, loc)
-    #     next(cm)
-    #     self.enter_time_points()
-    #     if next(cm):
-    #         next(cm)
-    #         if loc & ELocation.GRAVE:
-    #             self.batch_sending('upd_vc', [c.vid, c.serialize()])
-    #         else:
-    #             cov = c.cover
-    #             for pi in self.players:
-    #                 if (not cov) | (pi is pt):
-    #                     pi.output('upd_vc', [c.vid, c.serialize()])
-    #                 else:
-    #                     pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
-    #             # todo: 换c的效果不会出。
-    #             self.batch_sending('crd_snd', [c.vid, loc], p)
-    #             self.enter_time_points()
-    #             if (loc & ELocation.EXILED) == 0:
-    #                 pt.shuffle()
+    def send_to(self, loc, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+        cm = c.move_to(ef, loc)
+        next(cm)
+        self.enter_time_points()
+        if next(cm):
+            next(cm)
+            if loc & ELocation.GRAVE:
+                self.batch_sending('upd_vc', [c.vid, c.serialize()])
+            else:
+                cov = c.cover
+                for pi in self.players:
+                    if (not cov) | (pi is pt):
+                        pi.output('upd_vc', [c.vid, c.serialize()])
+                    else:
+                        pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+                # todo: 换c的效果不会出。
+                self.batch_sending('crd_snd', [c.vid, loc], p)
+                self.enter_time_points()
+                if (loc & ELocation.EXILED) == 0:
+                    pt.shuffle()
+            return True
+        return False
 
     def send_to_grave(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
@@ -2074,6 +2076,51 @@ class Game:
                     return None
             return self.vid_manager.get_card(cs[ind])
         return None
+
+    def ceremony(self, p: GamePlayer, func, v, send_to=ELocation.GRAVE, op='>', with_tp=True):
+        """
+        进行契约。
+        :param p:
+        :param func: 素材的筛选函数
+        :param send_to: 素材使用后送去……
+        :param v: 契约需求的值
+        :param op: 操作符。>: 大于等于 =: 恰好等于
+        :param with_tp:
+        :return:
+        """
+        def check_ind(_ind):
+            if _ind not in range(0, len(cs)):
+                return EErrorCode.OVERSTEP
+            return 0
+
+        cs = list()
+        material = list()
+        atk = 0
+        if not with_tp:
+            for c in self.vid_manager.get_cards():
+                if func(c):
+                    cs.append(c.vid)
+            while True:
+                # 询问选项
+                ind = p.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                if ind is None:
+                    return False
+                c = self.vid_manager.get_card(cs[ind])
+                material.append(c)
+                cs.pop(ind)
+                atk += c.ATK.value
+                if op == '>':
+                    if atk >= v:
+                        break
+                elif op == '=':
+                    if atk == v:
+                        break
+            for c in material:
+                pt = self.get_player(c)
+                if not self.send_to(2 - pt.sp + send_to, p, pt, c):
+                    return False
+            return True
+        return False
 
     def devote(self, p: GamePlayer, c: GameCard, ef: Effect):
         """

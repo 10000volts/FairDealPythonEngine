@@ -32,7 +32,7 @@ class E2(EffPerTurn):
     重置每回合的防止击溃次数。
     """
     def __init__(self, host):
-        super().__init__(host=host, ef=E3(host), passive=False)
+        super().__init__(host=host, ef=E3(host), passive=True)
 
 
 class E3(EffTriggerCostMixin):
