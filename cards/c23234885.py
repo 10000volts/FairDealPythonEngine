@@ -1,14 +1,23 @@
 # 超额执行
-from utils.common_effects import EffSingleStgE1Mixin, EffAttackLimit, EffUntil
+from utils.common_effects import EffSingleStgE1Mixin, EffUntil, EffLazyTriggerCostMixin
 from utils.constants import EEffectDesc, ECardType, ELocation, ETimePoint
 
 
-class E2(EffAttackLimit):
+class E2(EffLazyTriggerCostMixin):
     """
-    不能直接攻击
+    战斗伤害变成0
     """
     def __init__(self, c):
-        super().__init__(host=c, can_invalid=False)
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, can_invalid=False, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DEALING_DAMAGE:
+            if (tp.sender is None) & (tp.args[0] == self.host):
+                return True
+        return False
+
+    def execute(self):
+        self.reacted.pop().args[2] = 0
 
 
 class E1(EffSingleStgE1Mixin):

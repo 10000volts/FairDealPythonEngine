@@ -1,4 +1,4 @@
-# 龙骑士 盖亚Coser
+# 大敌 库伦维尔
 from utils.common_effects import EffPierce
 
 

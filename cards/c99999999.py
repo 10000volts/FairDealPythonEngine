@@ -67,7 +67,6 @@ class E5(EffNextTurnMixin):
 
     def execute(self):
         self.game.devote(self.game.get_player(self.host), self.host, self)
-        self.host.remove_effect(self)
 
 
 class E4(EffTriggerCostMixin):

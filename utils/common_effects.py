@@ -411,3 +411,26 @@ class EffPierce(EffLazyTriggerCostMixin):
             tp.args[2] -= tp.args[1].DEF.value
         else:
             tp.args[2] -= tp.args[1].ATK.value
+
+
+class EffTaunt(EffTriggerCostMixin):
+    """
+    嘲讽。
+    """
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.TAUNT, host=host, trigger=True, force=True, passive=True,
+                         ef_id=EEffectDesc.TAUNT)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.TRY_ATTACK:
+            p = self.game.get_player(self.host)
+            op = self.game.players[p.sp]
+            if (tp.args[0] in op.on_field) & (self.host in p.on_field) & (self.host.cover == 0):
+                for ef in tp.args[1].effects:
+                    if ef.ef_id == EEffectDesc.TAUNT:
+                        return False
+                return True
+        return False
+
+    def execute(self):
+        self.reacted.pop().args[-1] = 0

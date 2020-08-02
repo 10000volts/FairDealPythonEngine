@@ -107,6 +107,8 @@ class EEffectDesc:
     ATK_LOSE = 54
     # 奉献
     DEVOTE = 55
+    # 嘲讽
+    TAUNT = 56
 
 
 class ELocation:
