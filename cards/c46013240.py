@@ -20,7 +20,7 @@ class E2(EffTriggerCostMixin):
     回复生命。
     """
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.HEAL, host=c, trigger=True)
+        super().__init__(desc=EEffectDesc.HEAL, host=c, trigger=True, force=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TURN_ENDING:
