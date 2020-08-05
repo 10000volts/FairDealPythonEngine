@@ -636,6 +636,7 @@ class GameCard:
             if etp3:
                 if etp3 == ETimePoint.OUT_FIELD_END:
                     # 离场后重置
+                    self.game.skip_times = 0
                     self.reset()
                 tp3 = TimePoint(etp3, ef, [self, pre_loc])
                 self.game.temp_tp_stack.append(tp3)
@@ -646,6 +647,9 @@ class GameCard:
             elif etp4 == ETimePoint.IN_GRAVE_END:
                 self.turns = 0
                 self.cover = 0
+            elif etp4 == ETimePoint.IN_FIELD_END:
+                self.turns = 0
+                self.game.skip_times = 0
             else:
                 self.turns = 0
             tp4 = TimePoint(etp4, ef, [self, loc])
@@ -832,6 +836,10 @@ class Game:
         self.loser: GamePlayer = None
         # 连锁计数。
         self.react_times = 0
+        # 连续跳过(np)次数，进入/离开场地才会重置计数。
+        self.skip_times = 0
+        # 连续跳过次数达到该值时立即进行单局胜负判定。
+        self.max_skip = self.game_config['max_skip']
         self.turn_process = self.game_config['turn_process']
         # 在当前阶段所有需要检查是否满足了触发条件的效果
         self.ef_listener = list()
@@ -1319,6 +1327,10 @@ class Game:
                             attacker.attack(tgt)
                 # next phase 主动进行自己回合的下个阶段(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
                 elif cmd[0] == 4:
+                    self.skip_times += 1
+                    if self.skip_times >= self.max_skip:
+                        self.judge()
+                        break
                     self.enter_turn_phase(next(ntp))
                 # good game 单局认输
                 elif cmd[0] == 5:
