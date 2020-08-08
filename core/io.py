@@ -44,12 +44,13 @@ def set_socket(acceptor):
     terminal[acceptor].connect(acceptor)
 
 
-def input_from_socket(p, msg, check_func, force=True):
+def input_from_socket(p, msg, check_func, special_func, force=True):
     """
 
     :param p: player
     :param msg: 提示信息
     :param check_func:
+    :param special_func: -1时的特殊处理(默认行为为认输)。
     :param force: 是否为强制输入。
     :return:
     """
@@ -72,6 +73,9 @@ def input_from_socket(p, msg, check_func, force=True):
             #     continue
             if ' ' in ans:
                 ans = [int(x) for x in ans.split(' ')]
+                if ans == -1:
+                    if special_func(p, ans[1]):
+                        return None
                 err_code = check_func(*ans)
                 if err_code == 0:
                     return ans
@@ -97,11 +101,11 @@ def input_from_socket(p, msg, check_func, force=True):
             return None
 
 
-def input_from_local(p, msg, func):
+def input_from_local(p, msg, check_func, special_func, force=True):
     pass
 
 
-def input_from_ai(p, msg, func):
+def input_from_ai(p, msg, check_func, special_func, force=True):
     return p.upstream.respond(msg)
 
 

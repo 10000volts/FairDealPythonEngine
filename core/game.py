@@ -14,6 +14,7 @@ from random import randint
 import redis
 import json
 from datetime import datetime
+from threading import Thread
 
 # redis键值对int/str不敏感
 rds = redis.StrictRedis(db=0)
@@ -100,10 +101,10 @@ class GamePlayer:
         self.ef_g_limiter = dict()
 
     def input(self, func, *args):
-        return self.in_method(self, make_input(*args), func)
+        return self.in_method(self, make_input(*args), self.game.give_up, func)
 
     def free_input(self, func, *args):
-        return self.in_method(self, make_input(*args), func, False)
+        return self.in_method(self, make_input(*args), self.game.give_up, func, False)
 
     def output(self, *args):
         msg = make_output(*args)
@@ -855,13 +856,28 @@ class Game:
         for p in self.players:
             p.output('startg')
 
+        t1 = Thread(None, self.check_winner)
+        t1.setDaemon(True)
+        t1.start()
+        t1.join(3600.0)
+        if self.winner is None:
+            self.win_reason = 4
+            self.judge()
+            self.loser = self.players[self.winner.sp]
+        return self.winner, self.loser
+
+    def check_winner(self):
+        t2 = Thread(None, self.run_process)
+        t2.setDaemon(True)
+        t2.start()
+        while self.winner is None:
+            pass
+        self.loser = self.players[self.winner.sp]
+
+    def run_process(self):
         process = self.game_config['process']
         for ph in process:
             self.enter_phase(ph)
-            if self.winner is not None:
-                self.loser = self.players[self.winner.sp]
-                break
-        return self.winner, self.loser
 
     def enter_phase(self, ph):
         self.phase_now = ph
@@ -1414,6 +1430,23 @@ class Game:
             self.enter_time_point(tp)
             if tp.args[1]:
                 self.draw_card(self.turn_player, tp.args[0])
+
+    def give_up(self, p: GamePlayer, is_me):
+        """
+        一方认输。
+        :param p: 当前进行输入的玩家。
+        :param is_me:
+        :return:
+        """
+        if self.phase_now == EGamePhase.PLAY_CARD:
+            if is_me:
+                self.winner = self.players[p.sp]
+                self.win_reason = 2
+            else:
+                self.winner = p
+                self.win_reason = 2
+            return True
+        return False
 
     def judge(self):
         """
