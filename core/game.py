@@ -856,7 +856,7 @@ class Game:
         t1 = Thread(None, self.check_winner)
         t1.setDaemon(True)
         t1.start()
-        t1.join(3600.0)
+        t1.join()  # 3600.0
         if self.winner is None:
             self.win_reason = 4
             self.judge()
