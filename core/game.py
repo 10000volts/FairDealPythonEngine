@@ -80,14 +80,11 @@ class GamePlayer:
         sd = list()
         for cid in self.ori_deck.keys():
             for i in range(self.ori_deck[cid][0]):
-                if int(self.ori_deck[cid][3]):
-                    gc = GameCard(g, cid, ELocation.SIDE + 2 - self.sp)
-                    # self.vision.append(gc.vid)
-                    sd.append(gc)
-                else:
-                    gc = GameCard(g, cid, ELocation.HAND + 2 - self.sp)
-                    # self.vision.append(gc.vid)
-                    hd.append(gc)
+                gc = GameCard(g, cid, ELocation.HAND + 2 - self.sp)
+                hd.append(gc)
+            for i in range(self.ori_deck[cid][1]):
+                gc = GameCard(g, cid, ELocation.SIDE + 2 - self.sp)
+                sd.append(gc)
         self.deck = list()
         self.ori_side = sd
         self.side = sd
