@@ -9,8 +9,8 @@ import re
 terminal = dict()
 
 
-class TimeoutException(Exception):
-    pass
+# class TimeoutException(Exception):
+#     pass
 
 
 def make_output(op: str, args: list = None, sd=1):
@@ -73,7 +73,7 @@ def input_from_socket(p, msg, check_func, special_func, force=True):
             #     continue
             if ' ' in ans:
                 ans = [int(x) for x in ans.split(' ')]
-                if ans == -1:
+                if ans[0] == -1:
                     if special_func(p, ans[1]):
                         return None
                 err_code = check_func(*ans)
@@ -92,8 +92,8 @@ def input_from_socket(p, msg, check_func, special_func, force=True):
                     continue
                 return None
         except Exception as ex:
-            if type(ex) == TimeoutException:
-                raise ex
+            # if type(ex) == TimeoutException:
+            #     raise ex
             if force:
                 print(ex)
                 output_2_socket(p.upstream, make_output('in_err', [0]))

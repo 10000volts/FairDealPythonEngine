@@ -98,10 +98,10 @@ class GamePlayer:
         self.ef_g_limiter = dict()
 
     def input(self, func, *args):
-        return self.in_method(self, make_input(*args), self.game.give_up, func)
+        return self.in_method(self, make_input(*args), func, self.game.give_up)
 
     def free_input(self, func, *args):
-        return self.in_method(self, make_input(*args), self.game.give_up, func, False)
+        return self.in_method(self, make_input(*args), func, self.game.give_up, False)
 
     def output(self, *args):
         msg = make_output(*args)
