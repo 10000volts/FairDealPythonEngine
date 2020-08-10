@@ -56,8 +56,12 @@ class GamePlayer:
         self.leader_id = leader_card_id
         # 可使雇员从手牌通常入场的剩余次数。通常情况下每回合1次。
         self.summon_times = 1
-        # 可从手牌发动策略的剩余次数。通常情况下每回合1次。
+        # 可从手牌使用策略的剩余次数。通常情况下每回合1次。
         self.strategy_times = 1
+        # 可从手牌额外发动策略的剩余次数。通常情况下每回合0次。
+        self.activate_times = 0
+        # 可从手牌额外盖放策略的剩余次数。通常情况下每回合0次。
+        self.set_times = 0
         # 是否为先手玩家。
         self.sp = 0
         # 回合效果限定器。{ef_id: times, ...}
@@ -1116,7 +1120,7 @@ class Game:
                     if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(None)):
                         return EErrorCode.FORBIDDEN_STRATEGY
                     # 是否还有剩余的使用次数
-                    if self.turn_player.strategy_times == 0:
+                    if (self.turn_player.strategy_times == 0) & (self.turn_player.activate_times == 0):
                         return EErrorCode.TIMES_LIMIT
                     _tp = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[-1]])
                     self.enter_time_point(_tp)
@@ -1163,7 +1167,7 @@ class Game:
                     if not _tp.args[-1]:
                         return EErrorCode.FORBIDDEN_SET
                     # 是否还有剩余的使用次数
-                    if self.turn_player.strategy_times == 0:
+                    if (self.turn_player.strategy_times == 0) & (self.turn_player.set_times == 0):
                         return EErrorCode.TIMES_LIMIT
                     return 0
                 return EErrorCode.UNKNOWN_CARD
@@ -1269,7 +1273,10 @@ class Game:
                         self.turn_player.summon_times -= 1
                         self.summon(self.turn_player, self.turn_player, c, cmd[2], cmd[3])
                     elif c.type == ECardType.STRATEGY:
-                        self.turn_player.strategy_times -= 1
+                        if self.turn_player.activate_times:
+                            self.turn_player.activate_times -= 1
+                        else:
+                            self.turn_player.strategy_times -= 1
                         self.activate_strategy(self.turn_player, self.turn_player, c, cmd[2])
                 # act 询问可发动的效果
                 elif cmd[0] == 1:
@@ -1299,7 +1306,10 @@ class Game:
                         self.turn_player.summon_times -= 1
                         self.set_em(self.turn_player, self.turn_player, c, cmd[2])
                     elif c.type == ECardType.STRATEGY:
-                        self.turn_player.strategy_times -= 1
+                        if self.turn_player.set_times:
+                            self.turn_player.set_times -= 1
+                        else:
+                            self.turn_player.strategy_times -= 1
                         self.set_strategy(self.turn_player, self.turn_player, c, cmd[2])
                 # attack 尝试发动攻击
                 elif cmd[0] == 3:
@@ -1408,6 +1418,8 @@ class Game:
         # 重置可召唤、适用策略次数。
         self.turn_player.summon_times = 1
         self.turn_player.strategy_times = 1
+        self.turn_player.activate_times = 0
+        self.turn_player.set_times = 0
         for p in self.players:
             p.ef_limiter = dict()
         for c in self.turn_player.on_field:

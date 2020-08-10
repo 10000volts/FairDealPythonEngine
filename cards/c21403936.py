@@ -62,7 +62,7 @@ class E1(Effect):
         if tp.tp == ETimePoint.ASK4EFFECT and tp not in self.reacted:
             p = self.game.get_player(self.host)
             if self.host in p.hand:
-                tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 5000, 1])
+                tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, self.host.ATK.value, 1])
                 self.game.enter_time_point(tp2)
                 if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
                     if p.summon_times == 0:
@@ -87,8 +87,8 @@ class E1(Effect):
         sd = self.game.get_player(self.host)
         if self.condition(tp):
             self.reacted.append(tp)
-            # 支付一半生命力
-            f = sd.leader.hp_cost(5000, self)
+            # 支付ATK生命力
+            f = sd.leader.hp_cost(self.host.ATK.value, self)
             if next(f):
                 next(f)
                 return True

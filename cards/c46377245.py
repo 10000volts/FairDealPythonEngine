@@ -1,18 +1,18 @@
 # 可爱的大狗狗
 from utils.common_effects import EffSummon
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ECardType
+from utils.constants import EEffectDesc, ECardType
 
 
 class E1(EffSummon):
     """
-    询问。
+    攻击力上升。
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.ATK_GAIN, host=host)
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
