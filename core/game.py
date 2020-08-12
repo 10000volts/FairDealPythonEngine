@@ -1129,7 +1129,11 @@ class Game:
             # act 询问可发动的效果
             elif _args[0] == 1:
                 if (self.turn_phase == ETurnPhase.M1) | (self.turn_phase == ETurnPhase.M2):
-                    return 0
+                    # 存在且属于我方
+                    if _args[1] in self.vid_manager.cards and \
+                            self.get_player(self.vid_manager.get_card(_args[1])) is self.turn_player:
+                        return 0
+                    return EErrorCode.DONT_EXIST
                 return EErrorCode.WRONG_PHASE
             # set 将手牌盖放到场上
             elif _args[0] == 2:
@@ -1281,14 +1285,10 @@ class Game:
                 # act 询问可发动的效果
                 elif cmd[0] == 1:
                     efs = list()
-                    for c in self.vid_manager.get_cards():
-                        # 场上盖放的策略不在这里处理
-                        if (self.get_player(c) is self.turn_player) & \
-                                (not ((c.type == ECardType.STRATEGY) & (c.location & ELocation.ON_FIELD > 0) &
-                                 c.cover)):
-                            for ef in c.effects:
-                                if (not ef.trigger) and ef.condition(TimePoint(ETimePoint.ASK4EFFECT)):
-                                    efs.append(ef)
+                    c = self.vid_manager.get_card(cmd[1])
+                    for ef in c.effects:
+                        if (not ef.trigger) and ef.condition(TimePoint(ETimePoint.ASK4EFFECT)):
+                            efs.append(ef)
                     _len = len(efs)
                     if _len:
                         self.turn_player.output('req_rct', [ETimePoint.ASK4EFFECT])
