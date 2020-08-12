@@ -864,6 +864,8 @@ class Game:
         t1.start()
         if self.time_limit:
             t1.join(self.time_limit)
+        else:
+            t1.join()
         if self.winner is None:
             self.win_reason = 4
             self.judge()
