@@ -344,7 +344,7 @@ class HPProperty(CardProperty):
 
 
 class GameCard:
-    def __init__(self, g, cid=None, ori_loc=0, is_token=False):
+    def __init__(self, g, cid=None, ori_loc=ELocation.UNKNOWN, is_token=False):
         """
 
         :param cid:
@@ -665,6 +665,7 @@ class GameCard:
     def serialize(self):
         return {
             'vid': self.vid,
+            'cid': self.cid,
             'name': self.name,
             'type': self.type,
             'subtype': self.subtype,
@@ -843,6 +844,7 @@ class Game:
         # 连续跳过次数达到该值时立即进行单局胜负判定。
         self.max_skip = self.game_config['max_skip']
         self.turn_process = self.game_config['turn_process']
+        self.time_limit = self.game_config.get('time_limit', None)
         # 在当前阶段所有需要检查是否满足了触发条件的效果
         self.ef_listener = list()
         self.vid_manager = GCIDManager()
@@ -860,7 +862,8 @@ class Game:
         t1 = Thread(None, self.check_winner)
         t1.setDaemon(True)
         t1.start()
-        t1.join()  # 3600.0
+        if self.time_limit:
+            t1.join(self.time_limit)
         if self.winner is None:
             self.win_reason = 4
             self.judge()
