@@ -15,6 +15,7 @@ import redis
 import json
 from datetime import datetime
 from threading import Thread
+from time import sleep
 
 # redis键值对int/str不敏感
 rds = redis.StrictRedis(db=0)
@@ -877,7 +878,7 @@ class Game:
         t2.setDaemon(True)
         t2.start()
         while self.winner is None:
-            pass
+            sleep(1)
         self.loser = self.players[self.winner.sp]
 
     def run_process(self):
