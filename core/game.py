@@ -863,10 +863,10 @@ class Game:
         t1 = Thread(None, self.check_winner)
         t1.setDaemon(True)
         t1.start()
-        if self.time_limit:
-            t1.join(self.time_limit)
-        else:
-            t1.join()
+        # if self.time_limit:
+        #     t1.join(self.time_limit)
+        # else:
+        t1.join()
         if self.winner is None:
             self.win_reason = 4
             self.judge()
@@ -1473,7 +1473,7 @@ class Game:
         强制进行单局的胜负判断。
         :return:
         """
-        self.winner = self.p1 if self.p1.leader.DEF > self.p2.leader.DEF else self.p2
+        self.winner = self.p1 if self.p1.leader.DEF.value > self.p2.leader.DEF.value else self.p2
 
     def exchange_turn(self):
         p = self.op_player
