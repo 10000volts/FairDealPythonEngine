@@ -874,11 +874,16 @@ class Game:
         return self.winner, self.loser
 
     def check_winner(self):
-        t2 = Thread(None, self.run_process)
-        t2.setDaemon(True)
-        t2.start()
-        while self.winner is None:
-            sleep(1)
+        # t2 = Thread(None, self.run_process)
+        # t2.setDaemon(True)
+        # t2.start()
+        # while self.winner is None:
+        #     sleep(1)
+        process = self.game_config['process']
+        for ph in process:
+            self.enter_phase(ph)
+            if self.winner is not None:
+                break
         self.loser = self.players[self.winner.sp]
 
     def run_process(self):
