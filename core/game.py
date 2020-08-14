@@ -125,11 +125,10 @@ class GamePlayer:
         for c in self.hand:
             self.update_vc(c)
         for p in self.game.players:
-            for i in range(0, 10):
-                self.output('upd_vc', [p.leader.vid, p.leader.serialize()], self is p)
-                if p != self:
-                    for c in p.hand:
-                        self.update_vc_ano(c)
+            self.output('upd_vc', [p.leader.vid, p.leader.serialize()], self is p)
+            if p != self:
+                for c in p.hand:
+                    self.update_vc_ano(c)
 
     def req4option(self, option: list, count=1, force=False):
         """
