@@ -14,7 +14,7 @@ class E5(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYED:
-            return (tp.args[0] is self.host) & (tp.sender is None) \
+            return (tp.args[0] is self.host) & (tp.sender is None) & \
                    (self.game.get_player(tp.args[1]) is not self.game.get_player(self.host)) & \
                    (tp not in self.reacted)
         return False

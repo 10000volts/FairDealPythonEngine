@@ -176,6 +176,23 @@ class EffProtect(Effect):
         self.reacted.pop().args[-1] = 0
 
 
+class EBattleDamage0(EffLazyTriggerCostMixin):
+    """
+    战斗伤害变成0
+    """
+    def __init__(self, c):
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, can_invalid=False, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DEALING_DAMAGE:
+            if (tp.sender is None) & (tp.args[0] == self.host):
+                return True
+        return False
+
+    def execute(self):
+        self.reacted.pop().args[2] = 0
+
+
 class EffProtectProtocol(Effect):
     """
     保护协议(破产保护)
@@ -209,8 +226,8 @@ class EffProtectProtocol(Effect):
                                                (self.game.turn_player is self.game.get_player(self.host)))))
         # 可无限次阻挡
         c.block_times = -1
-        # 不能直接攻击
-        c.register_effect(EffAttackLimit(c, False))
+        # 战斗伤害变成0
+        c.register_effect(EBattleDamage0(c))
         # 全局1次
         self.host.remove_effect(self)
 
@@ -422,6 +439,7 @@ class EffTaunt(EffTriggerCostMixin):
                          ef_id=EEffectDesc.TAUNT)
 
     def condition(self, tp):
+        # 是在尝试攻击的时点，所以被阻挡(攻击时时点)不会发生问题。
         if tp.tp == ETimePoint.TRY_ATTACK:
             p = self.game.get_player(self.host)
             op = self.game.players[p.sp]

@@ -9,13 +9,13 @@ class E3(EffTriggerCostMixin):
     """
     造成的战斗伤害减半。
     """
-    def __init__(self, c):
+    def __init__(self, c, scr_arg):
         super().__init__(desc=EEffectDesc.DAMAGE_CHANGE,
-                         host=c, trigger=True, force=True)
+                         host=c, trigger=True, force=True, scr_arg=scr_arg)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
-            if (tp.args[0] is self.host) & (tp.sender is None) & (tp not in self.reacted):
+            if (tp.args[0] is self.scr_arg) & (tp.sender is None) & (tp not in self.reacted):
                 return True
         return False
 
@@ -85,11 +85,18 @@ class E1(Effect):
 
     def execute(self):
         p = self.game.get_player(self.host)
+        for p in self.game.players:
+            for c in p.on_field:
+                if c is not None and c.type == ECardType.EMPLOYEE:
+                    tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, self, [c, 1])
+                    self.game.enter_time_point(tp)
+                    if tp.args[-1] == 0:
+                        return
         tgt = self.game.choose_target(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
-                                                      (c.type == ECardType.EMPLOYEE)), self)
+                                                      (c.type == ECardType.EMPLOYEE)), self, True)
         if tgt is not None:
             op, v = tgt.ATK.gain(self.scr_arg)
-            e3 = E3(self.host)
+            e3 = E3(self.host, tgt)
             self.host.register_effect(e3)
             self.host.register_effect(E2(self.host, tgt, op, v, e3))
 

@@ -109,6 +109,8 @@ class EEffectDesc:
     DEVOTE = 55
     # 嘲讽
     TAUNT = 56
+    # 被保护
+    PROTECT = 57
 
 
 class ELocation:
@@ -661,4 +663,4 @@ class ETimePoint:
     # 风行检查 在此时点发动效果的卡：
     # 风行雇员
     # 在此时点，风行雇员暂时把自己的charge属性设置为True。
-    CHARGE_CHECK = 224
+    CHARGE_CHECK = 225

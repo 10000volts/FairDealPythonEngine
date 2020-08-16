@@ -773,12 +773,12 @@ class Match:
             pl: tuple = self.game.start()
             self.wins[pl[0]] += 1
             last_loser = pl[1]
+            self.batch_sending('endg', [self.game.win_reason], pl[0])
             winner: GamePlayer = self.end_check()
             if winner is not None:
                 self.batch_sending('endm', None, winner)
                 exec(self.match_config['match_end'])
                 return winner
-            self.batch_sending('endg', None, pl[0])
             self.batch_sending('mbreak')
             exec(self.match_config['match_break'])
 
@@ -860,13 +860,14 @@ class Game:
         for p in self.players:
             p.output('startg')
 
-        t1 = Thread(None, self.check_winner)
-        t1.setDaemon(True)
-        t1.start()
+        # t1 = Thread(None, self.check_winner)
+        # t1.setDaemon(True)
+        # t1.start()
         # if self.time_limit:
         #     t1.join(self.time_limit)
         # else:
-        t1.join()
+        # t1.join()
+        self.check_winner()
         if self.winner is None:
             self.win_reason = 4
             self.judge()
