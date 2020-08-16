@@ -1599,15 +1599,16 @@ class Game:
         """
         # 输出。
         if ef.secret:
-            p.output('cst_eff', [None if ef.no_source else ef.host.vid], True)
+            p.output('cst_eff', [None if ef.no_source else ef.host.vid, ef.description], True)
             if ef.cost(t):
-                p.output('act_eff', [None if ef.no_source else ef.host.vid], True)
+                p.output('act_eff', [None if ef.no_source else ef.host.vid, ef.description], True)
                 ef.execute()
                 return
         if not ef.passive:
             for pi in self.players:
                 if (not ef.secret) | (pi is p):
-                    pi.output('cst_eff', [None if ef.no_source else ef.host.vid], pi is p)
+                    pi.update_vc(ef.host)
+                    pi.output('cst_eff', [None if ef.no_source else ef.host.vid, ef.description], pi is p)
         if ef.cost(t):
             tp = TimePoint(ETimePoint.PAID_COST, ef, [1])
             self.temp_tp_stack.append(tp)
@@ -1617,7 +1618,9 @@ class Game:
                 if not ef.passive:
                     for pi in self.players:
                         if (not ef.secret) | (pi is p):
-                            pi.output('act_eff', [None if ef.no_source else ef.host.vid], pi is p)
+                            pi.update_vc(ef.host)
+                            pi.output('act_eff', [None if ef.no_source else ef.host.vid, ef.description],
+                                      pi is p)
                 ef.execute()
                 self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_EFFECT_ACTIVATE, ef, ef))
             else:
