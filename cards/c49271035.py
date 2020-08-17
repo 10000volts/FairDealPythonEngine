@@ -49,6 +49,7 @@ class E2(Effect):
         x = tp.args[0]
         y = tp.args[1]
         cs = adj_pos(x, y, g.scale)
+        pos = list()
         chs = list()
         # 剔除其中的无效卡
         sd = self.game.get_player(self.host)
@@ -56,11 +57,12 @@ class E2(Effect):
             if g.chessboard[c] is not None:
                 if (g.chessboard[c].location - sd.sp) % 2:
                     chs.append(g.chessboard[c].vid)
+                    pos.append(c)
         chs_len = len(chs)
         if chs_len:
             ind = sd.free_input(check_ind, 'req_chs_tgt', [chs, 1])
             if ind is not None:
-                g.show_card(sd, chs[ind], self)
+                g.investigate(sd, chs[ind], pos[ind])
         self.host.remove_effect(self)
 
 

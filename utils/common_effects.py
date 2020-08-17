@@ -49,7 +49,7 @@ class EffInvestigator(EffTriggerCostMixin):
         for c in cs:
             if g.chessboard[c] is not None:
                 if (g.chessboard[c].location - sd.sp) % 2:
-                    g.show_card(sd, g.chessboard[c].vid, self)
+                    g.investigate(sd, g.chessboard[c].vid, c)
         self.host.remove_effect(self)
 
 

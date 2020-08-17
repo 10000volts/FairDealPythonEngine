@@ -1708,6 +1708,17 @@ class Game:
         else:
             yield False
 
+    def investigate(self, p: GamePlayer, vid, pos):
+        """
+        在放置阶段时调查卡。
+        :param p: 发动效果的玩家
+        :param vid:
+        :param pos:
+        :return:
+        """
+        self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()])
+        self.batch_sending('upd_cbd', [pos], p)
+
     def show_card(self, p: GamePlayer, vid, ef: Effect = None, with_tp=True):
         """
         向双方展示自己选择的卡(不包括洗牌, 但必须在之后洗牌)。
