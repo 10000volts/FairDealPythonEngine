@@ -979,12 +979,14 @@ class Game:
     def __ph_extra_data(self):
         def gen(p: GamePlayer):
             for c in p.hand:
-                c.ATK.change_adv(randint(-2, 2) * 500)
+                c.ATK.add_val = randint(-2, 2) * 500
                 self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
+                p.update_vc(c)
             # 调查筹码
             i = randint(0, len(p.hand) - 1)
-            p.hand[i].ATK.change_adv(0)
+            p.hand[i].ATK.add_val = 0
             p.hand[i].register_effect(EffInvestigator(p.hand[i]), True)
+            p.update_vc(p.hand[i])
             self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
 
         gen(self.p1)
@@ -1022,6 +1024,7 @@ class Game:
                 for ac in cs:
                     if self.chessboard[ac] is not None:
                         self.chessboard[ac].ATK.add_val += card.ATK.add_val
+                        self.chessboard[ac].ATK.update()
                 # 影响力值发挥作用后归零，成为附加值。
                 card.ATK.add_val = 0
                 self.batch_sending('go', [x, y, card.vid], p)
