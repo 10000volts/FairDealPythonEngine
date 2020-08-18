@@ -1041,8 +1041,7 @@ class Game:
         def take_card(p: GamePlayer):
             # direction: 0: 只取走1个筹码 6: 同时取走下方的筹码 1: 同时取走右侧的筹码
             def check(_x, _y, direction):
-                if (direction != -self.scale) & (direction != -1) & \
-                        (direction != self.scale) & (direction != 1) & (direction != 0):
+                if (direction != self.scale) & (direction != 1) & (direction != 0):
                     return EErrorCode.INVALID_TOOK
                 if (_x == 5) & (direction == 1):
                     return EErrorCode.INVALID_TOOK

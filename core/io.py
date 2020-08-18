@@ -60,7 +60,7 @@ def input_from_socket(p, msg, check_func, special_func, force=True):
             ans = terminal[p.upstream].recv(1024).decode()
             # todo: del
             # print('ans ' + ans)
-            if re.match('[0-9 ]+$', ans) is None:
+            if re.match('[0-9 -]+$', ans) is None:
                 if force:
                     output_2_socket(p.upstream, make_output('in_err', [0]))
                     continue
