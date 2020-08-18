@@ -1182,8 +1182,8 @@ class Game:
                         return EErrorCode.TIMES_LIMIT
                     return 0
                 return EErrorCode.UNKNOWN_CARD
-            # attack 尝试发动攻击
-            elif _args[0] == 3:
+            # attack/quick attack 尝试发动攻击
+            elif (_args[0] == 3) | (_args[0] == 7):
                 # 只能在战斗阶段发动攻击。
                 if (self.turn_phase != ETurnPhase.BP1) & (self.turn_phase != ETurnPhase.LBP1) &\
                         (self.turn_phase != ETurnPhase.LBP2):
@@ -1203,6 +1203,25 @@ class Game:
                 self.enter_time_point(_tp)
                 if not _tp.args[-1]:
                     return EErrorCode.FORBIDDEN_ATTACK
+                if _args[0] == 7:
+                    # 模拟攻击以筛选可攻击目标
+                    _atk_tgt = list()
+                    for _em in self.op_player.on_field:
+                        if _em is not None and _em.type == ECardType.EMPLOYEE:
+                            _tp = TimePoint(ETimePoint.TRY_ATTACK, None, [_c, _em, 1])
+                            self.enter_time_point(_tp)
+                            if _tp.args[-1]:
+                                _atk_tgt.append(_em.vid)
+                    _tp = TimePoint(ETimePoint.TRY_ATTACK, None, [_c, self.op_player.leader, 1])
+                    self.enter_time_point(_tp)
+                    # 入场回合默认不能直接攻击对方领袖。
+                    # 风行检查
+                    self.enter_time_point(TimePoint(ETimePoint.CHARGE_CHECK, None, _c))
+                    if _tp.args[-1] & ((_c.charge | _c.turns) > 0):
+                        _atk_tgt.append(self.op_player.leader.vid)
+                        _c.charge = False
+                    if _args[2] not in _atk_tgt:
+                        return EErrorCode.FORBIDDEN_ATTACK
                 return 0
             # next phase 主动进行自己回合的下个阶段
             elif _args[0] == 4:
@@ -1393,6 +1412,23 @@ class Game:
                         if tp.args[-1]:
                             self.activate_strategy(self.turn_player, self.turn_player, c, cmd[1])
                         self.enter_time_point(TimePoint(ETimePoint.UNCOVERED_STRATEGY, None, [c]))
+                # quick attack 快速攻击指令
+                elif cmd[0] == 7:
+                    attacker = self.turn_player.on_field[cmd[1]]
+                    tgt = self.vid_manager.get_card(cmd[2])
+                    attacker.attack_times -= 1
+                    tp = TimePoint(ETimePoint.ATTACKING, None, [attacker, tgt, 1])
+                    self.enter_time_point(tp)
+                    # 攻击时离场导致攻击无效。
+                    if tp.args[-1] & ((attacker.location & ELocation.ON_FIELD) > 0):
+                        tgt = tp.args[1]
+                        self.batch_sending('atk', [attacker.vid, tgt.vid])
+                        # 对领袖的攻击，询问阻挡
+                        if tgt is self.op_player.leader:
+                            tgt = self.req4block(attacker, tgt)
+                            attacker.attack(tgt, True)
+                        else:
+                            attacker.attack(tgt)
 
     def next_turn_phase(self):
         for p in self.turn_process:
