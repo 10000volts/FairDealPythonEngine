@@ -1029,6 +1029,7 @@ class Game:
                         self.chessboard[ac].ATK.update()
                 # 影响力值发挥作用后归零，成为附加值。
                 card.ATK.add_val = 0
+                card.ATK.update()
                 self.batch_sending('go', [x, y, card.vid], p)
 
                 # 放下后的处理。
