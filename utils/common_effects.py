@@ -121,7 +121,8 @@ class EffUntil(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        self.host.remove_effect(self.scr_arg)
+        if self.scr_arg in self.host.effects:
+            self.host.remove_effect(self.scr_arg)
         self.host.remove_effect(self)
 
 

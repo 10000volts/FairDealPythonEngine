@@ -10,7 +10,7 @@ class E2(EffTriggerCostMixin):
     """
     def __init__(self, c, scr_arg):
         super().__init__(desc=EEffectDesc.PROTECT,
-                         host=c, trigger=True, force=True, scr_arg=scr_arg, no_reset=True)
+                         host=c, trigger=True, force=True, scr_arg=scr_arg, no_reset=True, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_ATTACK:
