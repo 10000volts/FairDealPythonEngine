@@ -24,7 +24,8 @@ class E2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TURN_ENDING:
-            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) & (tp not in self.reacted):
+            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) & (tp not in self.reacted)\
+                    & (self.game.turn_player is self.game.get_player(self.host)):
                 return True
         return False
 
