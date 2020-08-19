@@ -278,6 +278,8 @@ class CardProperty:
             for p in self.card.game.players:
                 if (p is g.get_player(self.card)) | (not self.card.cover):
                     p.update_vc(self.card)
+                else:
+                    p.update_vc_ano(self.card)
 
     def gain(self, v, perm: bool = False):
         """
