@@ -274,12 +274,11 @@ class CardProperty:
         self.value = int(t1.args) if t1.args > 0 else 0
         g.enter_time_point(TimePoint(self.tp2, None, self.value))
         # 发送属性更新信息。
-        if temp != self.value:
-            for p in self.card.game.players:
-                if (p is g.get_player(self.card)) | (not self.card.cover):
-                    p.update_vc(self.card)
-                else:
-                    p.update_vc_ano(self.card)
+        for p in self.card.game.players:
+            if (p is g.get_player(self.card)) | (not self.card.cover):
+                p.update_vc(self.card)
+            else:
+                p.update_vc_ano(self.card)
 
     def gain(self, v, perm: bool = False):
         """
