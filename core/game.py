@@ -681,7 +681,7 @@ class GameCard:
             'location': self.location,
             'buff_eff': list(self.buff_eff.values()),
             'inf_pos': self.inf_pos,
-            'posture': self.posture,
+            'posture': int(self.posture),
             'cover': self.cover,
             'sign': self.sign,
                            }
@@ -693,7 +693,7 @@ class GameCard:
             'location': self.location,
             'buff_eff': list(self.buff_eff.values()),
             'inf_pos': self.inf_pos,
-            'posture': self.posture,
+            'posture': int(self.posture),
             'cover': self.cover,
             'sign': self.sign,
                            }
