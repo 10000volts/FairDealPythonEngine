@@ -27,7 +27,7 @@ class E4(EffLazyTriggerCostMixin):
         return False
 
     def execute(self):
-        e5 = EffPierce(self.scr_arg)
+        e5 = EffPierce(self.scr_arg[0])
         self.scr_arg[0].register_effect(e5, True)
         self.scr_arg[1].scr_arg[3] = e5
         self.host.remove_effect(self)
@@ -55,7 +55,7 @@ class E1(EffSingleStgE1Mixin):
             self.host.register_effect(e3)
             e4 = E4(self.host, tgt, e3)
             self.host.register_effect(e4)
-            tgt.register_effect(EffSingleStgE2(self.host, [tgt]))
+            self.host.register_effect(EffSingleStgE2(self.host, [tgt]))
 
 
 def give(c):

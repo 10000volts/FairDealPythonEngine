@@ -31,7 +31,7 @@ class E1(EffSingleStgE1Mixin):
             eff = 1000 if self.host.ATK.value > 1000 else self.host.ATK.value
             op, v = tgt.ATK.gain(eff)
             self.host.register_effect(E3(self.host, tgt, op, v))
-            tgt.register_effect(EffSingleStgE2(self.host, [tgt]))
+            self.host.register_effect(EffSingleStgE2(self.host, [tgt]))
 
 
 def give(c):
