@@ -5,10 +5,10 @@ from utils.common_effects import EffCommonSummon
 
 class E1(EffCommonSummon):
     """
-    我方场上全部雇员ATK翻倍。
+    ATK翻倍。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host)
+        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host)
 
     def execute(self):
         """
@@ -16,10 +16,12 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
+        def check(c):
+            return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        for em in p.on_field:
-            if em is not None and em.type == ECardType.EMPLOYEE:
-                em.ATK.plus(2)
+        tgt = self.game.choose_target(p, p, check, self)
+        if tgt is not None:
+            tgt.ATK.plus(2)
 
 
 def give(c):

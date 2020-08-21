@@ -1,6 +1,6 @@
 # 拒绝服务攻击
 from utils.common_effects import EffCommonStrategy
-from utils.constants import EEffectDesc, ECardType
+from utils.constants import EEffectDesc
 
 
 class E1(EffCommonStrategy):

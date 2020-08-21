@@ -1,4 +1,20 @@
 # 偶像新星
+from utils.common_effects import EffPierce, EffLazyTriggerCostMixin
+from utils.constants import ETimePoint, EEffectDesc
+
+
+class E2(EffLazyTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(host=host, desc=EEffectDesc.ATK_GAIN, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.SUCC_SUMMON:
+            if (tp.args[0] is self.host) & (tp not in self.reacted):
+                return True
+        return False
+
+    def execute(self):
+        self.host.ATK.gain(800, True)
 
 
 def give(c):
@@ -7,4 +23,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(EffPierce(c))

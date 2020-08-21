@@ -85,8 +85,8 @@ class E1(Effect):
 
     def execute(self):
         p = self.game.get_player(self.host)
-        for p in self.game.players:
-            for c in p.on_field:
+        for pi in self.game.players:
+            for c in pi.on_field:
                 if c is not None and c.type == ECardType.EMPLOYEE:
                     tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, self, [c, 1])
                     self.game.enter_time_point(tp)
