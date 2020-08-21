@@ -268,11 +268,11 @@ class CardProperty:
                 v = 0
             i += 1
         self.value = v if v > 0 else 0
-        t1 = TimePoint(self.tp1, None, self.value)
+        t1 = TimePoint(self.tp1, None, [self.card, self.value])
         g = self.card.game
         g.enter_time_point(t1)
         self.value = int(t1.args) if t1.args > 0 else 0
-        g.enter_time_point(TimePoint(self.tp2, None, self.value))
+        g.enter_time_point(TimePoint(self.tp2, None, [self.card, self.value]))
         # 发送属性更新信息。
         for p in self.card.game.players:
             if (p is g.get_player(self.card)) | (not self.card.cover):
@@ -1061,17 +1061,18 @@ class Game:
             x, y, d = p.input(check, 'req_tk_crd')
             # 将卡取走。
             if d:
-                cards = [self.chessboard[self.scale * y + x],
-                         self.chessboard[self.scale * y + x + d]]
-                self.chessboard[self.scale * y + x] = None
-                self.chessboard[self.scale * y + x + d] = None
+                cards = [self.scale * y + x, self.scale * y + x + d]
             else:
-                cards = [self.chessboard[self.scale * y + x]]
-                self.chessboard[self.scale * y + x] = None
-            for card in cards:
-                p.hand.append(card)
-                card.location = 2 - p.sp + ELocation.HAND
-                p.update_vc(card)
+                cards = [self.scale * y + x]
+            for pos in cards:
+                if len(p.hand) < self.scale ** 2 / 2:
+                    card = self.chessboard[pos]
+                    self.chessboard[pos] = None
+                    p.hand.append(card)
+                    card.location = 2 - p.sp + ELocation.HAND
+                    p.update_vc(card)
+                else:
+                    d = 0
             self.batch_sending('tk_crd', [x, y, d], p)
             for card in cards:
                 self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
@@ -1082,7 +1083,8 @@ class Game:
         while f:
             f = False
 
-            take_card(self.turn_player)
+            if len(self.turn_player.hand) < self.scale ** 2 / 2:
+                take_card(self.turn_player)
             self.exchange_turn()
 
             for c in self.chessboard:
@@ -1597,8 +1599,8 @@ class Game:
 
     def enter_time_point(self, tp: TimePoint, out: bool = True):
         self.tp_stack.append(tp)
-        if out:
-            self.batch_sending('ent_tp', [tp.tp])
+        # if out:
+        #     self.batch_sending('ent_tp', [tp.tp])
         if tp.sender is None:
             # 先询问对方。
             self.react_times += 2
@@ -1618,7 +1620,7 @@ class Game:
             self.temp_tp_stack.pop(0)
         for t in tts:
             p = p if t.sender is None else self.get_player(t.sender.host)
-            self.batch_sending('ent_tp', [t.tp])
+            # self.batch_sending('ent_tp', [t.tp])
             # 先询问对方。
             self.react_times += 2
             self.react(self.players[p.sp], t, self.react_times - 2)

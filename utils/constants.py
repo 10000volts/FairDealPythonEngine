@@ -111,6 +111,8 @@ class EEffectDesc:
     TAUNT = 56
     # 被保护
     PROTECT = 57
+    # 领袖血量到达上限，抛弃溢出值
+    DISCARD_OVERFLOW = 58
 
 
 class ELocation:
@@ -545,11 +547,11 @@ class ETimePoint:
     SHOWED_CARD = 192
     # 攻击力计算时 在此时点发动效果的卡：
     # 鼓舞
-    # args: 当前攻击力数值。
+    # args[0]: 卡 args[1]: 当前攻击力数值。
     ATK_CALCING = 193
     # 攻击力计算后 在此时点发动效果的卡：
     # 飞天拉面神
-    # args: 计算后的攻击力数值。
+    # args[0]: 卡 args[1]: 计算后的攻击力数值。
     ATK_CALC = 194
     # 防御力计算时 在此时点发动效果的卡：
     #

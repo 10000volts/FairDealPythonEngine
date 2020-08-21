@@ -29,8 +29,10 @@ class E1(EffCostMixin):
                                 self.game.enter_time_point(tp)
                                 if tp.args[-1]:
                                     for pos2 in range(0, 3):
-                                        if op.on_field[pos2] is None:
-                                            return True
+                                        if p.on_field[pos2] is None:
+                                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos2, posture, 1])
+                                            self.game.enter_time_point(tp)
+                                            return bool(tp.args[-1])
         return False
 
     def execute(self):
@@ -45,7 +47,7 @@ class E1(EffCostMixin):
 
         def check(c):
             f = False
-            if (c.location & (2 - p.sp + ELocation.HAND)) & (c.type == ECardType.EMPLOYEE):
+            if ((c.location & (2 - p.sp + ELocation.HAND)) > 0) & (c.type == ECardType.EMPLOYEE):
                 for posture in range(0, 2):
                     for pos in range(0, 3):
                         if op.on_field[pos] is None:

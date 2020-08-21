@@ -453,3 +453,24 @@ class EffTaunt(EffTriggerCostMixin):
 
     def execute(self):
         self.reacted.pop().args[-1] = 0
+
+
+class EffHPLimit(EffLazyTriggerCostMixin):
+    """
+    血量上限。
+    """
+    def __init__(self, host, limit=10000):
+        super().__init__(desc=EEffectDesc.FORBIDDEN, host=host, trigger=True, force=True,
+                         passive=True, scr_arg=limit, ef_id=EEffectDesc.DISCARD_OVERFLOW,
+                         can_invalid=False)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DEF_CALCING:
+            if (tp.args[0] is self.host) & (tp.args[1] > self.scr_arg) & (tp not in self.reacted):
+                return True
+        return False
+
+    def execute(self):
+        tp = self.reacted.pop()
+        if tp.args[1] >= self.scr_arg:
+            tp.args[1] = self.scr_arg
