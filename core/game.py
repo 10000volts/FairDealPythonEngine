@@ -271,7 +271,7 @@ class CardProperty:
         t1 = TimePoint(self.tp1, None, [self.card, self.value])
         g = self.card.game
         g.enter_time_point(t1)
-        self.value = int(t1.args) if t1.args > 0 else 0
+        self.value = int(t1.args[1]) if t1.args[1] > 0 else 0
         g.enter_time_point(TimePoint(self.tp2, None, [self.card, self.value]))
         # 发送属性更新信息。
         for p in self.card.game.players:
