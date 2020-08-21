@@ -1826,7 +1826,9 @@ class Game:
         :param pos:
         :return:
         """
-        self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()])
+        c = self.vid_manager.get_card(vid)
+        c.cover = False
+        self.batch_sending('upd_vc', [vid, c.serialize()])
         self.batch_sending('upd_cbd', [pos], p)
 
     def show_card(self, p: GamePlayer, vid, ef: Effect = None, with_tp=True):
