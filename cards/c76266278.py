@@ -1,4 +1,20 @@
 # 删库跑路前科人员
+from utils.common_effects import EffLazyTriggerCostMixin
+from utils.constants import EEffectDesc, ETimePoint
+
+
+class E1(EffLazyTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DESTROYED:
+            if (tp.args[1] is self.host) & (tp not in self.reacted):
+                return True
+        return False
+
+    def execute(self):
+        self.game.deal_damage(self.host, self.game.get_player(self.host).leader, 2000, self)
 
 
 def give(c):
@@ -7,4 +23,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(E1(c))

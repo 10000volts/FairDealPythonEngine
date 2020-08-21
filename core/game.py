@@ -919,6 +919,7 @@ class Game:
             self.__end_phase(ETimePoint.PH_TAKE_CARD_END)
         elif ph == EGamePhase.MULLIGAN:
             self.__enter_phase(ETimePoint.PH_MULLIGAN)
+            self.__ph_mulligan()
             self.__end_phase(ETimePoint.PH_MULLIGAN_END)
         elif ph == EGamePhase.PLAY_CARD:
             self.__enter_phase(ETimePoint.PH_PLAY_CARD)
@@ -1088,6 +1089,74 @@ class Game:
                 f = f | (c is not None)
         self.turn_player.shuffle()
         self.op_player.shuffle()
+
+    def __ph_mulligan(self):
+        """
+        调整阶段。
+        :return:
+        """
+        def check_exchange(_m, _s):
+            """
+            检查手牌中序号_m的卡是否能交换副卡组中序号_s的卡
+            :param _m:
+            :param _s:
+            :return:
+            """
+            if (_m in range(0, len(p.hand))) & (_s in range(0, len(p.side))):
+                # 王牌补偿，满足条件时，任意筹码都可以交换副卡组中的王牌筹码
+                if p.side[_s].rank == ECardRank.TRUMP:
+                    return True
+                return p.hand[_m].rank >= p.side[_s].rank
+            else:
+                return True
+
+        def check(_m1, _m2, _s1, _s2):
+            """
+            :param _m1:
+            :param _m2:
+            :param _s1:
+            :param _s2:
+            :return:
+            """
+            _tc = 0
+            _tcs = 0
+            for _c in p.hand:
+                if _c.rank == ECardRank.TRUMP:
+                    _tc += 1
+            if _s1 in range(0, len(p.side)):
+                if p.side[_s1].rank == ECardRank.TRUMP:
+                    _tc += 1
+            if _s2 in range(0, len(p.side)):
+                # 连续交换副卡组中同一位置的牌。
+                if _s2 == _s1:
+                    if p.hand[_m1].rank == ECardRank.TRUMP:
+                        _tcs += 1
+                else:
+                    if p.side[_s2].rank == ECardRank.TRUMP:
+                        _tcs += 1
+            if (_tc + _tcs > 3) & (_tcs > 0):
+                return EErrorCode.NO_MORE_TRUMP
+            if check_exchange(_m1, _s1) & check_exchange(_m2, _s2):
+                return 0
+            return EErrorCode.FORBIDDEN_EXCHANGE
+
+        # 收到进入调整阶段的消息时客户端即可进行操作。mul指令只是用于回收用户发来的指令。
+        for p in self.players:
+            r = p.free_input(check, 'mul')
+            if r is not None:
+                m1, m2, s1, s2 = r
+                if (m1 in range(0, len(p.hand))) & (s1 in range(0, len(p.side))):
+                    t = p.hand[m1]
+                    p.hand[m1] = p.side[s1]
+                    p.side[s1] = t
+                    p.update_vc(p.hand[m1])
+                    p.update_vc(t)
+                if (m2 in range(0, len(p.hand))) & (s2 in range(0, len(p.side))):
+                    t = p.hand[m2]
+                    p.hand[m2] = p.side[s2]
+                    p.side[s2] = t
+                    p.update_vc(p.hand[m2])
+                    p.update_vc(t)
 
     def __ph_play_card(self):
         def check(*_args):

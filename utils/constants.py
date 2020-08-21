@@ -205,6 +205,10 @@ class EErrorCode:
     DEFEND_POSTURE = 18
     # 没有剩余攻击次数时不能转换姿态。
     NO_TIMES_REMAIN = 19
+    # 从副卡组换上的王牌卡数量超过限制。
+    NO_MORE_TRUMP = 20
+    # 禁止交换。
+    FORBIDDEN_EXCHANGE = 21
 
 
 class ETimePoint:
