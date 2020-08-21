@@ -71,10 +71,10 @@ class E5(EffNextTurnMixin):
 
 class E4(EffTriggerCostMixin):
     """
-    造成伤害时赋予效果。
+    造成伤害时对方丢弃手牌、赋予自身解放效果。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.DEVOTE, host=host, trigger=True, force=True)
+        super().__init__(desc=EEffectDesc.DISCARD, host=host, trigger=True, force=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALT_DAMAGE:
@@ -84,6 +84,14 @@ class E4(EffTriggerCostMixin):
         return False
 
     def execute(self):
+        op = self.game.players[self.game.get_player(self.host).sp]
+        if len(op.hand) > 0:
+            for c in op.hand:
+                tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+                self.game.enter_time_point(tp)
+                if tp.args[-1]:
+                    self.game.req4discard(op, 1, self)
+                    break
         self.host.register_effect(E5(self.host))
 
 

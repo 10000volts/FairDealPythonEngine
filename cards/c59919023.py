@@ -84,8 +84,12 @@ class E4(EffSummon):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            tgt.ATK.reset()
-            tgt.DEF.reset()
+            tgt.ATK.op_st = list()
+            tgt.ATK.val_st = list()
+            tgt.ATK.update()
+            tgt.DEF.op_st = list()
+            tgt.DEF.val_st = list()
+            tgt.DEF.update()
 
 
 def give(c):

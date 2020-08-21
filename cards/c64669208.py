@@ -1,9 +1,9 @@
 # 返聘
-from utils.common_effects import EffCommonStrategy
+from utils.common_effects import EffTriggerCostMixin
 from utils.constants import EEffectDesc, ELocation, ECardType
 
 
-class E1(EffCommonStrategy):
+class E1(EffTriggerCostMixin):
     """
     场下回收。
     """
@@ -31,7 +31,7 @@ class E1(EffCommonStrategy):
         """
         def check(c):
             return ((c.location & ELocation.GRAVE) > 0) & (c.ATK.value == self.host.ATK.value) & \
-                c.type == ECardType.EMPLOYEE
+                (c.type == ECardType.EMPLOYEE)
 
         # 选择的卡回到手牌
         p = self.game.get_player(self.host)

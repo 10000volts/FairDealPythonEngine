@@ -1,9 +1,9 @@
 # 假博士
-from utils.common_effects import EffTriggerCostMixin
+from utils.common_effects import EffLazyTriggerCostMixin
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint
 
 
-class E1(EffTriggerCostMixin):
+class E1(EffLazyTriggerCostMixin):
     """
     造成伤害。
     """

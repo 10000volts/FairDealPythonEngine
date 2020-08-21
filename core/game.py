@@ -340,6 +340,10 @@ class CardProperty:
 class HPProperty(CardProperty):
     def update(self):
         super().update()
+        # HP不存储过程。
+        self.op_st = list()
+        self.val_st = list()
+        self.become(self.value)
         if self.value <= 0:
             self.card.game.destroy(None, self.card)
 
@@ -1070,11 +1074,8 @@ class Game:
                     p.hand.append(card)
                     card.location = 2 - p.sp + ELocation.HAND
                     p.update_vc(card)
-                else:
-                    d = 0
-            self.batch_sending('tk_crd', [x, y, d], p)
-            for card in cards:
-                self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
+                    self.batch_sending('tk_crd', [pos, 0], p)
+                    self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
 
         # 后手玩家在这个环节中先取走卡片以平衡先后手。
         self.exchange_turn()
