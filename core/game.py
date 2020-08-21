@@ -341,9 +341,8 @@ class HPProperty(CardProperty):
     def update(self):
         super().update()
         # HP不存储过程。
-        self.op_st = list()
-        self.val_st = list()
-        self.become(self.value)
+        self.op_st = ['=']
+        self.val_st = [self.value]
         if self.value <= 0:
             self.card.game.destroy(None, self.card)
 
