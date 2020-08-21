@@ -1827,7 +1827,7 @@ class Game:
         :return:
         """
         c = self.vid_manager.get_card(vid)
-        c.cover = False
+        c.cover = 0
         self.batch_sending('upd_vc', [vid, c.serialize()])
         self.batch_sending('upd_cbd', [pos], p)
 
