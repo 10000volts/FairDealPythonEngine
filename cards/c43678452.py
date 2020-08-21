@@ -24,3 +24,4 @@ def give(c):
     :return:
     """
     c.register_effect(EffPierce(c))
+    c.register_effect(E2(c))

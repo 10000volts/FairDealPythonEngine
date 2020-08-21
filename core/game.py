@@ -244,7 +244,6 @@ class CardProperty:
         self.update()
 
     def update(self):
-        temp = self.value
         v = self.src_value + self.add_val
         i = 0
         for op in self.op_st:
