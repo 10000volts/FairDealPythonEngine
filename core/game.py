@@ -367,6 +367,7 @@ class GameCard:
         """
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
         self.game = g
+        self.location = ori_loc
         if cid is not None:
             self.vid = 0
             g.vid_manager.register(self)
@@ -392,7 +393,6 @@ class GameCard:
             self.series = json.loads(rds.hget(cid, 'series').decode())
             self.is_token = is_token
             self.effects = list()
-            self.location = ori_loc
             # 在对局中获得的效果。{eff: desc}
             self.buff_eff = dict()
             # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区
