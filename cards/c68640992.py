@@ -1,6 +1,6 @@
 # 高薪招聘
 from core.game import GameCard
-from utils.constants import EEffectDesc, EEmployeeType, ECardType, ECardRank
+from utils.constants import EEffectDesc, EEmployeeType, ECardType, ECardRank, ELocation
 from utils.common_effects import EffTurnCostMixin
 
 
@@ -31,7 +31,7 @@ class E1(EffTurnCostMixin):
         :return:
         """
         p = self.game.get_player(self.host)
-        c = GameCard(self.game)
+        c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
         c.create('应聘者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.GOOD,
                  self.host.ATK.value, self.host.ATK.value)
         self.game.special_summon(p, p, c, self)

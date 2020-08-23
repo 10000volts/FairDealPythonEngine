@@ -17,25 +17,24 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         if tp is None:
-            for p in self.game.players:
-                for c in p.grave:
-                    if (c.type == ECardType.EMPLOYEE) & (c.ATK.value == self.host.ATK.value):
-                        return True
+            p = self.game.get_player(self.host)
+            for c in p.grave:
+                if (c.type == ECardType.EMPLOYEE) & (c.ATK.value == self.host.ATK.value):
+                    return True
         return False
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
-        调用基类方法进行输出。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         :return:
         """
         def check(c):
-            return ((c.location & ELocation.GRAVE) > 0) & (c.ATK.value == self.host.ATK.value) & \
+            return (c in p.grave) & (c.ATK.value == self.host.ATK.value) & \
                 (c.type == ECardType.EMPLOYEE)
 
         # 选择的卡回到手牌
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target(p, p, check, self, True, False)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)
 

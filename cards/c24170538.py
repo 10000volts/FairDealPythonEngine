@@ -18,16 +18,17 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            p = self.game.get_player(self.host)
-            for c in p.hand:
-                if (c.type == ECardType.EMPLOYEE) & (c.rank < ECardRank.TRUMP):
-                    for posture in range(0, 2):
-                        for pos in range(0, 3):
-                            if p.on_field[pos] is None:
-                                tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, posture, 1])
-                                self.game.enter_time_point(tp)
-                                if tp.args[-1]:
-                                    return True
+            if (tp.args[0] is self.host) & (tp not in self.reacted):
+                p = self.game.get_player(self.host)
+                for c in p.hand:
+                    if (c.type == ECardType.EMPLOYEE) & (c.rank < ECardRank.TRUMP):
+                        for posture in range(0, 2):
+                            for pos in range(0, 3):
+                                if p.on_field[pos] is None:
+                                    tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, posture, 1])
+                                    self.game.enter_time_point(tp)
+                                    if tp.args[-1]:
+                                        return True
         return False
 
     def execute(self):
@@ -40,7 +41,7 @@ class E1(EffTriggerCostMixin):
         p = self.game.get_player(self.host)
 
         def check(c):
-            if ((c.location & (2 - p.sp + ELocation.HAND)) > 0) & (c.type == ECardType.EMPLOYEE) & \
+            if (c.location == 2 - p.sp + ELocation.HAND) & (c.type == ECardType.EMPLOYEE) & \
                     (c.rank < ECardRank.TRUMP):
                 for posture in range(0, 2):
                     for pos in range(0, 3):
@@ -50,7 +51,7 @@ class E1(EffTriggerCostMixin):
                             if tp.args[-1]:
                                 return True
                 return False
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target(p, p, check, self, True, False)
         if tgt is not None:
             self.game.special_summon(p, p, tgt, self)
 

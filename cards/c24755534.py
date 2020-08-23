@@ -30,8 +30,8 @@ class E1(EffTriggerCostMixin):
         op = self.game.players[p.sp]
         tgt1 = self.game.choose_target(p, p, lambda c: (((c in p.on_field) &
                                                       (c.type == ECardType.EMPLOYEE))), self, True)
-        tgt2 = self.game.choose_target(p, p, lambda c: (((c in op.on_field) &
-                                                      (c.type == ECardType.STRATEGY))), self, True)
+        tgt2 = self.game.choose_target(p, p, lambda c: ((c in op.on_field) &
+                                                      (c.type == ECardType.STRATEGY)), self, True)
         self.game.destroy(self.host, tgt1, self)
         self.game.destroy(self.host, tgt2, self)
 

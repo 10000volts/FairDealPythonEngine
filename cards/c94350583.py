@@ -27,7 +27,7 @@ class E1(EffTriggerCostMixin):
 
     def execute(self):
         p = self.game.get_player(self.host)
-        c = GameCard(self.game, self.host.cid, ELocation.UNKNOWN | (2 - p.sp), True)
+        c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), self.host.cid, True)
         c.ATK.become(int(self.host.ATK.value / 2))
         self.game.special_summon(p, p, c, self, 1)
 

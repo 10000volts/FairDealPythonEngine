@@ -1,6 +1,6 @@
 # 兄贵三兄弟
 from core.game import TimePoint, GameCard
-from utils.constants import EEffectDesc, EEmployeeType, ETimePoint, ECardType, ECardRank
+from utils.constants import EEffectDesc, EEmployeeType, ETimePoint, ECardType, ECardRank, ELocation
 from utils.common_effects import EffCommonSummon
 
 
@@ -19,7 +19,7 @@ class E1(EffCommonSummon):
         """
         p = self.game.get_player(self.host)
         for i in range(0, 2):
-            c = GameCard(self.game)
+            c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
             c.create('另外两兄弟', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.TRUMP,
                      1500, 0)
             for posture in range(0, 2):

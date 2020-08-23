@@ -1,4 +1,23 @@
 # 和声姐妹花 布伦娜
+from core.game import GameCard
+from utils.common_effects import EffLazyTriggerCostMixin
+from utils.constants import EEffectDesc, ETimePoint, ELocation
+
+
+class E1(EffLazyTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.SEND2DECK, host=host, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DESTROYED:
+            if (tp.args[1] is self.host) & (tp not in self.reacted):
+                return True
+        return False
+
+    def execute(self):
+        p = self.game.get_player(self.host)
+        c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, 9612125, is_token=True)
+        self.game.send2deck(p, p, c, self)
 
 
 def give(c):
@@ -7,4 +26,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(E1(c))

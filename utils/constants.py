@@ -655,18 +655,22 @@ class ETimePoint:
     # args[0]: 目标
     ASK4EFFECT = 221
     # 尝试回复生命 在此时点发动效果的卡：
-    #
-    # args[0]: 目标
+    # 终结时刻
+    # args[0]: 效果发动者 args[1]: 目标 args[2]: 回复量
     TRY_HEAL = 222
     # 回复生命时 在此时点发动效果的卡：
     #
-    # args[0]: 目标
+    # args[0]: 效果发动者 args[1]: 目标 args[2]: 回复量
     HEALING = 223
     # 回复生命后 在此时点发动效果的卡：
     #
-    # args[0]: 目标
+    # args[0]: 效果发动者 args[1]: 目标 args[2]: 回复量
     HEALED = 224
     # 风行检查 在此时点发动效果的卡：
     # 风行雇员
     # 在此时点，风行雇员暂时把自己的charge属性设置为True。
     CHARGE_CHECK = 225
+    # 原攻击力计算时 在此时点发动效果的卡：
+    # 婴儿
+    # args[0]: 卡 args[1]: 附加值
+    SRC_ATK_CALCING = 226

@@ -80,15 +80,15 @@ class GamePlayer:
         self.game = g
 
         self.sp = int(g.p1 is self)
-        self.leader = GameCard(g, self.leader_id, 2 - self.sp)
+        self.leader = GameCard(g, ELocation.UNKNOWN + 2 - self.sp, self.leader_id)
         hd = list()
         sd = list()
         for cid in self.ori_deck.keys():
             for i in range(self.ori_deck[cid][0]):
-                gc = GameCard(g, cid, ELocation.HAND + 2 - self.sp)
+                gc = GameCard(g, ELocation.HAND + 2 - self.sp, cid)
                 hd.append(gc)
             for i in range(self.ori_deck[cid][1]):
-                gc = GameCard(g, cid, ELocation.SIDE + 2 - self.sp)
+                gc = GameCard(g, ELocation.HAND + 2 - self.sp, cid)
                 sd.append(gc)
         self.deck = list()
         self.ori_side = sd
@@ -190,10 +190,10 @@ class GamePlayer:
         for p in self.game.players:
             p.output('shf', [loc + 2 - self.sp])
             if p is self:
-                for c in self.hand:
+                for c in cs:
                     self.update_vc(c)
             else:
-                for c in self.hand:
+                for c in cs:
                     p.update_vc_ano(c)
 
     def update_vc(self, c):
@@ -212,10 +212,11 @@ class ObjList(list):
 
 
 class CardProperty:
-    def __init__(self, v, tp1, tp2, c):
+    def __init__(self, v, tp0, tp1, tp2, c):
         """
 
         :param v: 初始值。
+        :param tp0: 计算src_atk时触发的时点。
         :param tp1: 计算该属性时触发的时点。
         :param tp2: 计算该属性后触发的时点。
         :param c: GameCard
@@ -229,6 +230,7 @@ class CardProperty:
         self.op_st = ObjList()
         # 数值栈。
         self.val_st = ObjList()
+        self.tp0 = tp0
         self.tp1 = tp1
         self.tp2 = tp2
         self.card = c
@@ -244,7 +246,16 @@ class CardProperty:
         self.update()
 
     def update(self):
-        v = self.src_value + self.add_val
+        v = self.src_value
+        g = self.card.game
+        if self.tp0 is not None:
+            tp = TimePoint(self.tp0, None, [self.card, self.add_val])
+            g.enter_time_point(tp)
+            v += tp.args[1]
+        else:
+            v += self.add_val
+        if v < 0:
+            v = 0
         i = 0
         for op in self.op_st:
             if (op == '+') | (op == '++'):
@@ -268,13 +279,12 @@ class CardProperty:
             i += 1
         self.value = v if v > 0 else 0
         t1 = TimePoint(self.tp1, None, [self.card, self.value])
-        g = self.card.game
         g.enter_time_point(t1)
         self.value = int(t1.args[1]) if t1.args[1] > 0 else 0
         g.enter_time_point(TimePoint(self.tp2, None, [self.card, self.value]))
         # 发送属性更新信息。
         for p in self.card.game.players:
-            if (p is g.get_player(self.card)) | (not self.card.cover):
+            if (p is g.get_player(self.card)) | (self.card.cover == 0):
                 p.update_vc(self.card)
             else:
                 p.update_vc_ano(self.card)
@@ -348,7 +358,7 @@ class HPProperty(CardProperty):
 
 
 class GameCard:
-    def __init__(self, g, cid=None, ori_loc=ELocation.UNKNOWN, is_token=False):
+    def __init__(self, g, ori_loc, cid=None, is_token=False):
         """
 
         :param cid:
@@ -368,12 +378,15 @@ class GameCard:
             # 不可修改。
             self.src_atk = int(rds.hget(cid, 'atk_eff').decode())
             self.src_def = int(rds.hget(cid, 'def_hp').decode())
-            self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
+            self.ATK = CardProperty(self.src_atk, ETimePoint.SRC_ATK_CALCING,
+                                    ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
             if self.type == ECardType.LEADER:
-                self.DEF = HPProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+                self.DEF = HPProperty(self.src_def, None,
+                                      ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
                 self.cover = 0
             else:
-                self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+                self.DEF = CardProperty(self.src_def, None,
+                                        ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
                 # 是否被暗置(背面朝上，对对方玩家不可见)。
                 self.cover = 1
             self.series = json.loads(rds.hget(cid, 'series').decode())
@@ -424,14 +437,15 @@ class GameCard:
         # 不可修改。
         self.src_atk = src_atk
         self.src_def = src_def
-        self.ATK = CardProperty(self.src_atk, ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
-        self.DEF = CardProperty(self.src_def, ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
+        self.ATK = CardProperty(self.src_atk, ETimePoint.SRC_ATK_CALCING,
+                                ETimePoint.ATK_CALCING, ETimePoint.ATK_CALC, self)
+        self.DEF = CardProperty(self.src_def, None,
+                                ETimePoint.DEF_CALCING, ETimePoint.DEF_CALC, self)
         # 是否被暗置(背面朝上，对对方玩家不可见)。
         self.cover = 0
         self.series = list()
         self.is_token = True
         self.effects = list()
-        self.location = ELocation.UNKNOWN
         # 在对局中获得的效果。{eff: desc}
         self.buff_eff = dict()
         # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区
@@ -465,7 +479,7 @@ class GameCard:
             # 通知双方
             if out:
                 for p in self.game.players:
-                    if (p is self.game.get_player(self)) | (not self.cover):
+                    if (p is self.game.get_player(self)) | (self.cover == 0):
                         p.update_vc(self)
                     else:
                         p.update_vc_ano(self)
@@ -479,7 +493,7 @@ class GameCard:
             # 通知双方
             if out:
                 for p in self.game.players:
-                    if (p is self.game.get_player(self)) | (not self.cover):
+                    if (p is self.game.get_player(self)) | (self.cover == 0):
                         p.update_vc(self)
                     else:
                         p.update_vc_ano(self)
@@ -1313,7 +1327,7 @@ class Game:
                     _c = self.turn_player.on_field[_args[1]]
                     if _c is None:
                         return EErrorCode.DONT_EXIST
-                    if _c.cover:
+                    if _c.cover == 1:
                         _tp = TimePoint(ETimePoint.TRY_UNCOVER_EM, None, [c, 1])
                         self.enter_time_point(_tp)
                         if not _tp.args[-1]:
@@ -1335,7 +1349,7 @@ class Game:
                     _c = self.turn_player.on_field[_args[1]]
                     if _c is None:
                         return EErrorCode.DONT_EXIST
-                    if _c.cover:
+                    if _c.cover == 1:
                         # 反制策略不能直接发动。
                         if _c.subtype & EStrategyType.COUNTER:
                             return EErrorCode.PLAY_COUNTER
@@ -1389,7 +1403,7 @@ class Game:
                         # 场上盖放的策略不在这里处理
                         if (self.get_player(c) is self.turn_player) & \
                                 (not ((c.type == ECardType.STRATEGY) & (c.location & ELocation.ON_FIELD > 0) &
-                                 c.cover)):
+                                 c.cover == 1)):
                             for ef in c.effects:
                                 if (not ef.trigger) and ef.condition(TimePoint(ETimePoint.ASK4EFFECT)):
                                     efs.append(ef)
@@ -1468,7 +1482,7 @@ class Game:
                 elif cmd[0] == 6:
                     c = self.turn_player.on_field[cmd[1]]
                     if c.type == ECardType.EMPLOYEE:
-                        if c.cover:
+                        if c.cover == 1:
                             tp = TimePoint(ETimePoint.UNCOVERING_EM, None, [c, 1])
                             self.batch_sending('crd_cp', [c.vid])
                             self.enter_time_point(tp)
@@ -1556,9 +1570,9 @@ class Game:
     def __tph_draw_card(self):
         if len(self.turn_player.deck) > 0:
             count = 2 if len(self.turn_player.deck) > 1 else 1
-            tp = TimePoint(ETimePoint.TRY_DRAW, None, [count, True])
+            tp = TimePoint(ETimePoint.TRY_DRAW, None, [count, 1])
             self.enter_time_point(tp)
-            if tp.args[1]:
+            if tp.args[-1]:
                 self.draw_card(self.turn_player, tp.args[0])
 
     def give_up(self, p: GamePlayer, is_me):
@@ -1596,7 +1610,7 @@ class Game:
         self.enter_turn_phase(ETurnPhase.DP)
         self.enter_turn_phase(next(ntp))
 
-    def enter_time_point(self, tp: TimePoint, out: bool = True):
+    def enter_time_point(self, tp: TimePoint, out: bool = False):
         self.tp_stack.append(tp)
         # if out:
         #     self.batch_sending('ent_tp', [tp.tp])
@@ -1852,31 +1866,31 @@ class Game:
             self.batch_sending('upd_vc', [vid, self.vid_manager.get_card(vid).serialize()])
             self.batch_sending('shw_crd', [vid], p)
 
-    def draw_card(self, p: GamePlayer, count, ef: Effect = None, with_tp=True):
+    def draw_card(self, p: GamePlayer, draw_count, ef: Effect = None, with_tp=True):
         """
         抽卡。
         :param p: 发动效果的玩家
-        :param count: 抽卡数量
+        :param draw_count: 抽卡数量
         :param ef: 所属效果，为None表示无源效果
         :param with_tp: 能否响应
         :return:
         """
         if with_tp:
-            check_point = self.activate_effect_step2(ef, ETimePoint.DRAWING, None, count)
+            check_point = self.activate_effect_step2(ef, ETimePoint.DRAWING, None, draw_count)
             if next(check_point):
                 cs = list()
-                for i in range(0, count):
+                for i in range(0, draw_count):
                     if len(p.deck) > 0:
                         c = p.deck.pop()
                         cs.append(c)
-                        p.hand.append(c)
+                        self.send2hand(p, p, c)
                     else:
                         break
                 self.enter_time_point(TimePoint(ETimePoint.DRAWN, None, cs))
         else:
-            for i in range(0, count):
+            for i in range(0, draw_count):
                 if len(p.deck) > 0:
-                    p.hand.append(p.deck.pop())
+                    self.send2hand(p, p, p.deck.pop())
                 else:
                     break
 
@@ -2119,7 +2133,7 @@ class Game:
         if next(cm):
             next(cm)
             for pi in self.players:
-                if (not cov) | (pi is pt):
+                if (cov == 0) | (pi is pt):
                     pi.output('upd_vc', [c.vid, c.serialize()])
                 else:
                     pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
@@ -2127,6 +2141,31 @@ class Game:
             self.batch_sending('crd_snd2hnd', [c.vid], p)
             self.enter_time_points()
             pt.shuffle()
+
+    def send2deck(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+        """
+        送去卡组。
+        :param p:
+        :param pt: 送去目标玩家的卡组。
+        :param c:
+        :param ef:
+        :return:
+        """
+        cov = c.cover
+        cm = c.move_to(ef, ELocation.DECK + 2 - pt.sp)
+        next(cm)
+        self.enter_time_points()
+        if next(cm):
+            next(cm)
+            for pi in self.players:
+                if (cov == 0) | (pi is pt):
+                    pi.output('upd_vc', [c.vid, c.serialize()])
+                else:
+                    pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+            # todo: 换c的效果不会出。
+            self.batch_sending('crd_snd2dck', [c.vid], p)
+            self.enter_time_points()
+            pt.shuffle(ELocation.DECK)
 
     def send2exiled(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
@@ -2144,7 +2183,7 @@ class Game:
         if next(cm):
             next(cm)
             for pi in self.players:
-                if (not cov) | (pi is pt):
+                if (cov == 0) | (pi is pt):
                     pi.output('upd_vc', [c.vid, c.serialize()])
                 else:
                     pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
@@ -2214,7 +2253,7 @@ class Game:
                 self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
 
     def choose_target(self, p: GamePlayer, pt: GamePlayer, func,
-                      ef: Effect, force=False, with_tp=True) -> GameCard:
+                      ef: Effect, force=True, with_tp=True) -> GameCard:
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
@@ -2421,5 +2460,5 @@ class Game:
         else:
             c.sign[name] = count
         for p in self.players:
-            if (p is self.get_player(c)) | (not c.cover):
+            if (p is self.get_player(c)) | (c.cover == 0):
                 p.update_vc(c)

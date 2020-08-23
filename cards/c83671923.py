@@ -68,7 +68,7 @@ class E1(EffCostMixin):
         if tgt is not None:
             atk = tgt.ATK.value
             self.game.special_summon(p, op, tgt, self)
-            c = GameCard(self.game)
+            c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
             c.create('随行者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.COMMON,
                      atk, 0)
             self.game.special_summon(p, p, c, self)

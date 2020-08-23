@@ -17,7 +17,7 @@ class E2(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if (tp.tp == ETimePoint.SUCC_ACTIVATE_STRATEGY) | (tp.tp == ETimePoint.SET_STRATEGY):
+        if tp.tp == ETimePoint.SET_STRATEGY:
             if ((tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0) & \
                     (tp not in self.reacted):
                 return True
