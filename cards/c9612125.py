@@ -10,7 +10,7 @@ class E1(EffSummon):
 
     def execute(self):
         p = self.game.get_player(self.host)
-        c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), 90387875, is_token=True)
+        c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '90387875', is_token=True)
         self.game.send_to_grave(p, p, c, self)
 
 

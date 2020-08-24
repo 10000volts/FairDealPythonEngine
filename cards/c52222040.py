@@ -1,6 +1,7 @@
 # 吉祥物招聘
 from utils.common_effects import EffTriggerCostMixin
-from utils.constants import EEffectDesc
+from core.game import GameCard
+from utils.constants import EEffectDesc, ELocation
 
 
 class E1(EffTriggerCostMixin):
@@ -16,12 +17,7 @@ class E1(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp is None:
-            p = self.game.get_player(self.host)
-            for c in p.grave:
-                if (c.cid == '46377245') | (c.cid == '63128732'):
-                    return True
-        return False
+        return tp is None
 
     def execute(self):
         """
@@ -30,13 +26,19 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         def check(c):
-            return (c in p.grave) & ((c.cid == '46377245') | (c.cid == '63128732'))
+            return (c in p.grave) & (c.cid == '63128732')
 
         # 选择的卡回到手牌
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, True, False)
-        if tgt is not None:
-            self.game.send2hand(p, p, tgt, self)
+        for c in p.grave:
+            if c.cid == '63128732':
+                tgt = self.game.choose_target(p, p, check, self, True, False)
+                if tgt is not None:
+                    self.game.send2hand(p, p, tgt, self)
+                return
+        c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '46377245', is_token=True)
+        c.ATK.change_adv(self.host.ATK.add_val)
+        self.game.send2hand(p, p, c, self)
 
 
 def give(c):

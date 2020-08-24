@@ -1732,6 +1732,7 @@ class Game:
         if not ef.passive:
             for pi in self.players:
                 if (not ef.secret) | (pi is p):
+                    ef.cover = 0
                     pi.update_vc(ef.host)
                     pi.output('cst_eff', [None if ef.no_source else ef.host.vid, ef.description], pi is p)
         if ef.cost(t):
@@ -1743,6 +1744,7 @@ class Game:
                 if not ef.passive:
                     for pi in self.players:
                         if (not ef.secret) | (pi is p):
+                            ef.cover = 0
                             pi.update_vc(ef.host)
                             pi.output('act_eff', [None if ef.no_source else ef.host.vid, ef.description],
                                       pi is p)
@@ -1944,7 +1946,7 @@ class Game:
             return 0
 
         # 询问入场位置、姿态
-        pos = p.input(check_pos, 'req_pos', [0, 3])
+        pos = p.input(check_pos, 'req_pos', [pt is p])
         if pos is not None:
             posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0 if posture is None else posture
             self.summon(p, pt, em, pos, posture, ef)
@@ -1974,7 +1976,7 @@ class Game:
                     # 入场被允许
                     if tp.args[-1]:
                         # 询问入场位置、姿态
-                        pos = p.input(check_pos, 'req_pos', [0, 3])
+                        pos = p.input(check_pos, 'req_pos', [pt is p])
                         if pos is not None:
                             posture = p.input(lambda x: 0, 'req_pst', [0, 2]) > 0
                             self.summon(p, pt, em, pos, posture, None)
