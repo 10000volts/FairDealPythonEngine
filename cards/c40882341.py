@@ -35,7 +35,7 @@ class E2(EffNextTurnMixin):
 
     def execute(self):
         self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
-        self.host.remove_effect(self.scr_arg[3])
+        self.scr_arg[0].remove_effect(self.scr_arg[3])
         self.host.remove_effect(self)
 
 

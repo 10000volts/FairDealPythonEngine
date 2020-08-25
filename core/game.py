@@ -487,18 +487,19 @@ class GameCard:
             self.game.ef_listener.append(e)
 
     def remove_effect(self, e, out=True):
-        self.effects.remove(e)
-        if e in self.buff_eff:
-            self.buff_eff.pop(e)
-            # 通知双方
-            if out:
-                for p in self.game.players:
-                    if (p is self.game.get_player(self)) | (self.cover == 0):
-                        p.update_vc(self)
-                    else:
-                        p.update_vc_ano(self)
-        if e in self.game.ef_listener:
-            self.game.ef_listener.remove(e)
+        if e in self.effects:
+            self.effects.remove(e)
+            if e in self.buff_eff:
+                self.buff_eff.pop(e)
+                # 通知双方
+                if out:
+                    for p in self.game.players:
+                        if (p is self.game.get_player(self)) | (self.cover == 0):
+                            p.update_vc(self)
+                        else:
+                            p.update_vc_ano(self)
+            if e in self.game.ef_listener:
+                self.game.ef_listener.remove(e)
 
     def reset(self):
         """
