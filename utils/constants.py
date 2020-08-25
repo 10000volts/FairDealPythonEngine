@@ -113,6 +113,8 @@ class EEffectDesc:
     PROTECT = 57
     # 领袖血量到达上限，抛弃溢出值
     DISCARD_OVERFLOW = 58
+    # 支付生命力
+    HP_COST = 59
 
 
 class ELocation:
