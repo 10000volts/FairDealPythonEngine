@@ -33,7 +33,8 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         p = self.game.get_player(self.host)
-        self.game.deal_damage(self.host, self.game.players[p.sp].leader, int(self.host.ATK.value / 2))
+        self.game.deal_damage(self.host, self.game.players[p.sp].leader, int(self.host.ATK.value / 2),
+                              self)
 
 
 class E2(EffTriggerCostMixin):

@@ -81,8 +81,10 @@ class EffLazyTriggerCostMixin(Effect):
     默认的触发式效果cost行为。
     """
     def cost(self, tp):
-        self.reacted.append(tp)
-        return True
+        if tp not in self.reacted:
+            self.reacted.append(tp)
+            return True
+        return False
 
 
 class EffNextTurnMixin(EffLazyTriggerCostMixin):
@@ -383,7 +385,7 @@ class EffSummon(EffLazyTriggerCostMixin):
         return False
 
 
-class EffCommonSummon(EffLazyTriggerCostMixin):
+class EffCommonSummon(EffTriggerCostMixin):
     """
     常规入场后效果模板。
     """
