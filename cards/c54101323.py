@@ -45,7 +45,7 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         def check(c):
-            return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
+            return (c.location == ELocation.ON_FIELD + 2 - p.sp) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self, True)
         if tgt is not None:

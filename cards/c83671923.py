@@ -47,7 +47,7 @@ class E1(EffCostMixin):
 
         def check(c):
             f = False
-            if ((c.location & (2 - p.sp + ELocation.HAND)) > 0) & (c.type == ECardType.EMPLOYEE):
+            if (c.location == (2 - p.sp + ELocation.HAND)) & (c.type == ECardType.EMPLOYEE):
                 for posture in range(0, 2):
                     for pos in range(0, 3):
                         if op.on_field[pos] is None:
