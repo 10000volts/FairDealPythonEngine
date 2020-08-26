@@ -791,7 +791,7 @@ class Match:
             pl: tuple = self.game.start()
             self.wins[pl[0]] += 1
             last_loser = pl[1]
-            self.batch_sending('endg', [self.game.win_reason], pl[0])
+            self.batch_sending('endg', [self.game.win_reason], pl[1])
             winner: GamePlayer = self.end_check()
             if winner is not None:
                 self.batch_sending('endm', None, winner)
