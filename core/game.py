@@ -1216,16 +1216,16 @@ class Game:
                     # 其他种类的策略发动时会顺带发动效果
                     _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [_c, 1])
                     _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [_c.effects[0], 1])
+                    _tp = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[-1]])
                     self.temp_tp_stack.append(_tp1)
                     self.temp_tp_stack.append(_tp2)
+                    self.temp_tp_stack.append(_tp)
                     self.enter_time_points()
                     if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(None)):
                         return EErrorCode.FORBIDDEN_STRATEGY
                     # 是否还有剩余的使用次数
                     if (self.turn_player.strategy_times == 0) & (self.turn_player.activate_times == 0):
                         return EErrorCode.TIMES_LIMIT
-                    _tp = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[-1]])
-                    self.enter_time_point(_tp)
                     return 0
                 return EErrorCode.UNKNOWN_CARD
             # act 询问可发动的效果
@@ -1356,10 +1356,17 @@ class Game:
                             return EErrorCode.PLAY_COUNTER
                         if not _c.effects[0].condition(None):
                             return EErrorCode.FORBIDDEN_STRATEGY
-                        _tp = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [_c, 1])
-                        self.enter_time_point(_tp)
-                        if not _tp.args[-1]:
-                            return EErrorCode.FORBIDDEN_UNCOVER
+                        _tp0 = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [_c, 1])
+                        _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [_c, 1])
+                        _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [_c.effects[0], 1])
+                        _tp3 = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[-1]])
+                        self.temp_tp_stack.append(_tp0)
+                        self.temp_tp_stack.append(_tp1)
+                        self.temp_tp_stack.append(_tp2)
+                        self.temp_tp_stack.append(_tp3)
+                        self.enter_time_points()
+                        if not (_tp0.args[-1] & _tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(None)):
+                            return EErrorCode.FORBIDDEN_STRATEGY
                         return 0
                     return EErrorCode.ALREADY_UNCOVERED
                 else:

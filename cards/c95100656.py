@@ -7,11 +7,11 @@ from utils.common_effects import EffUntil
 
 class E1(Effect):
     """
-    从场下以防御姿态入场。
+    从移除区以防御姿态入场。
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.SPECIAL_SUMMON,
-                         host=c)
+                         host=c, no_reset=True, ef_id='951006560', scr_arg=0)
 
     def condition(self, tp):
         """
@@ -27,15 +27,15 @@ class E1(Effect):
                     self.game.enter_time_point(tp)
                     # 入场被允许
                     if tp.args[-1]:
-                        # 在场下
-                        if self.host.location & ELocation.GRAVE:
-                            # 场上的卡恰好为5张
+                        # 在移除区
+                        if self.host.location & ELocation.EXILED:
+                            # 场上的卡恰好为5+X张
                             count = 0
                             for i in range(0, 6):
                                 for p in self.game.players:
                                     if p.on_field[i] is not None:
                                         count += 1
-                            return count == 5
+                            return count == 5 + self.scr_arg
         return False
 
     def execute(self):
@@ -44,10 +44,11 @@ class E1(Effect):
         调用基类方法进行输出。
         :return:
         """
-        # 从场下入场
-        if self.host.location & ELocation.GRAVE:
+        # 从移除区入场
+        if self.host.location & ELocation.EXILED:
             p = self.game.get_player(self.host)
             self.game.special_summon(p, p, self.host, self, 1)
+            self.scr_arg += 1
 
 
 def give(c):
@@ -56,4 +57,7 @@ def give(c):
     :param c:
     :return:
     """
+    for ef in c.effects:
+        if ef.ef_id == '951006560':
+            return
     c.register_effect(E1(c))
