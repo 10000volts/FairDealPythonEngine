@@ -2028,7 +2028,7 @@ class Game:
                 if not ((s.subtype & EStrategyType.LASTING) |
                          (s.subtype & EStrategyType.ATTACHMENT)):
                     self.send_to_grave(p, p, s)
-                    return
+                return
         self.send_to_grave(p, p, s)
 
     def set_em(self, p: GamePlayer, pt: GamePlayer, em: GameCard, pos, ef: Effect = None):
