@@ -39,7 +39,7 @@ class E2(EffTriggerCostMixin):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=c, trigger=True, force=True,
-                         no_reset=True)
+                         no_reset=True, passive=True)
 
     def condition(self, tp):
         """

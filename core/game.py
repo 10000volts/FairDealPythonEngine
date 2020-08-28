@@ -1044,10 +1044,10 @@ class Game:
                     if self.chessboard[ac] is not None:
                         self.chessboard[ac].ATK.add_val += card.ATK.add_val
                         self.chessboard[ac].ATK.update()
+                self.batch_sending('go', [x, y, card.vid], p)
                 # 影响力值发挥作用后归零，成为附加值。
                 card.ATK.add_val = 0
                 card.ATK.update()
-                self.batch_sending('go', [x, y, card.vid], p)
 
                 # 放下后的处理。
                 self.enter_time_point(TimePoint(ETimePoint.CARD_PUT, None, [x, y, card]))
@@ -1216,13 +1216,15 @@ class Game:
                     # 其他种类的策略发动时会顺带发动效果
                     _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [_c, 1])
                     _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [_c.effects[0], 1])
-                    _tp = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[-1]])
                     self.temp_tp_stack.append(_tp1)
                     self.temp_tp_stack.append(_tp2)
-                    self.temp_tp_stack.append(_tp)
                     self.enter_time_points()
                     if not(_tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(None)):
+                        self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+                                                        [_c, _tp1.args[-1]]))
                         return EErrorCode.FORBIDDEN_STRATEGY
+                    self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+                                                    [_c, _tp1.args[-1]]))
                     # 是否还有剩余的使用次数
                     if (self.turn_player.strategy_times == 0) & (self.turn_player.activate_times == 0):
                         return EErrorCode.TIMES_LIMIT
@@ -1359,14 +1361,16 @@ class Game:
                         _tp0 = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [_c, 1])
                         _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [_c, 1])
                         _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [_c.effects[0], 1])
-                        _tp3 = TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None, [_c, _tp1.args[-1]])
                         self.temp_tp_stack.append(_tp0)
                         self.temp_tp_stack.append(_tp1)
                         self.temp_tp_stack.append(_tp2)
-                        self.temp_tp_stack.append(_tp3)
                         self.enter_time_points()
                         if not (_tp0.args[-1] & _tp1.args[-1] & _tp2.args[-1] & _c.effects[0].condition(None)):
+                            self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+                                                            [_c, _tp1.args[-1]]))
                             return EErrorCode.FORBIDDEN_STRATEGY
+                        self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+                                                        [_c, _tp1.args[-1]]))
                         return 0
                     return EErrorCode.ALREADY_UNCOVERED
                 else:
@@ -2024,6 +2028,8 @@ class Game:
                 if not ((s.subtype & EStrategyType.LASTING) |
                          (s.subtype & EStrategyType.ATTACHMENT)):
                     self.send_to_grave(p, p, s)
+                    return
+        self.send_to_grave(p, p, s)
 
     def set_em(self, p: GamePlayer, pt: GamePlayer, em: GameCard, pos, ef: Effect = None):
         """
