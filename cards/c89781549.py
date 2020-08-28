@@ -38,9 +38,9 @@ class E3(EffTriggerCostMixin):
     """
     EFF-EFF（偷偷地）
     """
-    def __init__(self, c, op, v):
+    def __init__(self, c, v):
         super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=c, trigger=True, force=True,
-                         no_reset=True, passive=True, scr_arg=[op, v])
+                         no_reset=True, passive=True, scr_arg=v)
 
     def condition(self, tp):
         """
@@ -60,7 +60,7 @@ class E3(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        self.reacted.pop().args[0].ATK.remove(self.scr_arg[0], self.scr_arg[1])
+        self.reacted.pop().args[0].ATK.value -= self.scr_arg
         self.host.remove_effect(self)
 
 
@@ -90,8 +90,8 @@ class E2(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        op, v = self.reacted.pop().args[0].ATK.gain(self.scr_arg)
-        self.host.register_effect(E3(self.host, op, v))
+        self.reacted.pop().args[0].ATK.value += self.scr_arg
+        self.host.register_effect(E3(self.host, self.scr_arg))
 
 
 class E1(EffCommonStrategy):

@@ -184,6 +184,7 @@ class GamePlayer:
         elif loc == ELocation.SIDE:
             cs = self.side
         for c in cs:
+            c.cover = 1
             self.game.vid_manager.change(c.vid)
         shu(cs)
         # g: Game = self.game
