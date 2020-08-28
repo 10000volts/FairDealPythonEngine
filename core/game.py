@@ -1356,8 +1356,6 @@ class Game:
                         # 反制策略不能直接发动。
                         if _c.subtype & EStrategyType.COUNTER:
                             return EErrorCode.PLAY_COUNTER
-                        if not _c.effects[0].condition(None):
-                            return EErrorCode.FORBIDDEN_STRATEGY
                         _tp0 = TimePoint(ETimePoint.TRY_UNCOVER_STRATEGY, None, [_c, 1])
                         _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [_c, 1])
                         _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [_c.effects[0], 1])
