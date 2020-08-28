@@ -29,7 +29,7 @@ class E4(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        self.reacted.pop().ATK.gain(self.host.ATK.value)
+        self.reacted.pop().args[0].ATK.gain(self.host.ATK.value)
         self.host.remove_effect(self.scr_arg)
         self.host.remove_effect(self)
 
@@ -90,7 +90,7 @@ class E2(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        op, v = self.reacted.pop().ATK.gain(self.host.ATK.value)
+        op, v = self.reacted.pop().args[0].ATK.gain(self.host.ATK.value)
         self.host.register_effect(E3(self.host, op, v))
 
 
