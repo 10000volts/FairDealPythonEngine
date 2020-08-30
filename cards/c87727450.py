@@ -6,7 +6,7 @@ from core.game import TimePoint
 
 class E1(Effect):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=0)
+        super().__init__(desc=EEffectDesc.ATK_LOSE, host=host)
 
     def condition(self, tp):
         if tp is None:

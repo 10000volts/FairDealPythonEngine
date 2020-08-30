@@ -1,4 +1,5 @@
 # 街头混混
+from utils.common_effects import EffAgile
 
 
 def give(c):
@@ -7,4 +8,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(EffAgile(c))

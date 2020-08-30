@@ -85,13 +85,12 @@ class E4(EffTriggerCostMixin):
 
     def execute(self):
         op = self.game.players[self.game.get_player(self.host).sp]
-        if len(op.hand) > 0:
-            for c in op.hand:
-                tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
-                self.game.enter_time_point(tp)
-                if tp.args[-1]:
-                    self.game.req4discard(op, 1, self)
-                    break
+        for c in op.hand:
+            tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+            self.game.enter_time_point(tp)
+            if tp.args[-1]:
+                self.game.req4discard(op, 1, self)
+                break
         self.host.register_effect(E5(self.host))
 
 

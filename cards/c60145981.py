@@ -14,7 +14,6 @@ class E2(EffExile):
         p = self.game.get_player(self.host)
         for c in p.on_field:
             if c is not None and c.cid == '95100656':
-                print('伪造的录音笔 2效发动')
                 c.ATK.gain(min(self.host.ATK.value, 500))
 
 

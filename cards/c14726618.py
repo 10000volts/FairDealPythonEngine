@@ -1,6 +1,6 @@
 # 流量明星
-from utils.constants import EEffectDesc, ECardType, ELocation
-from utils.common_effects import EffCommonSummon
+from utils.constants import EEffectDesc, ECardType, ELocation, ETurnPhase
+from utils.common_effects import EffCommonSummon, EffAttackLimit, EffUntil
 
 
 class E1(EffCommonSummon):
@@ -22,6 +22,9 @@ class E1(EffCommonSummon):
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
             tgt.ATK.plus(2)
+            e2 = EffAttackLimit(tgt, False)
+            tgt.register_effect(e2)
+            tgt.register_effect(EffUntil(tgt, e2, lambda tp: tp.tp == ETurnPhase.ENDING))
 
 
 def give(c):

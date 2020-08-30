@@ -4,15 +4,12 @@ from utils.constants import EEffectDesc, ECardType, ELocation, EChoice
 
 
 class E1(EffSingleStgE1Mixin):
-    """
-    ATK+EFF(至少500)。
-    """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host)
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """

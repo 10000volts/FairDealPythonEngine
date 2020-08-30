@@ -12,24 +12,22 @@ class E1(EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=host, trigger=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.OUT_FIELD_END:
-            if (tp.args[0] is self.host) & (tp not in self.reacted) & (self.host.ATK.value >= 1000):
+        if tp.tp == ETimePoint.OUT_FIELD:
+            if (tp.args[0] is self.host) & (tp not in self.reacted) & (self.host.ATK.value > 1000):
                 p = self.game.get_player(self.host)
                 for posture in range(0, 2):
                     for pos in range(0, 3):
-                        if p.on_field[pos] is None:
-                            # todo: 特招判断的雇员偷懒了，不应该是self.host
-                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, p, pos, posture, 1])
-                            self.game.enter_time_point(tp)
-                            if tp.args[-1]:
-                                return True
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, p, pos, posture, 1])
+                        self.game.enter_time_point(tp)
+                        if tp.args[-1]:
+                            return True
         return False
 
     def execute(self):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), self.host.cid, True)
         c.ATK.become(int(self.host.ATK.value / 2))
-        self.game.special_summon(p, p, c, self, 1)
+        self.game.special_summon(p, p, c, self)
 
 
 def give(c):

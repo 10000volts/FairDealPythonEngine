@@ -139,10 +139,13 @@ class GamePlayer:
         :return:
         """
         def check(*_ind):
-            for i in _ind:
-                if i not in range(0, _len):
-                    return EErrorCode.OVERSTEP
-            return 0
+            if (count == 0) | (len(_ind) == count):
+                for i in _ind:
+                    if i not in range(0, _len):
+                        return EErrorCode.OVERSTEP
+                return 0
+            return EErrorCode.ILLEGAL_OPTIONS
+
         _len = len(option)
         if force:
             return self.input(check, 'req_chs', [option, count])
@@ -792,7 +795,7 @@ class Match:
             pl: tuple = self.game.start()
             self.wins[pl[0]] += 1
             last_loser = pl[1]
-            self.batch_sending('endg', [self.game.win_reason], pl[1])
+            self.batch_sending('endg', [self.game.win_reason], pl[0])
             winner: GamePlayer = self.end_check()
             if winner is not None:
                 self.batch_sending('endm', None, winner)
@@ -1747,7 +1750,7 @@ class Game:
                     pi.update_vc(ef.host)
                     pi.output('cst_eff', [None if ef.no_source else ef.host.vid, ef.description], pi is p)
         if ef.cost(t):
-            tp = TimePoint(ETimePoint.PAID_COST, ef, [1])
+            tp = TimePoint(ETimePoint.PAID_COST, ef, [ef.host, 1])
             self.temp_tp_stack.append(tp)
             self.enter_time_points()
             if tp.args[-1]:
@@ -2294,32 +2297,34 @@ class Game:
                     if tp.args[-1]:
                         cs.append(c.vid)
             _len = len(cs)
-            # 询问选项
-            if force:
-                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
-            else:
-                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                if ind is None:
-                    return None
-            c = self.vid_manager.get_card(cs[ind])
-            tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
-            self.enter_time_point(tp)
-            if tp.args[-1]:
-                self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
-                return c
+            if _len > 0:
+                # 询问选项
+                if force:
+                    ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                else:
+                    ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                    if ind is None:
+                        return None
+                c = self.vid_manager.get_card(cs[ind])
+                tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
+                self.enter_time_point(tp)
+                if tp.args[-1]:
+                    self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
+                    return c
         else:
             for c in self.vid_manager.get_cards():
                 if func(c):
                     cs.append(c.vid)
             _len = len(cs)
-            # 询问选项
-            if force:
-                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
-            else:
-                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                if ind is None:
-                    return None
-            return self.vid_manager.get_card(cs[ind])
+            if _len > 0:
+                # 询问选项
+                if force:
+                    ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                else:
+                    ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                    if ind is None:
+                        return None
+                return self.vid_manager.get_card(cs[ind])
         return None
 
     def ceremony(self, p: GamePlayer, func, v, send_to=ELocation.GRAVE, op='>', with_tp=True):

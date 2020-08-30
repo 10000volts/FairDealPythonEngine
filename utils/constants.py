@@ -115,6 +115,10 @@ class EEffectDesc:
     DISCARD_OVERFLOW = 58
     # 支付生命力
     HP_COST = 59
+    # 风行
+    AGILE = 60
+    # 转移目标
+    CHANGE_TARGET = 61
 
 
 class ELocation:
@@ -213,6 +217,8 @@ class EErrorCode:
     NO_MORE_TRUMP = 20
     # 禁止交换。
     FORBIDDEN_EXCHANGE = 21
+    # 选择的选项数目不符合要求。
+    ILLEGAL_OPTIONS = 22
 
 
 class ETimePoint:

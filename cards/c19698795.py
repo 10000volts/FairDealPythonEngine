@@ -1,4 +1,5 @@
 # 尽职的安保人员
+from utils.common_effects import EffTaunt
 
 
 def give(c):
@@ -7,4 +8,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(EffTaunt(c))

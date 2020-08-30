@@ -1,4 +1,64 @@
 # 工作狂人
+from utils.common_effects import EffLazyTriggerCostMixin, EffPierce
+from utils.constants import EEffectDesc, ETimePoint, ELocation
+from core.game import TimePoint
+
+
+class E4(EffLazyTriggerCostMixin):
+    """
+    回手。
+    """
+    def __init__(self, host):
+        super().__init__(host=host, desc=EEffectDesc.SEND2HAND, trigger=True, force=True, no_reset=True)
+
+    def condition(self, tp):
+        return (tp.tp == ETimePoint.TURN_END) & (tp not in self.reacted)
+
+    def execute(self):
+        p = self.game.get_player(self.host)
+        self.game.send2hand(p, p, self.host, self)
+
+
+class E2(EffLazyTriggerCostMixin):
+    """
+    特招。
+    """
+    def __init__(self, host):
+        super().__init__(host=host, desc=EEffectDesc.SPECIAL_SUMMON, trigger=True, force=True,
+                         no_reset=True)
+
+    def condition(self, tp):
+        return (tp.tp == ETimePoint.TURN_BEGIN) & (self.game.turn_player is self.game.get_player(self.host)) & \
+               (tp not in self.reacted)
+
+    def execute(self):
+        if (self.host.location & ELocation.ON_FIELD) == 0:
+            p = self.game.get_player(self.host)
+            for posture in range(0, 2):
+                for pos in range(0, 3):
+                    if p.on_field[pos] is None:
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, p, pos, posture, 1])
+                        self.game.enter_time_point(tp)
+                        # 入场被允许
+                        if tp.args[-1]:
+                            self.game.special_summon(p, p, self.host, self)
+                            break
+        self.host.register_effect(EffPierce(self.host), True)
+        self.host.register_effect(E4(self.host), True)
+
+
+class E1(EffLazyTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(host=host, desc=EEffectDesc.SPECIAL_SUMMON, trigger=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.DISCARDED:
+            if (tp.args[0] is self.host) & (tp not in self.reacted):
+                return True
+        return False
+
+    def execute(self):
+        self.host.register_effect(E2(self.host))
 
 
 def give(c):
@@ -7,4 +67,4 @@ def give(c):
     :param c:
     :return:
     """
-    pass
+    c.register_effect(E1(c))

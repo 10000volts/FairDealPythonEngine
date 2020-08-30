@@ -113,7 +113,7 @@ class EffUntil(EffTriggerCostMixin):
     满足条件时删除效果。
     """
     def __init__(self, host, ef, until):
-        super().__init__(desc=EEffectDesc.REMOVE_EFFECT, act_phase=EGamePhase.PLAY_CARD,
+        super().__init__(desc=EEffectDesc.REMOVE_EFFECT,
                          host=host, trigger=True, force=True, scr_arg=ef, no_reset=True, passive=True)
         self.until = until
 
@@ -123,8 +123,7 @@ class EffUntil(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        if self.scr_arg in self.host.effects:
-            self.host.remove_effect(self.scr_arg)
+        self.host.remove_effect(self.scr_arg)
         self.host.remove_effect(self)
 
 
@@ -390,8 +389,7 @@ class EffCommonSummon(EffTriggerCostMixin):
     常规入场后效果模板。
     """
     def __init__(self, desc, host):
-        super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD,
-                         host=host, trigger=True)
+        super().__init__(desc=desc, host=host, trigger=True)
 
     def condition(self, tp):
         """
@@ -455,6 +453,21 @@ class EffTaunt(EffTriggerCostMixin):
 
     def execute(self):
         self.reacted.pop().args[-1] = 0
+
+
+class EffAgile(EffLazyTriggerCostMixin):
+    """
+    风行。
+    """
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.AGILE, host=host, trigger=True, force=True,
+                         passive=True)
+
+    def condition(self, tp):
+        return (tp.tp == ETimePoint.CHARGE_CHECK) & (tp not in self.reacted)
+
+    def execute(self):
+        self.host.charge = True
 
 
 class EffHPLimit(EffLazyTriggerCostMixin):
