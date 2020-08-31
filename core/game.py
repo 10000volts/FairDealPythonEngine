@@ -503,7 +503,7 @@ class GameCard:
                         else:
                             p.update_vc_ano(self)
             if e in self.game.ef_listener:
-                self.game.ef_listener.remove(e)
+                e.removing = True
 
     def reset(self):
         """
@@ -1667,7 +1667,7 @@ class Game:
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
         p_react_list = list()
         for ef in self.ef_listener:
-            if ef.condition(tp):
+            if ef.condition(tp) & (not ef.removing):
                 if self.get_player(ef.host) is p:
                     if ef.force:
                         self.activate_effect(ef, p, tp)
@@ -1691,6 +1691,8 @@ class Game:
         elif self.react_times == 0:
             for ef in self.ef_listener:
                 ef.reacted.clear()
+                if ef.removing:
+                    self.ef_listener.remove(ef)
 
     def req4block(self, sender: GameCard, target: GameCard):
         """

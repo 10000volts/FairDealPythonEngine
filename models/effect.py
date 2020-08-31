@@ -86,6 +86,7 @@ class Effect:
         self.can_invalid = can_invalid
         self.react_index = -1
         self.passive = passive
+        self.removing = False
 
     def condition(self, tp):
         """
