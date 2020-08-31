@@ -7,7 +7,7 @@ from utils.common_effects import EffTriggerCostMixin, EffUntil
 
 class E4(EffTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(host=host, desc=EEffectDesc.DESTROY, trigger=True, force=True)
+        super().__init__(host=host, desc=EEffectDesc.DESTROY, trigger=True, force=True, no_reset=True)
 
     def condition(self, tp):
         return (tp.tp == ETimePoint.TURN_END) & (tp not in self.reacted)
@@ -21,7 +21,7 @@ class E4(EffTriggerCostMixin):
 
 class E2(EffTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(host=host, desc=EEffectDesc.ATK_LOSE, trigger=True, force=True)
+        super().__init__(host=host, desc=EEffectDesc.ATK_LOSE, trigger=True, force=True, no_reset=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYING:
@@ -32,7 +32,7 @@ class E2(EffTriggerCostMixin):
     def execute(self):
         tp = self.reacted.pop()
         if tp.args[0].location & ELocation.ON_FIELD:
-            tp.args[0].ATK.value -= tp.args[1].ATK.value
+            tp.args[0].ATK.gain(-tp.args[1].ATK.value)
 
 
 class E1(Effect):

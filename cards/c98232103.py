@@ -34,17 +34,23 @@ class E2(EffLazyTriggerCostMixin):
     def execute(self):
         if (self.host.location & ELocation.ON_FIELD) == 0:
             p = self.game.get_player(self.host)
-            for posture in range(0, 2):
-                for pos in range(0, 3):
-                    if p.on_field[pos] is None:
-                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, p, pos, posture, 1])
-                        self.game.enter_time_point(tp)
-                        # 入场被允许
-                        if tp.args[-1]:
-                            self.game.special_summon(p, p, self.host, self)
-                            break
+            f = True
+            for pos in range(0, 3):
+                if f:
+                    for posture in range(0, 2):
+                        if p.on_field[pos] is None:
+                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, p, pos, posture, 1])
+                            self.game.enter_time_point(tp)
+                            # 入场被允许
+                            if tp.args[-1]:
+                                self.game.special_summon(p, p, self.host, self)
+                                f = False
+                                break
+                else:
+                    break
         self.host.register_effect(EffPierce(self.host), True)
         self.host.register_effect(E4(self.host), True)
+        self.host.remove_effect(self)
 
 
 class E1(EffLazyTriggerCostMixin):

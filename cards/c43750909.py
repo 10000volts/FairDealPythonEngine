@@ -36,7 +36,7 @@ class E1(EffTriggerCostMixin):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            self.game.discard(self.host, tgt, self)
+            self.game.destroy(self.host, tgt, self)
 
 
 def give(c):
