@@ -180,14 +180,14 @@ class EffProtect(Effect):
 
 class EBattleDamage0(EffLazyTriggerCostMixin):
     """
-    战斗伤害变成0
+    伤害变成0
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, can_invalid=False, trigger=True, force=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
-            if (tp.sender is None) & (tp.args[0] == self.host):
+            if (tp.args[0] == self.host) & (tp not in self.reacted):
                 return True
         return False
 
@@ -207,8 +207,7 @@ class EffProtectProtocol(Effect):
         # 自己的回合，雇员以防御姿态在自己场上入场后
         p = self.game.get_player(self.host)
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            if (self.game.turn_player is p) & (tp.args[0] in p.on_field) &\
-                    (tp.args[2]) & (tp not in self.reacted):
+            if (self.game.turn_player is p) & (tp.args[0] in p.on_field) & (tp not in self.reacted):
                 return True
         return False
 
