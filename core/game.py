@@ -88,7 +88,7 @@ class GamePlayer:
                 gc = GameCard(g, ELocation.HAND + 2 - self.sp, cid)
                 hd.append(gc)
             for i in range(self.ori_deck[cid][1]):
-                gc = GameCard(g, ELocation.HAND + 2 - self.sp, cid)
+                gc = GameCard(g, ELocation.SIDE + 2 - self.sp, cid)
                 sd.append(gc)
         self.deck = list()
         self.ori_side = sd
