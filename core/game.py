@@ -1142,6 +1142,7 @@ class Game:
             :param _s2:
             :return:
             """
+            print(_m1, _m2, _s1, _s2)
             _tc = 0
             _tcs = 0
             for _c in p.hand:
