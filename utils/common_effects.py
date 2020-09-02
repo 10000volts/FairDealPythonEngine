@@ -201,34 +201,31 @@ class EffProtectProtocol(Effect):
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.PROTECT_PROTOCOL, act_phase=EGamePhase.PLAY_CARD,
-                         host=host, trigger=True)
+                         host=host)
 
     def condition(self, tp):
-        # 自己的回合，雇员以防御姿态在自己场上入场后
         p = self.game.get_player(self.host)
-        if tp.tp == ETimePoint.SUCC_SUMMON:
-            if (self.game.turn_player is p) & (tp.args[0] in p.on_field) & (tp not in self.reacted):
-                return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
+        if tp.tp == ETimePoint.ASK4EFFECT:
+            for c in p.on_field:
+                if c is not None and c.type == ECardType.EMPLOYEE:
+                    return True
         return False
 
     def execute(self):
-        c = self.reacted.pop().args[0]
-        e = EffProtect(c, False)
+        def check(c):
+            return (c.location == ELocation.ON_FIELD + 2 - p.sp) & (c.type == ECardType.EMPLOYEE)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target(p, p, check, self)
+        e = EffProtect(tgt, False)
         # 直到下次我方回合开始时不会被摧毁
-        c.register_effect(e, True)
-        c.register_effect(EffUntil(c, e,
-                                   lambda tp: ((tp.tp == ETimePoint.TURN_BEGIN) &
+        tgt.register_effect(e, True)
+        tgt.register_effect(EffUntil(tgt, e,
+                                     lambda tp: ((tp.tp == ETimePoint.TURN_BEGIN) &
                                                (self.game.turn_player is self.game.get_player(self.host)))))
         # 可无限次阻挡
-        c.block_times = -1
+        tgt.block_times = -1
         # 战斗伤害变成0
-        c.register_effect(EBattleDamage0(c))
+        tgt.register_effect(EBattleDamage0(tgt))
         # 全局1次
         self.host.remove_effect(self)
 
