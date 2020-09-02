@@ -1162,16 +1162,15 @@ class Game:
                 return EErrorCode.NO_MORE_TRUMP
             if check_exchange(_m1, _s1) & check_exchange(_m2, _s2):
                 return 0
+            elif check_exchange(_m1, _s2) & check_exchange(_m2, _s1):
+                return 0
             return EErrorCode.FORBIDDEN_EXCHANGE
 
         # 收到进入调整阶段的消息时客户端即可进行操作。mul指令只是用于回收用户发来的指令。
         for p in self.players:
-            r = p.free_input(check, 'mul')
+            r = p.free_input(check, 'req_mul')
             if r is not None:
                 m1, m2, s1, s2 = r
-                print('pop')
-                print(m1, m2, s1, s2)
-                print(p.side)
                 if (m1 in range(0, len(p.hand))) & (s1 in range(0, len(p.side))):
                     t = p.hand[m1]
                     p.hand[m1] = p.side[s1]
