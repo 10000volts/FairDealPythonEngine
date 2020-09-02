@@ -124,10 +124,14 @@ class GamePlayer:
         self.update_vc(self.leader)
         for c in self.hand:
             self.update_vc(c)
+        for c in self.side:
+            self.update_vc(c)
         for p in self.game.players:
             self.output('upd_vc', [p.leader.vid, p.leader.serialize()], self is p)
             if p != self:
                 for c in p.hand:
+                    self.update_vc_ano(c)
+                for c in p.side:
                     self.update_vc_ano(c)
 
     def req4option(self, option: list, count=1, force=False):
@@ -1165,15 +1169,22 @@ class Game:
             r = p.free_input(check, 'mul')
             if r is not None:
                 m1, m2, s1, s2 = r
+                print('pop')
+                print(m1, m2, s1, s2)
+                print(p.side)
                 if (m1 in range(0, len(p.hand))) & (s1 in range(0, len(p.side))):
                     t = p.hand[m1]
                     p.hand[m1] = p.side[s1]
+                    p.hand[m1].location = ELocation.HAND + 2 - p.sp
+                    t.location = ELocation.SIDE + 2 - p.sp
                     p.side[s1] = t
                     p.update_vc(p.hand[m1])
                     p.update_vc(t)
                 if (m2 in range(0, len(p.hand))) & (s2 in range(0, len(p.side))):
                     t = p.hand[m2]
                     p.hand[m2] = p.side[s2]
+                    p.hand[m2].location = ELocation.HAND + 2 - p.sp
+                    t.location = ELocation.SIDE + 2 - p.sp
                     p.side[s2] = t
                     p.update_vc(p.hand[m2])
                     p.update_vc(t)
