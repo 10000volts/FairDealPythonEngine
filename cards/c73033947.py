@@ -11,7 +11,7 @@ class E1(Effect):
     随机丢弃手牌并上升ATK。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.SEND2HAND, host=host, trigger=True,
+        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host, trigger=True,
                          scr_arg=0)
 
     def condition(self, tp):
@@ -25,11 +25,11 @@ class E1(Effect):
         return False
 
     def cost(self, tp):
-        # 至多3随机手牌丢弃
+        # 至多2随机手牌丢弃
         if tp not in self.reacted:
             self.reacted.append(tp)
             p = self.game.get_player(self.host)
-            m = p.req4num(1, min(3, len(p.hand)))
+            m = p.req4num(1, min(2, len(p.hand)))
             if m is not None:
                 for i in range(0, m):
                     # todo: 不会出现不能被丢弃的卡。
@@ -48,7 +48,7 @@ class E1(Effect):
         :return:
         """
         # ATK上升
-        self.host.ATK.gain(self.scr_arg * 300)
+        self.host.ATK.gain(self.scr_arg * 500)
 
 
 def give(c):
