@@ -353,7 +353,7 @@ class EffSingleStgE3Mixin(EffLazyTriggerCostMixin):
     """
     def __init__(self, host, scr_arg):
         super().__init__(desc=EEffectDesc.EFFECT_END, host=host, trigger=True,
-                         force=True, scr_arg=scr_arg, passive=True)
+                         force=True, scr_arg=scr_arg, passive=True, no_reset=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
@@ -384,8 +384,8 @@ class EffCommonSummon(EffTriggerCostMixin):
     """
     常规入场后效果模板。
     """
-    def __init__(self, desc, host):
-        super().__init__(desc=desc, host=host, trigger=True)
+    def __init__(self, desc, host, **kwargs):
+        super().__init__(desc=desc, host=host, trigger=True, **kwargs)
 
     def condition(self, tp):
         """

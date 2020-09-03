@@ -20,7 +20,7 @@ class E1(EffCommonStrategy):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """

@@ -119,6 +119,10 @@ class EEffectDesc:
     AGILE = 60
     # 转移目标
     CHANGE_TARGET = 61
+    # 穿透汲取
+    PIERCE_ABSORB = 62
+    # 效果胜利
+    VICTORY = 63
 
 
 class ELocation:

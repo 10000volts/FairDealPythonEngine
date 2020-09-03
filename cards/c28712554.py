@@ -17,8 +17,9 @@ class E2(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.TRY_HEAL:
-            if (tp.args[1] is self.game.get_player(self.host).leader) & (tp not in self.reacted):
+        if (tp.tp == ETimePoint.TRY_HEAL) | (tp.tp == ETimePoint.HEALING):
+            if (tp.args[1] is self.game.players[self.game.get_player(self.host).sp].leader) & \
+                    (tp not in self.reacted):
                 return True
         return False
 

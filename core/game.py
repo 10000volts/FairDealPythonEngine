@@ -1126,11 +1126,11 @@ class Game:
             :param _s:
             :return:
             """
-            if (_m in range(0, len(p.hand))) & (_s in range(0, len(p.side))):
+            if (_m in range(0, len(pn.hand))) & (_s in range(0, len(pn.side))):
                 # 王牌补偿，满足条件时，任意筹码都可以交换副卡组中的王牌筹码
-                if p.side[_s].rank == ECardRank.TRUMP:
+                if pn.side[_s].rank == ECardRank.TRUMP:
                     return True
-                return p.hand[_m].rank >= p.side[_s].rank
+                return pn.hand[_m].rank >= pn.side[_s].rank
             else:
                 return True
 
@@ -1142,22 +1142,21 @@ class Game:
             :param _s2:
             :return:
             """
-            print(_m1, _m2, _s1, _s2)
             _tc = 0
             _tcs = 0
-            for _c in p.hand:
+            for _c in pn.hand:
                 if _c.rank == ECardRank.TRUMP:
                     _tc += 1
-            if _s1 in range(0, len(p.side)):
-                if p.side[_s1].rank == ECardRank.TRUMP:
+            if _s1 in range(0, len(pn.side)):
+                if pn.side[_s1].rank == ECardRank.TRUMP:
                     _tc += 1
-            if _s2 in range(0, len(p.side)):
+            if _s2 in range(0, len(pn.side)):
                 # 连续交换副卡组中同一位置的牌。
                 if _s2 == _s1:
-                    if p.hand[_m1].rank == ECardRank.TRUMP:
+                    if pn.hand[_m1].rank == ECardRank.TRUMP:
                         _tcs += 1
                 else:
-                    if p.side[_s2].rank == ECardRank.TRUMP:
+                    if pn.side[_s2].rank == ECardRank.TRUMP:
                         _tcs += 1
             if (_tc + _tcs > 3) & (_tcs > 0):
                 return EErrorCode.NO_MORE_TRUMP
@@ -1169,6 +1168,7 @@ class Game:
 
         # 收到进入调整阶段的消息时客户端即可进行操作。mul指令只是用于回收用户发来的指令。
         for p in self.players:
+            pn = p
             r = p.free_input(check, 'req_mul')
             if r is not None:
                 m1, m2, s1, s2 = r
