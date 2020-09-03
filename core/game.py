@@ -1188,6 +1188,7 @@ class Game:
                     p.side[s2] = t
                     p.update_vc(p.hand[m2])
                     p.update_vc(t)
+                p.shuffle()
 
     def __ph_play_card(self):
         def check(*_args):
