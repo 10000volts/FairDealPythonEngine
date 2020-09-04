@@ -1,6 +1,6 @@
 # 高薪招聘
-from core.game import GameCard
-from utils.constants import EEffectDesc, EEmployeeType, ECardType, ECardRank, ELocation
+from core.game import GameCard, TimePoint
+from utils.constants import EEffectDesc, EEmployeeType, ECardType, ECardRank, ELocation, ETimePoint
 from utils.common_effects import EffTurnCostMixin
 
 
@@ -34,7 +34,15 @@ class E1(EffTurnCostMixin):
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
         c.create('应聘者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.GOOD,
                  self.host.ATK.value, self.host.ATK.value)
-        self.game.special_summon(p, p, c, self)
+
+        for pos in range(0, 3):
+            for posture in range(0, 2):
+                if p.on_field[pos] is None:
+                    tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, posture, 1])
+                    self.game.enter_time_point(tp)
+                    if tp.args[-1]:
+                        self.game.special_summon(p, p, c, self)
+                        return
 
 
 def give(c):

@@ -200,12 +200,11 @@ class EffProtectProtocol(Effect):
     保护协议(破产保护)
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.PROTECT_PROTOCOL, act_phase=EGamePhase.PLAY_CARD,
-                         host=host)
+        super().__init__(desc=EEffectDesc.PROTECT_PROTOCOL, host=host)
 
     def condition(self, tp):
-        p = self.game.get_player(self.host)
         if tp.tp == ETimePoint.ASK4EFFECT:
+            p = self.game.get_player(self.host)
             for c in p.on_field:
                 if c is not None and c.type == ECardType.EMPLOYEE:
                     return True

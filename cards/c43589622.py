@@ -1,27 +1,28 @@
 # 蓝图设计者
-from utils.common_effects import EffLazyTriggerCostMixin
-from utils.constants import EEffectDesc, ETimePoint, ELocation
+from utils.common_effects import EffSummon
+from utils.constants import EEffectDesc
 
 
-class E1(EffLazyTriggerCostMixin):
+class E1(EffSummon):
+    """
+    对对方玩家造成500伤害。
+    """
     def __init__(self, host):
-        super().__init__(host=host, desc=EEffectDesc.VICTORY)
+        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.ASK4EFFECT:
-            if self.host.location & ELocation.HAND:
-                p = self.game.get_player(self.host)
-                if (len(p.hand) == 1) & (len(p.deck) == 0):
-                    for c in p.on_field:
-                        if c is not None:
-                            return False
-                    self.game.show_card(p, self.host.vid, self)
-                    return True
+        if super().condition(tp):
+            p = self.game.get_player(self.host)
+            if (len(p.hand) == 0) & (len(p.deck) == 0):
+                for c in p.on_field:
+                    if c is not None and c is not self.host:
+                        return False
+                return True
         return False
 
     def execute(self):
-        self.game.win_reason = 1
-        self.game.winner = self.game.get_player(self.host)
+        p = self.game.players[self.game.get_player(self.host).sp]
+        self.game.deal_damage(self.host, p.leader, self.host.ATK.value * 2, self)
 
 
 def give(c):
