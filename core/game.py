@@ -1679,7 +1679,7 @@ class Game:
             return 0 if ind in range(0, ind_max) else EErrorCode.OVERSTEP
         p_react_list = list()
         for ef in self.ef_listener:
-            if ef.condition(tp) & (not ef.removing):
+            if ef.condition(tp) & (not ef.removing) & (tp not in ef.reacted):
                 if self.get_player(ef.host) is p:
                     if ef.force:
                         self.activate_effect(ef, p, tp)
