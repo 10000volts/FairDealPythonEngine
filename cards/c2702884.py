@@ -23,7 +23,7 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
         if self.host.turns:
             if tp.tp == ETimePoint.SUCC_SUMMON:
                 return ((self.host.location & ELocation.ON_FIELD) > 0) &\
-                       self.host.cover & (tp not in self.reacted)
+                       self.host.cover
         return False
 
 

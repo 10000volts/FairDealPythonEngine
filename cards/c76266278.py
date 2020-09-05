@@ -9,8 +9,7 @@ class E1(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYED:
-            if (tp.args[1] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[1] is self.host
         return False
 
     def execute(self):

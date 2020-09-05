@@ -15,8 +15,7 @@ class E3(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
-            if (tp.args[0] is self.scr_arg) & (tp.sender is None) & (tp not in self.reacted):
-                return True
+            return (tp.args[0] is self.scr_arg) & (tp.sender is None)
         return False
 
     def execute(self):

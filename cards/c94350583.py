@@ -14,7 +14,7 @@ class E2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
+            if tp.args[0] is self.host:
                 p = self.game.get_player(self.host)
                 for posture in range(0, 2):
                     for pos in range(0, 3):
@@ -42,7 +42,7 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD:
-            if (tp.args[0] is self.host) & (tp not in self.reacted) & (self.host.ATK.value > 1000):
+            if (tp.args[0] is self.host) & (self.host.ATK.value > 1000):
                 p = self.game.get_player(self.host)
                 for posture in range(0, 2):
                     for pos in range(0, 3):

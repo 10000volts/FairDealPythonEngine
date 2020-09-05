@@ -12,7 +12,7 @@ class E4(EffLazyTriggerCostMixin):
         super().__init__(host=host, desc=EEffectDesc.SEND2HAND, trigger=True, force=True, no_reset=True)
 
     def condition(self, tp):
-        return (tp.tp == ETimePoint.TURN_END) & (tp not in self.reacted)
+        return tp.tp == ETimePoint.TURN_END
 
     def execute(self):
         p = self.game.get_player(self.host)
@@ -28,8 +28,7 @@ class E2(EffLazyTriggerCostMixin):
                          no_reset=True)
 
     def condition(self, tp):
-        return (tp.tp == ETimePoint.TURN_BEGIN) & (self.game.turn_player is self.game.get_player(self.host)) & \
-               (tp not in self.reacted)
+        return (tp.tp == ETimePoint.TURN_BEGIN) & (self.game.turn_player is self.game.get_player(self.host))
 
     def execute(self):
         if (self.host.location & ELocation.ON_FIELD) == 0:
@@ -59,8 +58,7 @@ class E1(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DISCARDED:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[0] is self.host
         return False
 
     def execute(self):

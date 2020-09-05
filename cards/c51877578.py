@@ -12,7 +12,7 @@ class E1(EffLazyTriggerCostMixin):
                          act_phase=EGamePhase.EXTRA_DATA)
 
     def condition(self, tp):
-        return tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted
+        return tp.tp == ETimePoint.PH_EXTRA_DATA_END
 
     def execute(self):
         self.host.ATK.change_adv(-10000)

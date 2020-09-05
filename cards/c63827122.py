@@ -10,7 +10,7 @@ class E2(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SRC_ATK_CALCING:
-            return (tp.args[0] is self.host) & (tp not in self.reacted)
+            return tp.args[0] is self.host
         return False
 
     def execute(self):
@@ -24,7 +24,7 @@ class E1(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SRC_ATK_CALCING:
-            return (tp.args[0] is self.host) & (tp not in self.reacted)
+            return tp.args[0] is self.host
         return False
 
     def execute(self):

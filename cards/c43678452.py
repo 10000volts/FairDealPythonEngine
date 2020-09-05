@@ -9,8 +9,7 @@ class E2(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
-                return True
+            return (tp.args[0] is self.host) & (tp not in self.reacted)
         return False
 
     def execute(self):

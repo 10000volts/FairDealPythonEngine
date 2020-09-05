@@ -15,8 +15,7 @@ class E5(EffTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYED:
             return (tp.args[0] is self.host) & (tp.sender is None) & \
-                   (self.game.get_player(tp.args[1]) is not self.game.get_player(self.host)) & \
-                   (tp not in self.reacted)
+                   (self.game.get_player(tp.args[1]) is not self.game.get_player(self.host))
         return False
 
     def execute(self):
@@ -47,9 +46,7 @@ class E3(EffTriggerCostMixin):
                          host=c, trigger=True, force=True, scr_arg=p, no_reset=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DEALING_DAMAGE and tp.args[1] is self.scr_arg and tp not in self.reacted:
-            return True
-        return False
+        return tp.tp == ETimePoint.DEALING_DAMAGE and tp.args[1] is self.scr_arg
 
     def execute(self):
         tp = self.reacted.pop()
@@ -107,9 +104,7 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
-            if (tp.args[0] is self.host) & \
-                    (tp.sender is not self.scr_arg) & (tp not in self.reacted):
-                return True
+            return (tp.args[0] is self.host) & (tp.sender is not self.scr_arg)
         return False
 
     def execute(self):

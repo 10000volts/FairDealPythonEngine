@@ -13,7 +13,7 @@ class E1(EffLazyTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:
             if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) &\
-                    (tp not in self.reacted) & (tp.args[0] is not self.host):
+                    (tp.args[0] is not self.host):
                 return True
         return False
 

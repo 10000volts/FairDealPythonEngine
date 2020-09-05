@@ -1,10 +1,10 @@
 # 莱尔 玛斯
 from models.effect import Effect
-from core.game import TimePoint
+from utils.common_effects import EffLazyTriggerCostMixin
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ECardType, ELocation
 
 
-class E2(Effect):
+class E2(EffLazyTriggerCostMixin):
     """
     直接攻击时攻击力减半
     """
@@ -21,18 +21,11 @@ class E2(Effect):
         """
         if tp.tp == ETimePoint.ATTACKING:
             # 自己在场
-            if ((self.host.location & ELocation.ON_FIELD) > 0) & (tp.args[1].type == ECardType.LEADER) & \
-                    (tp not in self.reacted):
+            if ((self.host.location & ELocation.ON_FIELD) > 0) & (tp.args[1].type == ECardType.LEADER):
                 # 攻击者在对方场上或是自己
                 if (tp.args[0] in self.game.players[self.game.get_player(self.host).sp].on_field) \
                         | (tp.args[0] is self.host):
                     return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
         return False
 
     def execute(self):
@@ -60,13 +53,7 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if (tp.tp == ETimePoint.DESTROYING) and (tp.args[1] is self.host) and (tp not in self.reacted):
-            return True
-        return False
-
-    def cost(self, tp):
-        if self.condition(tp):
-            self.reacted.append(tp)
+        if (tp.tp == ETimePoint.DESTROYING) and (tp.args[1] is self.host):
             return True
         return False
 

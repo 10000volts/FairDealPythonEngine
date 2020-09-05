@@ -8,7 +8,7 @@ class EffTriggerCostMixin(Effect):
     默认的触发式效果cost行为。
     """
     def cost(self, tp):
-        if self.condition(tp):
+        if tp not in self.reacted:
             self.reacted.append(tp)
             return True
         return False
@@ -28,8 +28,7 @@ class EffInvestigator(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if (tp.tp == ETimePoint.CARD_PUT) and (tp.args[2] is self.host) \
-                and (tp not in self.reacted):
+        if (tp.tp == ETimePoint.CARD_PUT) and (tp.args[2] is self.host):
             return True
         return False
 
@@ -92,8 +91,7 @@ class EffNextTurnMixin(EffLazyTriggerCostMixin):
     到自己的下回合时发动
     """
     def condition(self, tp):
-        if tp.tp == ETimePoint.TURN_BEGIN and self.game.turn_player is self.game.get_player(self.host) \
-                and tp not in self.reacted:
+        if tp.tp == ETimePoint.TURN_BEGIN and self.game.turn_player is self.game.get_player(self.host):
             return True
         return False
 
@@ -103,9 +101,7 @@ class EffTurnEndMixin(EffLazyTriggerCostMixin):
     到回合结束时发动
     """
     def condition(self, tp):
-        if tp.tp == ETimePoint.TURN_END and tp not in self.reacted:
-            return True
-        return False
+        return tp.tp == ETimePoint.TURN_END
 
 
 class EffUntil(EffTriggerCostMixin):
@@ -118,9 +114,7 @@ class EffUntil(EffTriggerCostMixin):
         self.until = until
 
     def condition(self, tp):
-        if self.until(tp) and tp not in self.reacted:
-            return True
-        return False
+        return self.until(tp)
 
     def execute(self):
         self.host.remove_effect(self.scr_arg)
@@ -144,7 +138,7 @@ class EffAttackLimit(EffTriggerCostMixin):
         """
         if tp.tp == ETimePoint.TRY_ATTACK:
             # 攻击者是自己
-            if (tp.args[1].type == ECardType.LEADER) & (tp.args[0] is self.host) & (tp not in self.reacted):
+            if (tp.args[1].type == ECardType.LEADER) & (tp.args[0] is self.host):
                 return True
         return False
 
@@ -163,12 +157,11 @@ class EffProtect(Effect):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYING:
-            if (tp.args[1] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[1] is self.host
         return False
 
     def cost(self, tp):
-        if self.condition(tp):
+        if tp not in self.reacted:
             self.reacted.append(tp)
             return True
         return False
@@ -187,7 +180,7 @@ class EBattleDamage0(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
-            if (tp.args[0] == self.host) & (tp not in self.reacted):
+            if (tp.args[0] == self.host):
                 return True
         return False
 
@@ -244,10 +237,7 @@ class EffPerTurn(EffLazyTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.TURN_BEGIN:
-            if (tp not in self.reacted) & ((self.host.location & ELocation.ON_FIELD) > 0):
-                return True
-        return False
+        return (tp.tp == ETimePoint.TURN_BEGIN) & ((self.host.location & ELocation.ON_FIELD) > 0)
 
     def execute(self):
         """
@@ -338,7 +328,7 @@ class EffSingleStgE2(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
-            return (tp.args[0] is self.scr_arg[0]) & (tp not in self.reacted)
+            return tp.args[0] is self.scr_arg[0]
         return False
 
     def execute(self):
@@ -356,7 +346,7 @@ class EffSingleStgE3Mixin(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
-            return (tp.args[0] is self.host) & (tp not in self.reacted)
+            return tp.args[0] is self.host
         return False
 
 
@@ -374,9 +364,7 @@ class EffSummon(EffLazyTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host and tp not in self.reacted:
-            return True
-        return False
+        return tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host
 
 
 class EffCommonSummon(EffTriggerCostMixin):
@@ -392,7 +380,7 @@ class EffCommonSummon(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host and tp not in self.reacted \
+        if tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host\
                 and tp.sender is None:
             return True
         return False
@@ -411,7 +399,7 @@ class EffPierce(EffLazyTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.ATTACK_DAMAGE_JUDGE and tp.args[0] is self.host and tp not in self.reacted:
+        if tp.tp == ETimePoint.ATTACK_DAMAGE_JUDGE and tp.args[0] is self.host:
             return True
         return False
 
@@ -459,7 +447,7 @@ class EffAgile(EffLazyTriggerCostMixin):
                          passive=True)
 
     def condition(self, tp):
-        return (tp.tp == ETimePoint.CHARGE_CHECK) & (tp not in self.reacted)
+        return tp.tp == ETimePoint.CHARGE_CHECK
 
     def execute(self):
         self.host.charge = True
@@ -476,7 +464,7 @@ class EffHPLimit(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEF_CALCING:
-            if (tp.args[0] is self.host) & (tp.args[1] > self.scr_arg) & (tp not in self.reacted):
+            if (tp.args[0] is self.host) & (tp.args[1] > self.scr_arg):
                 return True
         return False
 

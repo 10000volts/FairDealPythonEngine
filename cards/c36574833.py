@@ -15,7 +15,7 @@ class E2(Effect):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
-            if (tp.args[0] is self.host) & (tp.sender is None) & (tp not in self.reacted):
+            if (tp.args[0] is self.host) & (tp.sender is None):
                 p = self.game.get_player(self.host)
                 tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, int(p.leader.DEF.value / 2), 1])
                 self.game.enter_time_point(tp2)
@@ -25,7 +25,7 @@ class E2(Effect):
 
     def cost(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
-            if self.condition(tp):
+            if tp not in self.reacted:
                 p = self.game.get_player(self.host)
                 self.reacted.append(tp)
                 # 支付生命力
@@ -56,7 +56,7 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRY_SUMMON:
-            if (tp.sender is None) & (tp.args[0] is self.host) & (tp not in self.reacted):
+            if (tp.sender is None) & (tp.args[0] is self.host):
                 p = self.game.get_player(self.host)
                 tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, int(p.leader.DEF.value / 2), 1])
                 self.game.enter_time_point(tp2)

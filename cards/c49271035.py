@@ -1,11 +1,12 @@
 # 数据分析师
+from utils.common_effects import EffLazyTriggerCostMixin
 from models.effect import Effect
 from core.game import TimePoint
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint, EErrorCode
 from utils.common import adj_pos
 
 
-class E2(Effect):
+class E2(EffLazyTriggerCostMixin):
     """
     调查筹码。
     """
@@ -19,20 +20,7 @@ class E2(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.CARD_PUT and tp.args[2] is self.host\
-                and tp not in self.reacted:
-            return True
-        return False
-
-    def cost(self, tp):
-        """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
-        :return:
-        """
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
-        return False
+        return tp.tp == ETimePoint.CARD_PUT and tp.args[2] is self.host
 
     def execute(self):
         """
@@ -80,7 +68,7 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.PH_EXTRA_DATA_END and tp not in self.reacted:
+        if tp.tp == ETimePoint.PH_EXTRA_DATA_END:
             p = self.game.get_player(self.host)
             tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 1000, 1])
             self.game.enter_time_point(tp2)
@@ -94,7 +82,7 @@ class E1(Effect):
         :return:
         """
         sd = self.game.get_player(self.host)
-        if self.condition(tp):
+        if tp not in self.reacted:
             self.reacted.append(tp)
             # 支付1000生命力
             f = sd.leader.hp_cost(1000, self)

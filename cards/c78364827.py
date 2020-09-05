@@ -23,9 +23,7 @@ class E2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) &\
-                    (tp not in self.reacted):
-                return True
+            return ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover)
         return False
 
     def execute(self):

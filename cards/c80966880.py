@@ -14,8 +14,7 @@ class E2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_ATTACK:
-            if (tp.args[1] is self.scr_arg) & (tp not in self.reacted):
-                return True
+            return tp.args[1] is self.scr_arg
         return False
 
     def execute(self):

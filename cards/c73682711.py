@@ -11,7 +11,7 @@ class E2(EffTriggerCostMixin):
         if tp.tp == ETimePoint.DEALT_DAMAGE:
             return (tp.args[0] is self.host) & ((self.host.location & ELocation.ON_FIELD) > 0) & \
                    (tp.args[1] is self.game.players[self.game.get_player(self.host).sp].leader) & \
-                   (tp.args[2] > 0) & (tp not in self.reacted)
+                   (tp.args[2] > 0)
         return False
 
     def execute(self):

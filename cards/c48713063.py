@@ -59,8 +59,7 @@ class E1(EffLazyTriggerCostMixin):
                          no_reset=True, passive=True)
 
     def condition(self, tp):
-        if (tp.tp == ETimePoint.BLOCKED) & (tp not in self.reacted) :
-            return self.game.op_player is self.game.get_player(tp.args[1])
+        return (tp.tp == ETimePoint.BLOCKED) & (self.game.op_player is self.game.get_player(tp.args[1]))
 
     def execute(self):
         """

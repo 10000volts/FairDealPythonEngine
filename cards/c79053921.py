@@ -26,8 +26,7 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
                 if self.host.location & ELocation.ON_FIELD:
                     p = self.game.get_player(self.host)
                     if self.host.cover:
-                        if (tp.args[1] is p.leader) & (tp not in self.reacted):
-                            return True
+                        return tp.args[1] is p.leader
         return False
 
 

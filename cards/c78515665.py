@@ -15,7 +15,7 @@ class E1(EffTriggerCostMixin):
         if tp.tp == ETimePoint.DEF_CALC:
             op = self.game.players[self.game.get_player(self.host).sp]
             if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) &\
-                    (tp not in self.reacted) & (tp.args[0] is op.leader) & (tp.args[1] < 3000):
+                    (tp.args[0] is op.leader) & (tp.args[1] < 3000):
                 for posture in range(0, 2):
                     for pos in range(0, 3):
                         if op.on_field[pos] is None:

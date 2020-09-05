@@ -19,8 +19,7 @@ class E1(EffTriggerCostMixin):
         if tp.tp == ETimePoint.SUCC_ACTIVATE_STRATEGY:
             # 自己在场，是对方的策略
             if ((self.host.location & ELocation.ON_FIELD) > 0) & \
-                    ((tp.args[0].location & (self.game.get_player(self.host).sp + 1)) > 0) & \
-                    (tp not in self.reacted):
+                    ((tp.args[0].location & (self.game.get_player(self.host).sp + 1)) > 0):
                 return True
         return False
 

@@ -18,9 +18,7 @@ class E4(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.ACTIVATING_STRATEGY:
-            if ((tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0) & \
-                    (tp not in self.reacted):
-                return True
+            return (tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0
         return False
 
     def execute(self):
@@ -49,9 +47,7 @@ class E3(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRIED_ACTIVATE_STRATEGY:
-            if ((tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0) & \
-                    (tp not in self.reacted):
-                return True
+            return (tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0
         return False
 
     def execute(self):
@@ -79,9 +75,7 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRY_ACTIVATE_STRATEGY:
-            if ((tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0) & \
-                    (tp not in self.reacted):
-                return True
+            return (tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0
         return False
 
     def execute(self):

@@ -13,9 +13,7 @@ class E2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
-            if (tp.args[0] is self.host) & \
-                    (tp.sender is not None) & (tp not in self.reacted):
-                return True
+            return (tp.args[0] is self.host) & (tp.sender is not None)
         return False
 
     def execute(self):
@@ -32,7 +30,7 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TURN_END:
-            if ((self.host.location & ELocation.ON_FIELD) > 0) & (tp not in self.reacted):
+            if (self.host.location & ELocation.ON_FIELD) > 0:
                 for c in self.game.get_player(self.host).hand:
                     tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
                     self.game.enter_time_point(tp)

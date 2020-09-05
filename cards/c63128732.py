@@ -12,8 +12,7 @@ class E4(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_CHANGE_POSTURE:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[0] is self.host
         return False
 
     def execute(self):
@@ -32,8 +31,7 @@ class E3(EffLazyTriggerCostMixin):
             p = self.game.get_player(self.host)
             return (tp.sender is None) & ((tp.args[1].location & (2 - p.sp)) > 0) & \
                    (tp.args[1].ATK.value == self.host.ATK.value) & \
-                   (tp.args[1] is not self.host) & ((self.host.location & ELocation.GRAVE) > 0) & \
-                   (tp not in self.reacted)
+                   (tp.args[1] is not self.host) & ((self.host.location & ELocation.GRAVE) > 0)
         return False
 
     def execute(self):
@@ -57,7 +55,7 @@ class E2(EffLazyTriggerCostMixin):
         if tp.tp == ETimePoint.SUCC_SUMMON:
             p = self.game.get_player(self.host)
             return (tp.args[0] in p.on_field) & (tp.args[0].type == ECardType.EMPLOYEE) & \
-                (tp.args[0].ATK.value <= 1000) & (tp.args[0].cover == 0) & (tp not in self.reacted) & \
+                (tp.args[0].ATK.value <= 1000) & (tp.args[0].cover == 0) & \
                    (tp is not self.scr_arg)
         return False
 

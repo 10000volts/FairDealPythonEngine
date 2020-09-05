@@ -17,7 +17,7 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host and tp not in self.reacted:
+        if tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host:
             p = self.game.get_player(self.host)
             tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 1000, 1])
             self.game.enter_time_point(tp2)
@@ -27,7 +27,7 @@ class E1(Effect):
 
     def cost(self, tp):
         p = self.game.get_player(self.host)
-        if self.condition(tp):
+        if tp not in self.reacted:
             self.reacted.append(tp)
             # 支付1000生命力
             f = p.leader.hp_cost(1000, self)

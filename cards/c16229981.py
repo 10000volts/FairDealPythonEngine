@@ -12,7 +12,7 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            if (tp.sender is None) & (tp not in self.reacted) & (tp.args[0] is self.host):
+            if (tp.sender is None) & (tp.args[0] is self.host):
                 for p in self.game.players:
                     for c in p.on_field:
                         if c is not None and c.type == ECardType.STRATEGY:

@@ -13,7 +13,7 @@ class E3(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TURN_BEGIN:
-            return (self.game.turn_player is self.game.get_player(self.host)) & (tp not in self.reacted)
+            return self.game.turn_player is self.game.get_player(self.host)
         return False
 
     def execute(self):
@@ -39,8 +39,7 @@ class E2(EffLazyTriggerCostMixin):
         """
         if tp.tp == ETimePoint.TRY_ATTACK:
             # 攻击者是自己
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[0] is self.host
         return False
 
     def execute(self):

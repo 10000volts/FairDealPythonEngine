@@ -13,7 +13,7 @@ class E3(EffTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:
             if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) &\
-                    (tp not in self.reacted) & (tp.args[0].location == self.host.location) & \
+                    (tp.args[0].location == self.host.location) & \
                     (len(tp.args[0].effects) == 0):
                 return True
         return False
@@ -45,7 +45,7 @@ class E2(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.ATK_CALCING:
-            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) & (tp not in self.reacted)\
+            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover)\
                     & (tp.args[0].type == ECardType.EMPLOYEE) & (tp.args[0].location == self.host.location) & \
                     (len(tp.args[0].effects) == 0):
                 return True

@@ -14,8 +14,7 @@ class E7(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_CHANGE_POSTURE:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[0] is self.host
         return False
 
     def execute(self):
@@ -31,7 +30,7 @@ class E6(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
+            if tp.args[0] is self.host:
                 p = self.game.get_player(self.host)
                 for c in p.grave:
                     if (c.type == ECardType.EMPLOYEE) & (c.cid != self.host.cid):
@@ -80,7 +79,7 @@ class E4(EffTriggerCostMixin):
         if tp.tp == ETimePoint.DEALT_DAMAGE:
             return (tp.args[0] is self.host) & ((self.host.location & ELocation.ON_FIELD) > 0) & \
                    (tp.args[1] is self.game.players[self.game.get_player(self.host).sp].leader) & \
-                   (tp.args[2] > 0) & (tp not in self.reacted)
+                   (tp.args[2] > 0)
         return False
 
     def execute(self):
@@ -165,9 +164,7 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_SUMMON:
-            if (tp.args[0] is self.host) & \
-                    (tp.sender is not self.scr_arg) & (tp not in self.reacted):
-                return True
+            return (tp.args[0] is self.host) & (tp.sender is not self.scr_arg)
         return False
 
     def execute(self):

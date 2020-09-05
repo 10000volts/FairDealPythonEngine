@@ -19,10 +19,9 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
         if (self.host.turns > 0) & (tp.tp == ETimePoint.PAID_COST):
             if self.host.location & ELocation.ON_FIELD:
                 if self.host.cover:
-                    if (tp.args[0].ATK.value <= self.host.ATK.value) & (tp not in self.reacted) & \
+                    return (tp.args[0].ATK.value <= self.host.ATK.value) & \
                             ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0) & \
-                            (tp.args[0].type == ECardType.STRATEGY):
-                        return True
+                            (tp.args[0].type == ECardType.STRATEGY)
         return False
 
 

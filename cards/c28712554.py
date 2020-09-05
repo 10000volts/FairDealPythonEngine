@@ -18,8 +18,7 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         if (tp.tp == ETimePoint.TRY_HEAL) | (tp.tp == ETimePoint.HEALING):
-            if (tp.args[1] is self.game.players[self.game.get_player(self.host).sp].leader) & \
-                    (tp not in self.reacted):
+            if (tp.args[1] is self.game.players[self.game.get_player(self.host).sp].leader):
                 return True
         return False
 

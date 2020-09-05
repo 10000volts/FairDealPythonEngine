@@ -18,8 +18,7 @@ class E1(EffTriggerCostMixin):
         """
         if tp.tp == ETimePoint.TRY_ATTACK:
             # 攻击者是自己
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
-                return True
+            return tp.args[0] is self.host
         return False
 
     def execute(self):
@@ -50,8 +49,7 @@ class E3(EffTriggerCostMixin):
         """
         if tp.tp == ETimePoint.DESTROYING:
             # 是自己，是战斗摧毁
-            if (tp.args[1] is self.host) & (tp.sender is None) & (tp not in self.reacted):
-                return True
+            return (tp.args[1] is self.host) & (tp.sender is None)
         return False
 
     def execute(self):

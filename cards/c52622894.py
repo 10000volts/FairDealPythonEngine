@@ -23,7 +23,7 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
                     p = self.game.get_player(self.host)
                     if self.host.cover:
                         if (tp.args[1].location == ELocation.ON_FIELD + 2 - p.sp) & \
-                                (tp.args[1].type == ECardType.EMPLOYEE) & (tp not in self.reacted):
+                                (tp.args[1].type == ECardType.EMPLOYEE):
                             return True
         return False
 

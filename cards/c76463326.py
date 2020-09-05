@@ -17,9 +17,7 @@ class E1(EffTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.EXTRA_DATA_GENERATING and tp.args is self.host and tp not in self.reacted:
-            return True
-        return False
+        return tp.tp == ETimePoint.EXTRA_DATA_GENERATING and tp.args is self.host
 
     def execute(self):
         """

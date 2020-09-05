@@ -1,9 +1,9 @@
 # 莫莱
-from models.effect import Effect
+from utils.common_effects import EffLazyTriggerCostMixin
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint
 
 
-class E1(Effect):
+class E1(EffLazyTriggerCostMixin):
     """
     附加值变成-500。
     """
@@ -17,19 +17,7 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp.tp == ETimePoint.EXTRA_DATA_GENERATING and tp.args is self.host and tp not in self.reacted:
-            return True
-        return False
-
-    def cost(self, tp):
-        """
-        支付cost，触发式效果需要在此添加连锁到的时点(且必须在进入新的时点前)。
-        :return:
-        """
-        if self.condition(tp):
-            self.reacted.append(tp)
-            return True
-        return False
+        return tp.tp == ETimePoint.EXTRA_DATA_GENERATING and tp.args is self.host
 
     def execute(self):
         """

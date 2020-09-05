@@ -18,7 +18,7 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            if (tp.args[0] is self.host) & (tp not in self.reacted):
+            if tp.args[0] is self.host:
                 p = self.game.get_player(self.host)
                 for c in p.hand:
                     if (c.type == ECardType.EMPLOYEE) & (c.rank < ECardRank.TRUMP):

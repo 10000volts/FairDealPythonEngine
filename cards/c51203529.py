@@ -24,7 +24,7 @@ class E2(EffLazyTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD:
             if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) &\
-                    (tp not in self.reacted) & (tp.args[0].type == ECardType.EMPLOYEE):
+                    (tp.args[0].type == ECardType.EMPLOYEE):
                 return True
         return False
 

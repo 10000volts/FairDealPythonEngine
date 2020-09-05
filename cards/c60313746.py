@@ -10,7 +10,7 @@ class E4(EffTriggerCostMixin):
         super().__init__(host=host, desc=EEffectDesc.DESTROY, trigger=True, force=True, no_reset=True)
 
     def condition(self, tp):
-        return (tp.tp == ETimePoint.TURN_END) & (tp not in self.reacted)
+        return tp.tp == ETimePoint.TURN_END
 
     def execute(self):
         for c in self.game.get_player(self.host).on_field:
@@ -26,7 +26,7 @@ class E2(EffTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYING:
             return (self.game.get_player(tp.args[1]) is self.game.get_player(self.host)) & \
-                   (tp.sender is None) & (tp not in self.reacted) & (tp.args[1].type == ECardType.EMPLOYEE)
+                   (tp.sender is None) & (tp.args[1].type == ECardType.EMPLOYEE)
         return False
 
     def execute(self):
