@@ -22,17 +22,16 @@ class E1(EffCostMixin):
             op = self.game.players[p.sp]
             for c in p.hand:
                 if (c.type == ECardType.EMPLOYEE) & (c.rank == ECardRank.COMMON):
-                    for posture in range(0, 2):
-                        for pos in range(0, 3):
-                            if op.on_field[pos] is None:
-                                tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, op, pos, posture, 1])
-                                self.game.enter_time_point(tp)
-                                if tp.args[-1]:
-                                    for pos2 in range(0, 3):
-                                        if p.on_field[pos2] is None:
-                                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos2, posture, 1])
-                                            self.game.enter_time_point(tp)
-                                            return bool(tp.args[-1])
+                    for pos in range(0, 3):
+                        if op.on_field[pos] is None:
+                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, op, pos, 0, 1])
+                            self.game.enter_time_point(tp)
+                            if tp.args[-1]:
+                                for pos2 in range(0, 3):
+                                    if p.on_field[pos2] is None:
+                                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos2, 0, 1])
+                                        self.game.enter_time_point(tp)
+                                        return bool(tp.args[-1])
         return False
 
     def execute(self):
@@ -48,30 +47,28 @@ class E1(EffCostMixin):
         def check(c):
             f = False
             if (c.location == (2 - p.sp + ELocation.HAND)) & (c.type == ECardType.EMPLOYEE):
-                for posture in range(0, 2):
-                    for pos in range(0, 3):
-                        if op.on_field[pos] is None:
-                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, op, pos, posture, 1])
-                            self.game.enter_time_point(tp)
-                            f |= tp.args[-1]
+                for pos in range(0, 3):
+                    if op.on_field[pos] is None:
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, op, pos, 0, 1])
+                        self.game.enter_time_point(tp)
+                        f |= tp.args[-1]
                 if not f:
                     return False
-                for posture in range(0, 2):
-                    for pos in range(0, 3):
-                        if p.on_field[pos] is None:
-                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, posture, 1])
-                            self.game.enter_time_point(tp)
-                            if tp.args[-1]:
-                                return True
+                for pos in range(0, 3):
+                    if p.on_field[pos] is None:
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, 0, 1])
+                        self.game.enter_time_point(tp)
+                        if tp.args[-1]:
+                            return True
                 return False
         tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:
             atk = tgt.ATK.value
-            self.game.special_summon(p, op, tgt, self)
+            self.game.special_summon(p, op, tgt, self, 0)
             c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
             c.create('随行者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.COMMON,
                      atk, 0)
-            self.game.special_summon(p, p, c, self)
+            self.game.special_summon(p, p, c, self, 0)
 
 
 def give(c):
