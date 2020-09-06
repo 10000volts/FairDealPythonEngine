@@ -1801,10 +1801,10 @@ class Game:
         if ef.secret:
             p.output('cst_eff', [None if ef.no_source else ef.host.vid, ef.description], True)
             if ef.cost(t):
-                if ef.condition(t):
-                    p.output('act_eff', [None if ef.no_source else ef.host.vid, ef.description], True)
-                    ef.execute()
-                    return
+                # if ef.condition(t):
+                p.output('act_eff', [None if ef.no_source else ef.host.vid, ef.description], True)
+                ef.execute()
+                return
         if not ef.passive:
             for pi in self.players:
                 if (not ef.secret) | (pi is p):
@@ -1815,7 +1815,8 @@ class Game:
             tp = TimePoint(ETimePoint.PAID_COST, ef, [ef.host, 1])
             self.temp_tp_stack.append(tp)
             self.enter_time_points()
-            if tp.args[-1] and ef.condition(t):
+            # 例：挫折大师的condition需检查是否还有手牌，但是回收时并不需要
+            if tp.args[-1]:  # and ef.condition(t):
                 # 输出
                 if not ef.passive:
                     for pi in self.players:
