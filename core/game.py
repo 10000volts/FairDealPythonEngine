@@ -305,9 +305,12 @@ class CardProperty:
         :param ef:
         :return:
         """
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             new_op = '++' if perm else '+'
             self.op_st.append(new_op)
             self.val_st.append(v)
@@ -316,9 +319,12 @@ class CardProperty:
         return None, None
 
     def gain_x(self, x, perm: bool = False, ef: Effect = None):
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             new_op = '++x' if perm else '+x'
             self.op_st.append('++x' if perm else '+x')
             self.val_st.append(x)
@@ -327,9 +333,12 @@ class CardProperty:
         return None, None
 
     def become(self, v, perm: bool = False, ef: Effect = None):
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             new_op = '==' if perm else '='
             self.op_st.append('==' if perm else '=')
             self.val_st.append(v)
@@ -338,9 +347,12 @@ class CardProperty:
         return None, None
 
     def become_x(self, x, perm: bool = False, ef: Effect = None):
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             new_op = '==x' if perm else '=x'
             self.op_st.append('==x' if perm else '=x')
             self.val_st.append(x)
@@ -349,9 +361,12 @@ class CardProperty:
         return None, None
 
     def plus(self, v, perm: bool = False, ef: Effect = None):
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             new_op = '**' if perm else '*'
             self.op_st.append('**' if perm else '*')
             self.val_st.append(v)
@@ -360,9 +375,12 @@ class CardProperty:
         return None, None
 
     def plus_x(self, x, perm: bool = False, ef: Effect = None):
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             new_op = '**x' if perm else '*x'
             self.op_st.append('**x' if perm else '*x')
             self.val_st.append(x)
@@ -376,9 +394,12 @@ class CardProperty:
         self.update()
 
     def change_adv(self, adv, ef: Effect = None):
-        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
-        self.card.game.enter_time_point(tp)
-        if tp.args[-1]:
+        flag = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+            self.card.game.enter_time_point(tp)
+            flag = tp.args[-1]
+        if flag:
             self.add_val = adv
             self.update()
 
@@ -577,9 +598,9 @@ class GameCard:
                 # 代支付
                 c, v = tp.args[:-1]
                 if c.type == ECardType.STRATEGY:
-                    c.ATK.gain(-v, False, self)
+                    c.ATK.gain(-v, False, ef)
                 else:
-                    c.DEF.gain(-v, False, self)
+                    c.DEF.gain(-v, False, ef)
                 # 通知玩家
                 c.game.batch_sending('hp_cst', [c.vid, v])
                 c.game.enter_time_point(TimePoint(ETimePoint.HP_COST, ef, [c.vid, v]))
