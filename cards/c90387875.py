@@ -16,7 +16,7 @@ class E1(EffLazyTriggerCostMixin):
     def execute(self):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, '9612125', is_token=True)
-        self.game.send2deck(p, p, c, self)
+        self.game.send2deck_above(p, p, c, self)
 
 
 def give(c):

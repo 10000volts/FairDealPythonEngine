@@ -50,7 +50,7 @@ class E1(EffSingleStgE1Mixin):
         tgt = self.game.choose_target(p, p, check, self, True)
         if tgt is not None:
             eff = 1000 if self.host.ATK.value > 1000 else self.host.ATK.value
-            op, v = tgt.ATK.gain(eff)
+            op, v = tgt.ATK.gain(eff, False, self)
             e3 = E3(self.host, tgt, op, v)
             self.host.register_effect(e3)
             e4 = E4(self.host, tgt, e3)

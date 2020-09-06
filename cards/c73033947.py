@@ -25,11 +25,11 @@ class E1(Effect):
         return False
 
     def cost(self, tp):
-        # 至多2随机手牌丢弃
+        # 至多3随机手牌丢弃
         if tp not in self.reacted:
             self.reacted.append(tp)
             p = self.game.get_player(self.host)
-            m = p.req4num(1, min(2, len(p.hand)))
+            m = p.req4num(1, min(3, len(p.hand)))
             if m is not None:
                 for i in range(0, m):
                     # todo: 不会出现不能被丢弃的卡。
@@ -43,12 +43,12 @@ class E1(Effect):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
         # ATK上升
-        self.host.ATK.gain(self.scr_arg * 500)
+        self.host.ATK.gain(self.scr_arg * 300, False, self)
 
 
 def give(c):

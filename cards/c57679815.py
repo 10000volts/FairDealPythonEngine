@@ -21,9 +21,9 @@ class E1(EffCommonStrategy):
         for em in p.on_field:
             if em is not None and em.type == ECardType.EMPLOYEE:
                 if self.host.ATK.value < 800:
-                    em.ATK.gain(self.host.ATK.value)
+                    em.ATK.gain(self.host.ATK.value, False, self)
                 else:
-                    em.ATK.gain(800)
+                    em.ATK.gain(800, False, self)
 
 
 def give(c):

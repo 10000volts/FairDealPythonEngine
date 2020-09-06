@@ -50,8 +50,8 @@ class E1(EffTriggerCostMixin):
         tgt = self.game.choose_target(p, p, check, self, True)
         if tgt is not None:
             atk = tgt.ATK.value
-            tgt.ATK.become(tgt.DEF.value)
-            tgt.DEF.become(atk)
+            tgt.ATK.become(tgt.DEF.value, False, self)
+            tgt.DEF.become(atk, False, self)
             e3 = EffAttackLimit(tgt, False)
             tgt.register_effect(e3)
             tgt.register_effect(E2(tgt, e3))

@@ -32,7 +32,7 @@ class E2(EffTriggerCostMixin):
     def execute(self):
         tp = self.reacted.pop()
         if tp.args[0].location & ELocation.ON_FIELD:
-            tp.args[0].ATK.gain(-tp.args[1].ATK.value)
+            tp.args[0].ATK.gain(-tp.args[1].ATK.value, False, self)
 
 
 class E1(Effect):

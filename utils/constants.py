@@ -123,6 +123,10 @@ class EEffectDesc:
     PIERCE_ABSORB = 62
     # 效果胜利
     VICTORY = 63
+    # 盖放卡
+    SET_CARD = 64
+    # 发动策略
+    ACTIVATE_STRATEGY = 65
 
 
 class ELocation:
@@ -332,6 +336,7 @@ class ETimePoint:
     FAIL_EFFECT_ACTIVATE = 129
     # 尝试放置策略 在此时点发动效果的卡：
     # 鲁莽的开发者
+    # args[0]: 卡
     TRY_SET_STRATEGY = 130
     # 放置策略后 在此时点发动效果的卡：
     #
@@ -686,3 +691,7 @@ class ETimePoint:
     # 婴儿
     # args[0]: 卡 args[1]: 附加值
     SRC_ATK_CALCING = 226
+    # 将对卡产生影响时 在此时点发动效果的卡：
+    # 高级智库
+    # args[0]: 目标
+    INFLUENCING = 227

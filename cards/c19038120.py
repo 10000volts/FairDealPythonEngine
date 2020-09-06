@@ -52,8 +52,8 @@ class E1(EffTurnCostMixin):
                 return False
         tgt = self.game.choose_target(p, p, check, self, False, False)
         if tgt is not None:
-            tgt.ATK.become(self.host.ATK.value)
-            tgt.DEF.become(self.host.ATK.value)
+            tgt.ATK.become(self.host.ATK.value, False, self)
+            tgt.DEF.become(self.host.ATK.value, False, self)
             self.game.special_summon(p, p, tgt, self)
 
 

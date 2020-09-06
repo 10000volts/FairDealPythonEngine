@@ -21,7 +21,7 @@ class E1(EffCommonSummon):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            tgt.ATK.gain(-600)
+            tgt.ATK.gain(-600, False, self)
 
 
 def give(c):

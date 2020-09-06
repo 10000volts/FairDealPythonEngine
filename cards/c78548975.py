@@ -37,8 +37,8 @@ class E3(EffTriggerCostMixin):
     def execute(self):
         tp = self.reacted.pop()
         t = tp.args[0].ATK.value
-        op1, v1 = tp.args[0].ATK.become(tp.args[1].ATK.value)
-        op2, v2 = tp.args[1].ATK.become(t)
+        op1, v1 = tp.args[0].ATK.become(tp.args[1].ATK.value, False, self)
+        op2, v2 = tp.args[1].ATK.become(t, False, self)
         self.host.register_effect(E4(self.host, op1, v1, op2, v2))
 
 

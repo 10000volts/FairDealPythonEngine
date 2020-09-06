@@ -9,7 +9,8 @@ class E1(EffCounterStgE1Mixin):
 
     def execute(self):
         if self.scr_arg[0].args[0].location & ELocation.ON_FIELD:
-            self.scr_arg[0].args[0].ATK.gain(-self.scr_arg[0].args[1].ATK.value)
+            self.scr_arg[0].args[0].ATK.gain(-self.scr_arg[0].args[1].ATK.value, False,
+                                             self)
 
 
 class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):

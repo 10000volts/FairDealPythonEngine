@@ -10,7 +10,7 @@ class E1(EffCounterStgE1Mixin):
 
     def execute(self):
         # 无效攻击。
-        self.scr_arg[0].args[-1] = 0
+        self.game.invalid_tp(self.scr_arg[0], self.scr_arg[0].args[0], self)
         # 生命力回复
         c = self.game.get_player(self.host).leader
         v = self.scr_arg[0].args[0].ATK.value

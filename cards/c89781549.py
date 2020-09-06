@@ -27,7 +27,7 @@ class E4(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        self.reacted.pop().args[0].ATK.gain(self.scr_arg.scr_arg)
+        self.reacted.pop().args[0].ATK.gain(self.scr_arg.scr_arg, False, self)
         self.host.remove_effect(self.scr_arg)
         self.host.remove_effect(self)
 
@@ -94,7 +94,7 @@ class E1(EffCommonStrategy):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """

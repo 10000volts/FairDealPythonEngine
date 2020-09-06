@@ -14,7 +14,7 @@ class E2(EffExile):
         p = self.game.get_player(self.host)
         for c in p.on_field:
             if c is not None and c.cid == '95100656':
-                c.ATK.gain(min(self.host.ATK.value, 500))
+                c.ATK.gain(min(self.host.ATK.value, 500), False, self)
 
 
 class E1(EffCommonStrategy):

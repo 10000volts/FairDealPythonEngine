@@ -21,7 +21,7 @@ class E1(EffSingleStgE1Mixin):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            tgt.ATK.become(self.host.ATK.value, True)
+            tgt.ATK.become(self.host.ATK.value, True, self)
 
 
 def give(c):

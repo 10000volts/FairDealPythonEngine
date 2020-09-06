@@ -9,7 +9,7 @@ class E1(EffCounterStgE1Mixin):
 
     def execute(self):
         # 无效。
-        self.scr_arg[0].args[-1] = 0
+        self.game.invalid_tp(self.scr_arg[0], self.scr_arg[0].args[0], self)
 
 
 class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):

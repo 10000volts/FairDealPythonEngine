@@ -20,7 +20,7 @@ class E1(EffSummon):
         p = self.game.get_player(self.host)
         for em in p.on_field:
             if em is not None and em.type == ECardType.EMPLOYEE:
-                em.ATK.gain(500)
+                em.ATK.gain(500, False, self)
 
 
 def give(c):

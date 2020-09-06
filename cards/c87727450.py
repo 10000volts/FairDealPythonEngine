@@ -32,7 +32,7 @@ class E1(Effect):
         for p in self.game.players:
             for c in p.on_field:
                 if c is not None and c.type == ECardType.EMPLOYEE:
-                    c.ATK.plus(0.5)
+                    c.ATK.plus(0.5, False, self)
 
 
 def give(c):

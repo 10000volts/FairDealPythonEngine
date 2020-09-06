@@ -14,7 +14,7 @@ class E2(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        self.host.ATK.gain(1000, True)
+        self.host.ATK.gain(1000, True, self)
 
 
 class E1(EffTriggerCostMixin):

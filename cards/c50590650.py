@@ -25,7 +25,8 @@ class E2(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        self.reacted.pop().args[0].ATK.gain(600 if self.host.ATK.value > 600 else self.host.ATK.value)
+        self.reacted.pop().args[0].ATK.gain(600 if self.host.ATK.value > 600 else self.host.ATK.value,
+                                            False, self)
 
 
 def give(c):

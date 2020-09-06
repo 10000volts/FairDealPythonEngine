@@ -21,11 +21,11 @@ class E1(EffSingleStgE1Mixin):
         if r == EChoice.CHANGE_ATK:
             tgt = self.game.choose_target(p, p, check, self)
             if tgt is not None:
-                tgt.ATK.gain(-self.host.ATK.value)
+                tgt.ATK.gain(-self.host.ATK.value, False, self)
         elif r == EChoice.CHANGE_DEF:
             tgt = self.game.choose_target(p, p, check, self)
             if tgt is not None:
-                tgt.DEF.gain(-self.host.ATK.value)
+                tgt.DEF.gain(-self.host.ATK.value, False, self)
 
 
 def give(c):

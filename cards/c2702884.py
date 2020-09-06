@@ -9,7 +9,7 @@ class E1(EffCounterStgE1Mixin):
 
     def execute(self):
         # 攻击力下降
-        self.scr_arg[0].args[0].ATK.gain(-self.host.ATK.value)
+        self.scr_arg[0].args[0].ATK.gain(-self.host.ATK.value, False, self)
 
 
 class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):

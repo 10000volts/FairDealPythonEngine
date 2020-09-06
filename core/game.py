@@ -297,62 +297,90 @@ class CardProperty:
             else:
                 p.update_vc_ano(self.card)
 
-    def gain(self, v, perm: bool = False):
+    def gain(self, v, perm: bool = False, ef: Effect = None):
         """
         攻击力上升/下降。
         :param v:
         :param perm: 是否永久。
+        :param ef:
         :return:
         """
-        new_op = '++' if perm else '+'
-        self.op_st.append(new_op)
-        self.val_st.append(v)
-        self.update()
-        return new_op, v
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            new_op = '++' if perm else '+'
+            self.op_st.append(new_op)
+            self.val_st.append(v)
+            self.update()
+            return new_op, v
+        return None, None
 
-    def gain_x(self, x, perm: bool = False):
-        new_op = '++x' if perm else '+x'
-        self.op_st.append('++x' if perm else '+x')
-        self.val_st.append(x)
-        self.update()
-        return new_op, x
+    def gain_x(self, x, perm: bool = False, ef: Effect = None):
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            new_op = '++x' if perm else '+x'
+            self.op_st.append('++x' if perm else '+x')
+            self.val_st.append(x)
+            self.update()
+            return new_op, x
+        return None, None
 
-    def become(self, v, perm: bool = False):
-        new_op = '==' if perm else '='
-        self.op_st.append('==' if perm else '=')
-        self.val_st.append(v)
-        self.update()
-        return new_op, v
+    def become(self, v, perm: bool = False, ef: Effect = None):
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            new_op = '==' if perm else '='
+            self.op_st.append('==' if perm else '=')
+            self.val_st.append(v)
+            self.update()
+            return new_op, v
+        return None, None
 
-    def become_x(self, x, perm: bool = False):
-        new_op = '==x' if perm else '=x'
-        self.op_st.append('==x' if perm else '=x')
-        self.val_st.append(x)
-        self.update()
-        return new_op, x
+    def become_x(self, x, perm: bool = False, ef: Effect = None):
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            new_op = '==x' if perm else '=x'
+            self.op_st.append('==x' if perm else '=x')
+            self.val_st.append(x)
+            self.update()
+            return new_op, x
+        return None, None
 
-    def plus(self, v, perm: bool = False):
-        new_op = '**' if perm else '*'
-        self.op_st.append('**' if perm else '*')
-        self.val_st.append(v)
-        self.update()
-        return new_op, v
+    def plus(self, v, perm: bool = False, ef: Effect = None):
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            new_op = '**' if perm else '*'
+            self.op_st.append('**' if perm else '*')
+            self.val_st.append(v)
+            self.update()
+            return new_op, v
+        return None, None
 
-    def plus_x(self, x, perm: bool = False):
-        new_op = '**x' if perm else '*x'
-        self.op_st.append('**x' if perm else '*x')
-        self.val_st.append(x)
-        self.update()
-        return new_op, x
+    def plus_x(self, x, perm: bool = False, ef: Effect = None):
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            new_op = '**x' if perm else '*x'
+            self.op_st.append('**x' if perm else '*x')
+            self.val_st.append(x)
+            self.update()
+            return new_op, x
+        return None, None
 
     def remove(self, op, v):
         self.op_st.remove(op)
         self.val_st.remove(v)
         self.update()
 
-    def change_adv(self, adv):
-        self.add_val = adv
-        self.update()
+    def change_adv(self, adv, ef: Effect = None):
+        tp = TimePoint(ETimePoint.INFLUENCING, ef, [self.card, 1])
+        self.card.game.enter_time_point(tp)
+        if tp.args[-1]:
+            self.add_val = adv
+            self.update()
 
 
 class HPProperty(CardProperty):
@@ -549,9 +577,9 @@ class GameCard:
                 # 代支付
                 c, v = tp.args[:-1]
                 if c.type == ECardType.STRATEGY:
-                    c.ATK.gain(-v)
+                    c.ATK.gain(-v, False, self)
                 else:
-                    c.DEF.gain(-v)
+                    c.DEF.gain(-v, False, self)
                 # 通知玩家
                 c.game.batch_sending('hp_cst', [c.vid, v])
                 c.game.enter_time_point(TimePoint(ETimePoint.HP_COST, ef, [c.vid, v]))
@@ -1062,7 +1090,7 @@ class Game:
                 return True
         f = True
         while f:
-            f = go(self.p1) | go(self.p2)
+            f = go(self.p2) | go(self.p1)
         self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_CALC))
         # 结算附加值。
         for c in self.chessboard:
@@ -1099,8 +1127,6 @@ class Game:
                     self.batch_sending('tk_crd', [pos, 0], p)
                     self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
 
-        # 后手玩家在这个环节中先取走卡片以平衡先后手。
-        self.exchange_turn()
         f = True
         while f:
             f = False
@@ -1398,8 +1424,8 @@ class Game:
             return 0
 
         # 重置先后手
-        self.turn_player = self.p2
-        self.op_player = self.p1
+        self.turn_player = self.p1
+        self.op_player = self.p2
         while self.winner is None:
             if self.turns >= 50:
                 self.win_reason = 3
@@ -1454,7 +1480,7 @@ class Game:
                             self.turn_player.set_times -= 1
                         else:
                             self.turn_player.strategy_times -= 1
-                        self.set_strategy(self.turn_player, self.turn_player, c, cmd[2])
+                        self.set_strategy(self.turn_player, self.turn_player, c, None, cmd[2])
                 # attack 尝试发动攻击
                 elif cmd[0] == 3:
                     attacker = self.turn_player.on_field[cmd[1]]
@@ -2013,7 +2039,7 @@ class Game:
         # 未成功，送去场下
         self.send_to_grave(p, pt, em)
             
-    def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos):
+    def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos: int = -1):
         """
         发动策略。
         :param p: 发起者。
@@ -2030,8 +2056,21 @@ class Game:
             self.enter_time_point(tp)
             # 发动成功
             if tp.args[-1]:
-                pt.on_field[pos] = s
-                s.inf_pos = pos
+                if pos > -1:
+                    pt.on_field[pos] = s
+                    s.inf_pos = pos
+                else:
+                    def check_pos(_pos):
+                        if _pos not in range(3, 6):
+                            return EErrorCode.OVERSTEP
+                        if pt.on_field[_pos] is not None:
+                            return EErrorCode.INVALID_PUT
+                        return 0
+
+                    # 询问入场位置、姿态
+                    pos = p.input(check_pos, 'req_pos_stg', [pt is p])
+                    pt.on_field[pos] = s
+                    s.inf_pos = pos
                 s.cover = 0
                 next(cm)
                 # todo: 换s的效果不会出。
@@ -2078,7 +2117,7 @@ class Game:
                 self.batch_sending('set_crd', [em.vid], p)
                 self.enter_time_points()
 
-    def set_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos, ef: Effect = None):
+    def set_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, ef: Effect = None, pos: int = -1):
         """
         盖放策略。
         :param p:
@@ -2095,8 +2134,21 @@ class Game:
             tp = TimePoint(ETimePoint.SET_STRATEGY, ef, [s, 1])
             self.enter_time_point(tp)
             if tp.args[-1]:
-                pt.on_field[pos] = s
-                s.inf_pos = pos
+                if pos > -1:
+                    pt.on_field[pos] = s
+                    s.inf_pos = pos
+                else:
+                    def check_pos(_pos):
+                        if _pos not in range(3, 6):
+                            return EErrorCode.OVERSTEP
+                        if pt.on_field[_pos] is not None:
+                            return EErrorCode.INVALID_PUT
+                        return 0
+
+                    # 询问入场位置、姿态
+                    pos = p.input(check_pos, 'req_pos_stg', [pt is p])
+                    pt.on_field[pos] = s
+                    s.inf_pos = pos
                 s.cover = 1
                 next(cm)
                 for pi in self.players:
@@ -2108,26 +2160,32 @@ class Game:
                 self.enter_time_points()
 
     def send_to(self, loc, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
-        cm = c.move_to(ef, loc)
-        next(cm)
-        self.enter_time_points()
-        if next(cm):
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            cm = c.move_to(ef, loc)
             next(cm)
-            if loc & ELocation.GRAVE:
-                self.batch_sending('upd_vc', [c.vid, c.serialize()])
-            else:
-                cov = c.cover
-                for pi in self.players:
-                    if (not cov) | (pi is pt):
-                        pi.output('upd_vc', [c.vid, c.serialize()])
-                    else:
-                        pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
-                # todo: 换c的效果不会出。
-                self.batch_sending('crd_snd', [c.vid, loc], p)
-                self.enter_time_points()
-                if (loc & ELocation.EXILED) == 0:
-                    pt.shuffle()
-            return True
+            self.enter_time_points()
+            if next(cm):
+                next(cm)
+                if loc & ELocation.GRAVE:
+                    self.batch_sending('upd_vc', [c.vid, c.serialize()])
+                else:
+                    cov = c.cover
+                    for pi in self.players:
+                        if (not cov) | (pi is pt):
+                            pi.output('upd_vc', [c.vid, c.serialize()])
+                        else:
+                            pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+                    # todo: 换c的效果不会出。
+                    self.batch_sending('crd_snd', [c.vid, loc], p)
+                    self.enter_time_points()
+                    if (loc & ELocation.EXILED) == 0:
+                        pt.shuffle()
+                return True
         return False
 
     def send_to_grave(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
@@ -2139,16 +2197,22 @@ class Game:
         :param ef:
         :return:
         """
-        cm = c.move_to(ef, ELocation.GRAVE + 2 - pt.sp)
-        next(cm)
-        self.enter_time_points()
-        if next(cm):
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            cm = c.move_to(ef, ELocation.GRAVE + 2 - pt.sp)
             next(cm)
-            # 墓地的卡必须公开。
-            self.batch_sending('upd_vc', [c.vid, c.serialize()])
-            # todo: 换c的效果不会出。
-            self.batch_sending('crd_snd2grv', [c.vid], p)
             self.enter_time_points()
+            if next(cm):
+                next(cm)
+                # 墓地的卡必须公开。
+                self.batch_sending('upd_vc', [c.vid, c.serialize()])
+                # todo: 换c的效果不会出。
+                self.batch_sending('crd_snd2grv', [c.vid], p)
+                self.enter_time_points()
 
     def send2hand(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
@@ -2159,23 +2223,29 @@ class Game:
         :param ef:
         :return:
         """
-        cov = c.cover
-        cm = c.move_to(ef, ELocation.HAND + 2 - pt.sp)
-        next(cm)
-        self.enter_time_points()
-        if next(cm):
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            cov = c.cover
+            cm = c.move_to(ef, ELocation.HAND + 2 - pt.sp)
             next(cm)
-            for pi in self.players:
-                if (cov == 0) | (pi is pt):
-                    pi.output('upd_vc', [c.vid, c.serialize()])
-                else:
-                    pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
-            # todo: 换c的效果不会出。
-            self.batch_sending('crd_snd2hnd', [c.vid], p)
             self.enter_time_points()
-            pt.shuffle()
+            if next(cm):
+                next(cm)
+                for pi in self.players:
+                    if (cov == 0) | (pi is pt):
+                        pi.output('upd_vc', [c.vid, c.serialize()])
+                    else:
+                        pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+                # todo: 换c的效果不会出。
+                self.batch_sending('crd_snd2hnd', [c.vid], p)
+                self.enter_time_points()
+                pt.shuffle()
 
-    def send2deck(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+    def send2deck_above(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
         送去卡组。
         :param p:
@@ -2184,21 +2254,26 @@ class Game:
         :param ef:
         :return:
         """
-        cov = c.cover
-        cm = c.move_to(ef, ELocation.DECK + 2 - pt.sp)
-        next(cm)
-        self.enter_time_points()
-        if next(cm):
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            cov = c.cover
+            cm = c.move_to(ef, ELocation.DECK + 2 - pt.sp)
             next(cm)
-            for pi in self.players:
-                if (cov == 0) | (pi is pt):
-                    pi.output('upd_vc', [c.vid, c.serialize()])
-                else:
-                    pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
-            # todo: 换c的效果不会出。
-            self.batch_sending('crd_snd2dck', [c.vid], p)
             self.enter_time_points()
-            pt.shuffle(ELocation.DECK)
+            if next(cm):
+                next(cm)
+                for pi in self.players:
+                    if (cov == 0) | (pi is pt):
+                        pi.output('upd_vc', [c.vid, c.serialize()])
+                    else:
+                        pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+                # todo: 换c的效果不会出。
+                self.batch_sending('crd_snd2dck', [c.vid], p)
+                self.enter_time_points()
 
     def send2exiled(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
@@ -2209,21 +2284,27 @@ class Game:
         :param ef:
         :return:
         """
-        cov = c.cover
-        cm = c.move_to(ef, ELocation.EXILED + 2 - pt.sp)
-        next(cm)
-        self.enter_time_points()
-        if next(cm):
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            cov = c.cover
+            cm = c.move_to(ef, ELocation.EXILED + 2 - pt.sp)
             next(cm)
-            for pi in self.players:
-                if (cov == 0) | (pi is pt):
-                    pi.output('upd_vc', [c.vid, c.serialize()])
-                else:
-                    pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
-            # todo: 换c的效果不会出。
-            self.batch_sending('crd_snd2exd', [c.vid], p)
             self.enter_time_points()
-            return True
+            if next(cm):
+                next(cm)
+                for pi in self.players:
+                    if (cov == 0) | (pi is pt):
+                        pi.output('upd_vc', [c.vid, c.serialize()])
+                    else:
+                        pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
+                # todo: 换c的效果不会出。
+                self.batch_sending('crd_snd2exd', [c.vid], p)
+                self.enter_time_points()
+                return True
         return False
 
     def deal_damage(self, sender: GameCard, target: GameCard, damage: int, ef: Effect = None):
@@ -2235,15 +2316,21 @@ class Game:
         :param ef:
         :return:
         """
-        tp = TimePoint(ETimePoint.DEALING_DAMAGE, ef, [sender, target, damage, 1])
-        self.enter_time_point(tp)
-        if tp.args[-1]:
-            sender, target, damage = tp.args[:-1]
-            # gain会通知客户端。
-            target.DEF.gain(-damage)
-            # todo: 是特性，不是bug。
-            self.batch_sending('dmg', [target.vid, damage], self.get_player(sender))
-            self.enter_time_point(TimePoint(ETimePoint.DEALT_DAMAGE, ef, [sender, target, damage]))
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [target, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            tp = TimePoint(ETimePoint.DEALING_DAMAGE, ef, [sender, target, damage, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                sender, target, damage = tp.args[:-1]
+                # gain会通知客户端。
+                target.DEF.gain(-damage, False, ef)
+                # todo: 是特性，不是bug。
+                self.batch_sending('dmg', [target.vid, damage], self.get_player(sender))
+                self.enter_time_point(TimePoint(ETimePoint.DEALT_DAMAGE, ef, [sender, target, damage]))
 
     def heal(self, sender: GameCard, target: GameCard, value: int, ef: Effect):
         """
@@ -2254,15 +2341,21 @@ class Game:
         :param ef:
         :return:
         """
-        tp = TimePoint(ETimePoint.HEALING, ef, [sender, target, value, 1])
-        self.enter_time_point(tp)
-        if tp.args[-1]:
-            sender, target, value = tp.args[:-1]
-            # gain会通知客户端。
-            target.DEF.gain(value)
-            # todo: 是特性，不是bug。
-            self.batch_sending('hea', [target.vid, value], self.get_player(sender))
-            self.enter_time_point(TimePoint(ETimePoint.HEALED, ef, [sender, target, value]))
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [target, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            tp = TimePoint(ETimePoint.HEALING, ef, [sender, target, value, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                sender, target, value = tp.args[:-1]
+                # gain会通知客户端。
+                target.DEF.gain(value, False, ef)
+                # todo: 是特性，不是bug。
+                self.batch_sending('hea', [target.vid, value], self.get_player(sender))
+                self.enter_time_point(TimePoint(ETimePoint.HEALED, ef, [sender, target, value]))
 
     def destroy(self, sender: GameCard, target: GameCard, ef: Effect = None):
         """
@@ -2272,18 +2365,24 @@ class Game:
         :param ef:
         :return:
         """
-        tp = TimePoint(ETimePoint.DESTROYING, ef, [sender, target, 1])
-        self.enter_time_point(tp)
-        if tp.args[-1]:
-            sender, target = tp.args[:-1]
-            if target.type == ECardType.LEADER:
-                self.winner = self.players[self.get_player(target).sp]
-                self.win_reason = 0
-            else:
-                # todo: 是特性，不是bug。
-                self.batch_sending('crd_des', [target.vid], self.get_player(sender))
-                self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
-                self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [target, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            tp = TimePoint(ETimePoint.DESTROYING, ef, [sender, target, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                sender, target = tp.args[:-1]
+                if target.type == ECardType.LEADER:
+                    self.winner = self.players[self.get_player(target).sp]
+                    self.win_reason = 0
+                else:
+                    # todo: 是特性，不是bug。
+                    self.batch_sending('crd_des', [target.vid], self.get_player(sender))
+                    self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
+                    self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
 
     def choose_target(self, p: GamePlayer, pt: GamePlayer, func,
                       ef: Effect, force=True, with_tp=True) -> GameCard:
@@ -2395,13 +2494,19 @@ class Game:
         :param ef:
         :return:
         """
-        tp = TimePoint(ETimePoint.DEVOTING, ef, [c, 1])
-        self.enter_time_point(tp)
-        if tp.args[-1]:
-            self.send_to_grave(p, p, c, ef)
-            self.enter_time_point(TimePoint(ETimePoint.DEVOTED, ef, [c]))
-            return True
-        return False
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            tp = TimePoint(ETimePoint.DEVOTING, ef, [c, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                self.send_to_grave(p, p, c, ef)
+                self.enter_time_point(TimePoint(ETimePoint.DEVOTED, ef, [c]))
+                return True
+            return False
 
     def discard(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect):
         """
@@ -2465,6 +2570,12 @@ class Game:
             return True
         return False
 
+    def invalid_tp(self, tp: TimePoint, tgt: GameCard, ef: Effect):
+        _tp = TimePoint(ETimePoint.INFLUENCING, ef, [tgt, 1])
+        self.enter_time_point(_tp)
+        if _tp.args[-1]:
+            tp.args[-1] = 0
+
     def change_posture(self, p: GamePlayer, c: GameCard, pst, ef: Effect = None):
         """
         改变至指定的姿态。
@@ -2474,13 +2585,19 @@ class Game:
         :param ef:
         :return:
         """
-        tp = TimePoint(ETimePoint.CHANGING_POSTURE, None, [c, 1])
-        self.batch_sending('crd_cp', [c.vid])
-        self.enter_time_point(tp)
-        if tp.args[-1]:
-            c.posture = pst
-            self.batch_sending('upd_vc', [c.vid, c.serialize()])
-        self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))
+        f = True
+        if ef is not None:
+            tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
+            self.enter_time_point(tp)
+            f = tp.args[-1]
+        if f:
+            tp = TimePoint(ETimePoint.CHANGING_POSTURE, None, [c, 1])
+            self.batch_sending('crd_cp', [c.vid])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                c.posture = pst
+                self.batch_sending('upd_vc', [c.vid, c.serialize()])
+            self.enter_time_point(TimePoint(ETimePoint.CHANGED_POSTURE, None, [c]))
 
     def count(self, c: GameCard, name, count=1):
         """

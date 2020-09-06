@@ -32,7 +32,7 @@ class E2(EffTriggerCostMixin):
             self.game.destroy(self.host, self.host, self)
             c = self.reacted.pop().args[0]
             if c.location & ELocation.ON_FIELD:
-                c.ATK.gain(self.host.ATK.value)
+                c.ATK.gain(self.host.ATK.value, False, self)
 
 
 def give(c):

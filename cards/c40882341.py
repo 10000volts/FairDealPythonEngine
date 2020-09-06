@@ -94,7 +94,7 @@ class E1(Effect):
         tgt = self.game.choose_target(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
                                                       (c.type == ECardType.EMPLOYEE)), self, True)
         if tgt is not None:
-            op, v = tgt.ATK.gain(self.scr_arg)
+            op, v = tgt.ATK.gain(self.scr_arg, False, self)
             e3 = E3(self.host, tgt)
             self.host.register_effect(e3)
             self.host.register_effect(E2(self.host, tgt, op, v, e3))

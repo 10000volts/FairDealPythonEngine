@@ -47,7 +47,7 @@ class E1(Effect):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            tgt.ATK.gain(-1000)
+            tgt.ATK.gain(-1000, False, self)
 
 
 def give(c):

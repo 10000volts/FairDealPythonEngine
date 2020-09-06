@@ -21,9 +21,9 @@ class E2(EffNextTurnMixin):
             self.scr_arg[2] += 1
         else:
             if self.scr_arg[0].DEF.value > 4000:
-                self.scr_arg[0].DEF.gain(-4000)
+                self.scr_arg[0].DEF.gain(-4000, False, self)
             else:
-                self.scr_arg[0].DEF.become(1)
+                self.scr_arg[0].DEF.become(1, False, self)
             self.host.remove_effect(self)
 
 

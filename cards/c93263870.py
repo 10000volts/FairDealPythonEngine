@@ -36,7 +36,7 @@ class E2(EffLazyTriggerCostMixin):
         """
         # 攻击力减半
         tp = self.reacted.pop()
-        tp.args[0].ATK.plus(0.5)
+        tp.args[0].ATK.plus(0.5, False, self)
 
 
 class E1(Effect):

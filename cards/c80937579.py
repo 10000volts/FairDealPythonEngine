@@ -32,7 +32,7 @@ class E1(Effect):
         return False
 
     def execute(self):
-        self.host.ATK.gain(1000, True)
+        self.host.ATK.gain(1000, True, self)
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
         c.create('幕后黑手的人偶', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.TRUMP,

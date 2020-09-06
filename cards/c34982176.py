@@ -22,8 +22,8 @@ class E1(EffCommonSummon):
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
             atk = tgt.ATK.value
-            tgt.ATK.become(tgt.DEF.value)
-            tgt.DEF.become(atk)
+            tgt.ATK.become(tgt.DEF.value, False, self)
+            tgt.DEF.become(atk, False, self)
 
 
 def give(c):

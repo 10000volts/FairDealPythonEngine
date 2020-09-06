@@ -21,7 +21,7 @@ class E1(EffCommonSummon):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            self.game.get_player(self.host).leader.DEF.gain(-tgt.ATK.value)
+            self.game.get_player(self.host).leader.DEF.gain(-tgt.ATK.value, False, self)
             self.game.destroy(self.host, tgt, self)
 
 

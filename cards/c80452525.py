@@ -35,8 +35,8 @@ class E1(EffTriggerCostMixin):
         op = self.game.players[p.sp]
         tgt = self.game.choose_target(p, p, check, self)
         if tgt is not None:
-            tgt.ATK.plus(2)
-            self.host.ATK.plus(2)
+            tgt.ATK.plus(2, False, self)
+            self.host.ATK.plus(2, False, self)
 
 
 def give(c):

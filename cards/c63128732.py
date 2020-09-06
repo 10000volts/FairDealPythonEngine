@@ -61,7 +61,7 @@ class E2(EffLazyTriggerCostMixin):
 
     def execute(self):
         em = self.reacted.pop().args[0]
-        em.ATK.become(3000 - em.ATK.value)
+        em.ATK.become(3000 - em.ATK.value, False, self)
         self.host.remove_effect(self)
 
 
