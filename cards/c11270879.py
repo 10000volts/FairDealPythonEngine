@@ -9,12 +9,11 @@ class E1(EffCounterStgE1Mixin):
 
     def execute(self):
         def check(c):
-            print('qaq')
-            print(c.location)
-            print(c.type)
             if (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY):
-                print(c.name)
-                return c.effects[0].condition(None)
+                c.ATK.value += self.host.ATK.value
+                f = c.effects[0].condition(None)
+                c.ATK.value -= self.host.ATK.value
+                return f
             return False
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target(p, p, check, self, True, False)

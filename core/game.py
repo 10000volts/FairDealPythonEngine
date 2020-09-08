@@ -2463,6 +2463,77 @@ class Game:
                 return self.vid_manager.get_card(cs[ind])
         return None
 
+    def choose_target_multi(self, p: GamePlayer, pt: GamePlayer, func,
+                      ef: Effect, count, force=True, with_tp=True) -> GameCard:
+        """
+        选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
+        :param p:
+        :param pt:
+        :param func:  筛选函数。
+        :param ef:
+        :param count:
+        :param force: 是否强制
+        :param with_tp:
+        :return:
+        """
+        def check_ind(*_args):
+            if len(_args) != count + 1:
+                return EErrorCode.ILLEGAL_OPTIONS
+            _ins = dict()
+            for _ind in _args[:-1]:
+                if _ind not in range(0, _len):
+                    return EErrorCode.OVERSTEP
+                if _ind in _ins:
+                    return EErrorCode.REPEAT_CHOOSE
+                _ins[_ind] = 1
+            return 0
+
+        cs = list()
+        if with_tp:
+            for c in self.vid_manager.get_cards():
+                if func(c):
+                    # 模拟选择。
+                    tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, 1])
+                    self.enter_time_point(tp)
+                    if tp.args[-1]:
+                        cs.append(c.vid)
+            _len = len(cs)
+            if _len > 0:
+                # 询问选项
+                if force:
+                    ins = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                else:
+                    ins = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                    if ins is None:
+                        return None
+                cs = list()
+                for ind in ins:
+                    c = self.vid_manager.get_card(cs[ind])
+                    tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
+                    self.enter_time_point(tp)
+                    if tp.args[-1]:
+                        self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
+                        cs.append(c)
+                return cs
+        else:
+            for c in self.vid_manager.get_cards():
+                if func(c):
+                    cs.append(c.vid)
+            _len = len(cs)
+            if _len > 0:
+                # 询问选项
+                if force:
+                    ins = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                else:
+                    ins = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                    if ins is None:
+                        return None
+                cs = list()
+                for ind in ins:
+                    cs.append(self.vid_manager.get_card(cs[ind]))
+                return cs
+        return None
+
     def ceremony(self, p: GamePlayer, func, v, send_to=ELocation.GRAVE, op='>', with_tp=True):
         """
         进行契约。
@@ -2591,6 +2662,13 @@ class Game:
             self.send2exiled(p, p, tgt, ef)
             return True
         return False
+
+    def invalid_effect(self, tgt: GameCard, tgt_ef: Effect, ef: Effect):
+        if (not tgt_ef.no_reset) and tgt_ef.can_invalid:
+            _tp = TimePoint(ETimePoint.INFLUENCING, ef, [tgt, 1])
+            self.enter_time_point(_tp)
+            if _tp.args[-1]:
+                tgt.remove_effect(tgt_ef)
 
     def invalid_tp(self, tp: TimePoint, tgt: GameCard, ef: Effect):
         _tp = TimePoint(ETimePoint.INFLUENCING, ef, [tgt, 1])

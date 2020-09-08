@@ -227,6 +227,8 @@ class EErrorCode:
     FORBIDDEN_EXCHANGE = 21
     # 选择的选项数目不符合要求。
     ILLEGAL_OPTIONS = 22
+    # 重复选择同一个选项。
+    REPEAT_CHOOSE = 23
 
 
 class ETimePoint:
