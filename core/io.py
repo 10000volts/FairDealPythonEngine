@@ -106,7 +106,7 @@ def input_from_local(p, msg, check_func, special_func, force=True):
 
 
 def input_from_ai(p, msg, check_func, special_func, force=True):
-    return p.upstream.respond(msg)
+    return p.upstream.respond(msg, force)
 
 
 def output_2_socket(acceptor, msg: str):
@@ -114,9 +114,9 @@ def output_2_socket(acceptor, msg: str):
     terminal[acceptor].send((msg + '|').encode())
 
 
-def output_2_local(acceptor, msg: dict):
-    print(hints[int(msg['op'])].format(msg['result']))
-
-
-def output_2_ai(acceptor, msg):
+def output_2_local(acceptor, msg: str):
     pass
+
+
+def output_2_ai(acceptor, msg: str):
+    acceptor.restore(msg)

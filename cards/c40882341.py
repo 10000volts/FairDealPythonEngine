@@ -7,7 +7,7 @@ from utils.common_effects import EffNextTurnMixin, EffTriggerCostMixin
 
 class E3(EffTriggerCostMixin):
     """
-    造成的战斗伤害减半。
+    造成的战斗伤害变成0。
     """
     def __init__(self, c, scr_arg):
         super().__init__(desc=EEffectDesc.DAMAGE_CHANGE,
@@ -20,7 +20,7 @@ class E3(EffTriggerCostMixin):
 
     def execute(self):
         tp = self.reacted.pop()
-        tp.args[2] = int(tp.args[2] / 2)
+        tp.args[2] = 0
 
 
 class E2(EffNextTurnMixin):

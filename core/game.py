@@ -35,6 +35,8 @@ class GamePlayer:
                 set_socket(p.upstream)
                 return input_from_socket, output_2_socket
             else:
+                m = import_module('ai.ai_{}'.format(p.upstream))
+
                 return input_from_ai, output_2_ai
         # op_method的acceptor
         self.upstream = p.upstream
