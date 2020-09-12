@@ -18,7 +18,7 @@ class E1(EffLazyTriggerCostMixin):
         return False
 
     def execute(self):
-        self.host.ATK.gain(300, False, self.host)
+        self.host.ATK.gain(300, False, self)
 
 
 def give(c):
