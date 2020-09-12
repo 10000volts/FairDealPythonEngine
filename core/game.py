@@ -2183,7 +2183,7 @@ class Game:
                 self.batch_sending('set_crd', [s.vid], p)
                 self.enter_time_points()
 
-    def send_to(self, loc, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+    def send_to(self, loc, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None, shuffle=True):
         f = True
         if ef is not None:
             tp = TimePoint(ETimePoint.INFLUENCING, ef, [c, 1])
@@ -2207,8 +2207,8 @@ class Game:
                     # todo: 换c的效果不会出。
                     self.batch_sending('crd_snd', [c.vid, loc], p)
                     self.enter_time_points()
-                    if (loc & ELocation.EXILED) == 0:
-                        pt.shuffle()
+                    if ((loc & ELocation.EXILED) == 0) & shuffle:
+                        pt.shuffle(loc - 2 + pt.sp)
                 return True
         return False
 
@@ -2238,7 +2238,7 @@ class Game:
                 self.batch_sending('crd_snd2grv', [c.vid], p)
                 self.enter_time_points()
 
-    def send2hand(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+    def send2hand(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None, shuffle=True):
         """
         送去手牌。
         :param p:
@@ -2267,7 +2267,8 @@ class Game:
                 # todo: 换c的效果不会出。
                 self.batch_sending('crd_snd2hnd', [c.vid], p)
                 self.enter_time_points()
-                pt.shuffle()
+                if shuffle:
+                    pt.shuffle()
 
     def send2deck_above(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
         """
@@ -2662,8 +2663,8 @@ class Game:
         tgt = self.choose_target(p, p, check, ef, False, False)
         if tgt is not None:
             self.send2exiled(p, p, tgt, ef)
-            return True
-        return False
+            return tgt
+        return None
 
     def invalid_effect(self, tgt: GameCard, tgt_ef: Effect, ef: Effect):
         if (not tgt_ef.no_reset) and tgt_ef.can_invalid:

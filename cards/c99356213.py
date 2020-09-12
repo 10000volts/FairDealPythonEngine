@@ -12,13 +12,14 @@ class E1(EffCommonSummon):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
-        for c in self.game.vid_manager.get_cards():
-            if ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.STRATEGY):
-                self.game.destroy(self.host, c, self)
+        for p in self.game.players:
+            for c in p.on_field:
+                if c is not None and c.type == ECardType.STRATEGY:
+                    self.game.destroy(self.host, c, self)
 
 
 def give(c):

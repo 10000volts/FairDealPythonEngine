@@ -12,6 +12,8 @@ class E1(EffSummon):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '66263624', is_token=True)
         self.game.send2hand(p, p, c, self)
+        if self.reacted.pop().sender is None:
+            self.host.register_effect(EffAgile(self.host))
 
 
 def give(c):
@@ -21,4 +23,3 @@ def give(c):
     :return:
     """
     c.register_effect(E1(c))
-    c.register_effect(EffAgile(c))

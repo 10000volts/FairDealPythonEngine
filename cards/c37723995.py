@@ -60,12 +60,14 @@ class E1(EffTriggerCostMixin):
         if tp.tp == ETimePoint.SUCC_SUMMON:
             if tp.args[0] is self.host:
                 p = self.game.get_player(self.host)
-                for c in p.hand:
-                    if (c.type == ECardType.STRATEGY) & ((c.subtype & EStrategyType.COUNTER) > 0):
-                        tp = TimePoint(ETimePoint.TRY_SET_STRATEGY, self, [c, 1])
-                        self.game.enter_time_point(tp)
-                        if tp.args[-1]:
-                            return True
+                for pos in range(3, 6):
+                    if p.on_field[pos] is None:
+                        for c in p.hand:
+                            if (c.type == ECardType.STRATEGY) & ((c.subtype & EStrategyType.COUNTER) > 0):
+                                tp = TimePoint(ETimePoint.TRY_SET_STRATEGY, self, [c, 1])
+                                self.game.enter_time_point(tp)
+                                if tp.args[-1]:
+                                    return True
         return False
 
     def execute(self):

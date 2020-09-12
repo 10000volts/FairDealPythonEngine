@@ -56,7 +56,7 @@ class E1(Effect):
 
             def check(c):
                 return c in p.hand
-            return self.game.req4exile(check, self.game.get_player(self.host), 1, self)
+            return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
         return False
 
     def execute(self):

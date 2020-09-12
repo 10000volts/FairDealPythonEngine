@@ -5,6 +5,21 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin
 
 
+class E4(EffTriggerCostMixin):
+    def __init__(self, c):
+        super().__init__(desc=EEffectDesc.INVALID,
+                         host=c, trigger=True, force=True, passive=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.TRY_SUMMON:
+            return (tp.args[0] is self.host) & (tp.sender is not None)
+        return False
+
+    def execute(self):
+        # 禁止入场。
+        self.reacted.pop().args[-1] = 0
+
+
 class E3(EffTriggerCostMixin):
     """
     回复生命。
@@ -105,3 +120,4 @@ def give(c):
     c.register_effect(E1(c))
     c.register_effect(E2(c))
     c.register_effect(E3(c))
+    c.register_effect(E4(c))

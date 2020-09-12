@@ -4,19 +4,6 @@ from utils.constants import ETimePoint, EEffectDesc
 from core.game import TimePoint
 
 
-class E2(EffTriggerCostMixin):
-    def __init__(self, host):
-        super().__init__(host=host, desc=EEffectDesc.ATK_GAIN, trigger=True, force=True)
-
-    def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYED:
-            return tp.args[1] is self.host
-        return False
-
-    def execute(self):
-        self.host.ATK.gain(1000, True, self)
-
-
 class E1(EffTriggerCostMixin):
     def __init__(self, host):
         super().__init__(host=host, desc=EEffectDesc.SPECIAL_SUMMON, trigger=True)
@@ -38,6 +25,7 @@ class E1(EffTriggerCostMixin):
     def execute(self):
         p = self.game.get_player(self.host)
         self.game.special_summon(p, p, self.host, self)
+        self.host.ATK.gain(1000, True, self)
 
 
 def give(c):
@@ -47,4 +35,3 @@ def give(c):
     :return:
     """
     c.register_effect(E1(c))
-    c.register_effect(E2(c))

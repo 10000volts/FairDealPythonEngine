@@ -1,5 +1,5 @@
 # 挡箭牌
-from utils.common_effects import EffSingleStgE1Mixin, EffSingleStgE3Mixin, EffTaunt
+from utils.common_effects import EffSingleStgE1Mixin, EffSingleStgE2, EffSingleStgE3Mixin, EffTaunt
 from utils.constants import EEffectDesc, ELocation, ECardType
 
 
@@ -36,6 +36,7 @@ class E1(EffSingleStgE1Mixin):
             tgt.register_effect(e5, True)
             e3 = E3(self.host, tgt, op, v, e5)
             self.host.register_effect(e3)
+            self.host.register_effect(EffSingleStgE2(self.host, [tgt]))
 
 
 def give(c):

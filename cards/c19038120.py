@@ -19,11 +19,11 @@ class E1(EffTurnCostMixin):
         """
         p = self.game.get_player(self.host)
         if (tp is None) & (self.ef_id not in p.ef_limiter):
-            for c in p.hand:
-                if (c.type == ECardType.EMPLOYEE) & (c.rank == ECardRank.COMMON):
-                    for posture in range(0, 2):
-                        for pos in range(0, 3):
-                            if p.on_field[pos] is None:
+            for pos in range(0, 3):
+                if p.on_field[pos] is None:
+                    for c in p.hand:
+                        if (c.type == ECardType.EMPLOYEE) & (c.rank == ECardRank.COMMON):
+                            for posture in range(0, 2):
                                 tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, posture, 1])
                                 self.game.enter_time_point(tp)
                                 if tp.args[-1]:
@@ -32,7 +32,7 @@ class E1(EffTurnCostMixin):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
