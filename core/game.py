@@ -2121,17 +2121,17 @@ class Game:
                         s.inf_pos = pos
                     s.cover = 0
                     next(cm)
+                    self.batch_sending('upd_vc', [s.vid, s.serialize()])
+                    self.batch_sending('act_stg', [s.vid], p)
                     tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
                     self.enter_time_point(tp)
                     # 发动成功
                     if tp.args[-1]:
                         # todo: 换s的效果不会出。
                         self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, [s]))
-                        self.batch_sending('upd_vc', [s.vid, s.serialize()])
-                        self.batch_sending('act_stg', [s.vid], p)
-                        self.enter_time_points()
                         # 策略使用时自动发动效果。
                         self.activate_effect(s.effects[0], p)
+                        self.enter_time_points()
                         # 非持续/单人策略发动后离场
                         if not ((s.subtype & EStrategyType.LASTING) |
                                  (s.subtype & EStrategyType.ATTACHMENT)):
