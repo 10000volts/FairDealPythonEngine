@@ -36,7 +36,7 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.SET_STRATEGY:
-            return (tp.args[0].location == ELocation.ON_FIELD + 2 - self.game.get_player(self.host).sp) & \
+            return (tp.args[0].location == self.host.location) & \
                    ((self.host.location & ELocation.ON_FIELD) > 0)
         return False
 
@@ -46,7 +46,9 @@ class E2(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        self.reacted.pop().args[0].ATK.plus(2, False, self)
+        tp = self.reacted.pop()
+        print(tp.name)
+        tp.args[0].ATK.plus(2, False, self)
 
 
 class E1(EffTriggerCostMixin):

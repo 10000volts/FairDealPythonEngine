@@ -5,7 +5,8 @@ from utils.constants import ETimePoint, EEffectDesc, ELocation, ECardType
 
 class E3(EffTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
+        super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None],
+                         passive=True, trigger=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
