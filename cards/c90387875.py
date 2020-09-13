@@ -1,7 +1,7 @@
 # 和声姐妹花 布伦娜
-from core.game import GameCard
+from core.game import GameCard, TimePoint
 from utils.common_effects import EffLazyTriggerCostMixin
-from utils.constants import EEffectDesc, ETimePoint, ELocation
+from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 
 
 class E1(EffLazyTriggerCostMixin):
@@ -10,7 +10,24 @@ class E1(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYED:
-            return tp.args[1] is self.host
+            if tp.args[1] is self.host:
+                for c in self.game.get_player(self.host).grave:
+                    if (c.type == ECardType.EMPLOYEE) & ('和声姐妹花' not in c.series):
+                        tp = TimePoint(ETimePoint.IN_EXILED, self, [c, 1])
+                        self.game.enter_time_point(tp)
+                        if tp.args[-1]:
+                            return True
+        return False
+
+    def cost(self, tp):
+        # 选择1牌移除
+        if tp not in self.reacted:
+            self.reacted.append(tp)
+            p = self.game.get_player(self.host)
+
+            def check(c):
+                return (c.location == ELocation.GRAVE + 2 - p.sp) & ('和声姐妹花' not in c.series)
+            return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
         return False
 
     def execute(self):

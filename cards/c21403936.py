@@ -29,16 +29,15 @@ class E3(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TURN_END:
-            if ((self.host.location & ELocation.ON_FIELD) > 0):
-                return True
+            return (self.host.location & ELocation.ON_FIELD) > 0
         return False
 
     def execute(self):
         p = self.game.get_player(self.host)
-        tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, 500, 1])
+        tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, 700, 1])
         self.game.enter_time_point(tp)
         if tp.args[-1]:
-            self.game.heal(self.host, p.leader, 500, self)
+            self.game.heal(self.host, p.leader, 700, self)
 
 
 class E2(Effect):

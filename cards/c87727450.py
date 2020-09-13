@@ -1,6 +1,6 @@
 # 金融风暴
 from models.effect import Effect
-from utils.constants import EEffectDesc, ETimePoint, ECardType
+from utils.constants import EEffectDesc, ETimePoint, ECardType, ELocation
 from core.game import TimePoint
 
 
@@ -19,14 +19,11 @@ class E1(Effect):
 
     def cost(self, tp):
         # 选择1手牌移除
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            p = self.game.get_player(self.host)
+        p = self.game.get_player(self.host)
 
-            def check(c):
-                return c in p.hand
-            return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
-        return False
+        def check(c):
+            return c.location == ELocation.HAND + 2 - p.sp
+        return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
 
     def execute(self):
         for p in self.game.players:

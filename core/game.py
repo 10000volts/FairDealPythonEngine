@@ -178,16 +178,42 @@ class GamePlayer:
 
     def shuffle(self, loc=ELocation.HAND):
         def shu(ls):
-            _len = len(ls) - 1
-            for i in range(0, _len + 1):
-                ind = randint(0, _len)
-                temp = ls[i]
-                ls[i] = ls[ind]
-                ls[ind] = temp
+            if sort:
+                st = list()
+                em = list()
+                for c in ls:
+                    if c.type == ECardType.STRATEGY:
+                        st.append(c)
+                    else:
+                        em.append(c)
+                _len = len(em) - 1
+                for i in range(0, _len + 1):
+                    ind = randint(0, _len)
+                    temp = em[i]
+                    em[i] = em[ind]
+                    ls[i] = em[i]
+                    em[ind] = temp
+                    ls[ind] = temp
+                _len = len(st) - 1
+                for i in range(0, _len + 1):
+                    ind = randint(0, _len)
+                    temp = st[i]
+                    st[i] = st[ind]
+                    ls[i + len(em)] = st[i]
+                    st[ind] = temp
+                    ls[ind + len(em)] = temp
+            else:
+                _len = len(ls) - 1
+                for i in range(0, _len + 1):
+                    ind = randint(0, _len)
+                    temp = ls[i]
+                    ls[i] = ls[ind]
+                    ls[ind] = temp
 
         cs = list()
         if loc == ELocation.HAND:
             cs = self.hand
+            sort = True
         elif loc == ELocation.DECK:
             cs = self.deck
         elif loc == ELocation.SIDE:
@@ -2072,44 +2098,46 @@ class Game:
         :param pos:
         :return: 
         """
-        cm = s.move_to(None, ELocation.ON_FIELD + 2 - pt.sp)
-        next(cm)
-        self.enter_time_points()
-        if next(cm):
-            tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
-            self.enter_time_point(tp)
-            # 发动成功
-            if tp.args[-1]:
-                if pos > -1:
-                    pt.on_field[pos] = s
-                    s.inf_pos = pos
-                else:
-                    def check_pos(_pos):
-                        if _pos not in range(3, 6):
-                            return EErrorCode.OVERSTEP
-                        if pt.on_field[_pos] is not None:
-                            return EErrorCode.INVALID_PUT
-                        return 0
-
-                    # 询问入场位置、姿态
-                    pos = p.input(check_pos, 'req_pos_stg', [pt is p])
-                    pt.on_field[pos] = s
-                    s.inf_pos = pos
-                s.cover = 0
+        for i in range(3, 6):
+            if pt.on_field[i] is None:
+                cm = s.move_to(None, ELocation.ON_FIELD + 2 - pt.sp)
                 next(cm)
-                # todo: 换s的效果不会出。
-                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, [s]))
-                self.batch_sending('upd_vc', [s.vid, s.serialize()])
-                self.batch_sending('act_stg', [s.vid], p)
                 self.enter_time_points()
-                # 策略使用时自动发动效果。
-                self.activate_effect(s.effects[0], p)
-                # 非持续/单人策略发动后离场
-                if not ((s.subtype & EStrategyType.LASTING) |
-                         (s.subtype & EStrategyType.ATTACHMENT)):
-                    self.send_to_grave(p, p, s)
-                return
-        self.send_to_grave(p, p, s)
+                if next(cm):
+                    if pos > -1:
+                        pt.on_field[pos] = s
+                        s.inf_pos = pos
+                    else:
+                        def check_pos(_pos):
+                            if _pos not in range(3, 6):
+                                return EErrorCode.OVERSTEP
+                            if pt.on_field[_pos] is not None:
+                                return EErrorCode.INVALID_PUT
+                            return 0
+
+                        # 询问入场位置、姿态
+                        pos = p.input(check_pos, 'req_pos_stg', [pt is p])
+                        pt.on_field[pos] = s
+                        s.inf_pos = pos
+                    s.cover = 0
+                    next(cm)
+                    tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
+                    self.enter_time_point(tp)
+                    # 发动成功
+                    if tp.args[-1]:
+                        # todo: 换s的效果不会出。
+                        self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, [s]))
+                        self.batch_sending('upd_vc', [s.vid, s.serialize()])
+                        self.batch_sending('act_stg', [s.vid], p)
+                        self.enter_time_points()
+                        # 策略使用时自动发动效果。
+                        self.activate_effect(s.effects[0], p)
+                        # 非持续/单人策略发动后离场
+                        if not ((s.subtype & EStrategyType.LASTING) |
+                                 (s.subtype & EStrategyType.ATTACHMENT)):
+                            self.send_to_grave(p, p, s)
+                        return
+                self.send_to_grave(p, p, s)
 
     def set_em(self, p: GamePlayer, pt: GamePlayer, em: GameCard, pos, ef: Effect = None):
         """
@@ -2437,6 +2465,12 @@ class Game:
                         cs.append(c.vid)
             _len = len(cs)
             if _len > 0:
+                # 打乱
+                for i in range(0, _len):
+                    j = randint(0, _len - 1)
+                    temp = cs[j]
+                    cs[j] = cs[i]
+                    cs[i] = temp
                 # 询问选项
                 if force:
                     ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
@@ -2456,6 +2490,12 @@ class Game:
                     cs.append(c.vid)
             _len = len(cs)
             if _len > 0:
+                # 打乱
+                for i in range(0, _len):
+                    j = randint(0, _len - 1)
+                    temp = cs[j]
+                    cs[j] = cs[i]
+                    cs[i] = temp
                 # 询问选项
                 if force:
                     ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])

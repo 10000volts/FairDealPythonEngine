@@ -13,7 +13,7 @@ class E1(EffCounterStgE1Mixin):
         self.game.invalid_tp(self.scr_arg[0], self.scr_arg[0].args[0], self)
         # 生命力回复
         c = self.game.get_player(self.host).leader
-        v = self.scr_arg[0].args[0].ATK.value
+        v = int(self.scr_arg[0].args[0].ATK.value / 2)
         tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, c, v, 1])
         self.game.enter_time_point(tp)
         if tp.args[-1]:

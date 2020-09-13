@@ -9,20 +9,21 @@ class E2(EffNextTurnMixin):
     回合开始时回复攻击力(2次)，之后失去4000生命力。
     """
     def __init__(self, host, c, v):
-        super().__init__(desc=EEffectDesc.EFFECT_END,
+        super().__init__(desc=EEffectDesc.HEAL,
                          host=host, trigger=True, force=True, scr_arg=[c, v, 0], no_reset=True)
 
     def execute(self):
         tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, self.scr_arg[0], self.scr_arg[1], 1])
         self.game.enter_time_point(tp)
-        if self.scr_arg[2] < 2:
+        if self.scr_arg[2] < 1:
             if tp.args[-1]:
                 self.game.heal(self.host, self.scr_arg[0], self.scr_arg[1], self)
             self.scr_arg[2] += 1
         else:
-            if self.scr_arg[0].DEF.value > 4000:
-                self.scr_arg[0].DEF.gain(-4000, False, self)
+            if self.scr_arg[0].DEF.value > 3000:
+                self.scr_arg[0].DEF.gain(-3000, False, self)
             else:
+                self.description = EEffectDesc.EFFECT_END
                 self.scr_arg[0].DEF.become(1, False, self)
             self.host.remove_effect(self)
 

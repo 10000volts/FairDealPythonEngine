@@ -7,7 +7,7 @@ class DetachList():
     """
     def __init__(self):
         super().__init__()
-        self._index = -1
+        self._index = 0
         self._iter_index = 0
         self._list = list()
 
@@ -32,12 +32,12 @@ class DetachList():
         :return:
         """
         r = self._list[self._index]
-        self._index -= 1
+        self._index += 1
         return r
 
     def clear(self):
         self._list.clear()
-        self._index = -1
+        self._index = 0
 
 
 class Effect:

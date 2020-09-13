@@ -3,9 +3,14 @@ from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin, Eff
 from utils.constants import ETimePoint, EEffectDesc, ELocation, ECardType
 
 
-class E1(EffCounterStgE1Mixin):
+class E3(EffTriggerCostMixin):
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.OUT_FIELD_END:
+            return tp.args[0] is self.host
+        return False
 
     def execute(self):
         def check(c):
@@ -20,6 +25,15 @@ class E1(EffCounterStgE1Mixin):
         if tgt is not None:
             tgt.ATK.gain(self.host.ATK.value, False, self)
             self.game.activate_strategy(p, p, tgt)
+        self.host.remove_effect(self.host)
+
+
+class E1(EffCounterStgE1Mixin):
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
+
+    def execute(self):
+        self.host.register_effect(E3(self.host))
 
 
 class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):

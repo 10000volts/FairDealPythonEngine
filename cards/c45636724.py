@@ -23,6 +23,7 @@ class E1(EffCommonSummon):
             for i in range(0, 2):
                 ind = randint(0, len(cl) - 1)
                 self.game.discard(p, p, cl[ind], self)
+                cl.pop(ind)
 
 
 def give(c):
