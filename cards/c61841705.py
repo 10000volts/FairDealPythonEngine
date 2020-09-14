@@ -30,8 +30,10 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         # 受到伤害
-        self.game.deal_damage(self.host, self.game.get_player(self.host).leader,
-                              self.reacted.pop().args[0].ATK.value, self)
+        v = self.reacted.pop().args[0].ATK.value
+        if v <= 1200:
+            self.game.deal_damage(self.host, self.game.get_player(self.host).leader,
+                                  v, self)
 
 
 def give(c):
