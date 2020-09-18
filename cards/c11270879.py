@@ -21,12 +21,15 @@ class E3(EffTriggerCostMixin):
                 c.ATK.value -= self.host.ATK.value
                 return f
             return False
-        p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, True, False)
-        if tgt is not None:
-            tgt.ATK.gain(self.host.ATK.value, False, self)
-            self.game.activate_strategy(p, p, tgt)
-        self.host.remove_effect(self.host)
+        for pos in range(3, 6):
+            p = self.game.get_player(self.host)
+            if p.on_field[pos] is None:
+                tgt = self.game.choose_target(p, p, check, self, True, False)
+                if tgt is not None:
+                    tgt.ATK.gain(self.host.ATK.value, False, self)
+                    self.game.activate_strategy(p, p, tgt)
+                self.host.remove_effect(self.host)
+                break
 
 
 class E1(EffCounterStgE1Mixin):

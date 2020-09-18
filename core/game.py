@@ -2098,46 +2098,44 @@ class Game:
         :param pos:
         :return: 
         """
-        for i in range(3, 6):
-            if pt.on_field[i] is None:
-                cm = s.move_to(None, ELocation.ON_FIELD + 2 - pt.sp)
-                next(cm)
-                self.enter_time_points()
-                if next(cm):
-                    if pos > -1:
-                        pt.on_field[pos] = s
-                        s.inf_pos = pos
-                    else:
-                        def check_pos(_pos):
-                            if _pos not in range(3, 6):
-                                return EErrorCode.OVERSTEP
-                            if pt.on_field[_pos] is not None:
-                                return EErrorCode.INVALID_PUT
-                            return 0
+        cm = s.move_to(None, ELocation.ON_FIELD + 2 - pt.sp)
+        next(cm)
+        self.enter_time_points()
+        if next(cm):
+            if pos > -1:
+                pt.on_field[pos] = s
+                s.inf_pos = pos
+            else:
+                def check_pos(_pos):
+                    if _pos not in range(3, 6):
+                        return EErrorCode.OVERSTEP
+                    if pt.on_field[_pos] is not None:
+                        return EErrorCode.INVALID_PUT
+                    return 0
 
-                        # 询问入场位置、姿态
-                        pos = p.input(check_pos, 'req_pos_stg', [pt is p])
-                        pt.on_field[pos] = s
-                        s.inf_pos = pos
-                    s.cover = 0
-                    next(cm)
-                    self.batch_sending('upd_vc', [s.vid, s.serialize()])
-                    self.batch_sending('act_stg', [s.vid], p)
-                    tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
-                    self.enter_time_point(tp)
-                    # 发动成功
-                    if tp.args[-1]:
-                        # todo: 换s的效果不会出。
-                        self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, [s]))
-                        # 策略使用时自动发动效果。
-                        self.activate_effect(s.effects[0], p)
-                        self.enter_time_points()
-                        # 非持续/单人策略发动后离场
-                        if not ((s.subtype & EStrategyType.LASTING) |
-                                 (s.subtype & EStrategyType.ATTACHMENT)):
-                            self.send_to_grave(p, p, s)
-                        return
-                self.send_to_grave(p, p, s)
+                # 询问入场位置、姿态
+                pos = p.input(check_pos, 'req_pos_stg', [pt is p])
+                pt.on_field[pos] = s
+                s.inf_pos = pos
+            s.cover = 0
+            next(cm)
+            self.batch_sending('upd_vc', [s.vid, s.serialize()])
+            self.batch_sending('act_stg', [s.vid], p)
+            tp = TimePoint(ETimePoint.ACTIVATING_STRATEGY, None, [s, 1])
+            self.enter_time_point(tp)
+            # 发动成功
+            if tp.args[-1]:
+                # todo: 换s的效果不会出。
+                self.temp_tp_stack.append(TimePoint(ETimePoint.SUCC_ACTIVATE_STRATEGY, None, [s]))
+                # 策略使用时自动发动效果。
+                self.activate_effect(s.effects[0], p)
+                self.enter_time_points()
+                # 非持续/单人策略发动后离场
+                if not ((s.subtype & EStrategyType.LASTING) |
+                         (s.subtype & EStrategyType.ATTACHMENT)):
+                    self.send_to_grave(p, p, s)
+                return
+        self.send_to_grave(p, p, s)
 
     def set_em(self, p: GamePlayer, pt: GamePlayer, em: GameCard, pos, ef: Effect = None):
         """
