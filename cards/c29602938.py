@@ -1,6 +1,7 @@
 # 金属乐迷
-from utils.constants import EEffectDesc, ETimePoint
+from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 from utils.common_effects import EffTriggerCostMixin
+from core.game import GameCard
 
 
 class E1(EffTriggerCostMixin):
@@ -19,7 +20,11 @@ class E1(EffTriggerCostMixin):
     def execute(self):
         # todo: 应该不会在效果发动时转移控制权吧？
         p = self.game.get_player(self.host)
-        self.game.send2hand(p, p, self.reacted.pop().args[1], self)
+        tgt = self.reacted.pop().args[1]
+        c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, tgt.cid, is_token=True)
+        c.create(tgt.name, tgt.type, tgt.subtype, tgt.rank,
+                 tgt.ATK.value, tgt.DEF.value)
+        self.game.send2hand(p, p, c, self)
 
 
 def give(c):

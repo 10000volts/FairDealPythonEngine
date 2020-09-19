@@ -21,7 +21,7 @@ class E1(EffCommonSummon):
         for i in range(0, 2):
             c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
             c.create('另外两兄弟', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.TRUMP,
-                     1500, 0)
+                     1000, 0)
             for posture in range(0, 2):
                 pos = 0
                 while pos in range(0, 3):

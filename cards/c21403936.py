@@ -34,10 +34,10 @@ class E3(EffTriggerCostMixin):
 
     def execute(self):
         p = self.game.get_player(self.host)
-        tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, 700, 1])
+        tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p.leader, int(self.host.ATK.value / 5), 1])
         self.game.enter_time_point(tp)
         if tp.args[-1]:
-            self.game.heal(self.host, p.leader, 700, self)
+            self.game.heal(self.host, p.leader, int(self.host.ATK.value / 5), self)
 
 
 class E2(Effect):

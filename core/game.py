@@ -498,6 +498,8 @@ class GameCard:
             self.sign = dict()
             m = import_module('cards.c{}'.format(self.cid))
             m.give(self)
+        else:
+            self.cid = None
 
     def create(self, name, ty, subtype, rank, src_atk, src_def):
         """
@@ -514,7 +516,6 @@ class GameCard:
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
         self.vid = 0
         self.game.vid_manager.register(self)
-        self.cid = None
         self.name = name
         self.type = ty
         self.subtype = subtype
