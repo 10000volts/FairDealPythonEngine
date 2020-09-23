@@ -423,6 +423,7 @@ class EffTaunt(EffTriggerCostMixin):
                          ef_id=EEffectDesc.TAUNT)
 
     def condition(self, tp):
+        from core.game import TimePoint
         # 是在尝试攻击的时点，所以被阻挡(攻击时时点)不会发生问题。
         if tp.tp == ETimePoint.TRY_ATTACK:
             p = self.game.get_player(self.host)
@@ -431,7 +432,13 @@ class EffTaunt(EffTriggerCostMixin):
                 for ef in tp.args[1].effects:
                     if ef.ef_id == EEffectDesc.TAUNT:
                         return False
-                return True
+                # 必须可被选择为攻击对象。
+                tp = TimePoint(ETimePoint.TRY_ATTACK, self, [tp.args[0], self.host, 1])
+                for ef in self.host.effects:
+                    if ef.ef_id != EEffectDesc.TAUNT:
+                        if ef.condition(tp):
+                            ef.execute()
+                return tp.args[-1]
         return False
 
     def execute(self):

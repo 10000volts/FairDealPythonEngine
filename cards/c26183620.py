@@ -13,7 +13,7 @@ class E1(EffCommonStrategy):
 
 class E2(EffTriggerCostMixin):
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, trigger=True, force=True)
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, trigger=True, force=True, no_reset=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:

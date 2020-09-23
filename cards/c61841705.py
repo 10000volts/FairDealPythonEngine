@@ -31,7 +31,7 @@ class E1(EffTriggerCostMixin):
         """
         # 受到伤害
         v = self.reacted.pop().args[0].ATK.value
-        if v <= 1400:
+        if v <= 1000:
             self.game.deal_damage(self.host, self.game.get_player(self.host).leader,
                                   v, self)
 
