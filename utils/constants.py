@@ -28,14 +28,10 @@ class EStrategyType:
 
 
 class EChoice:
-    # 影响攻击力(对症下药、人言可畏)
+    # 影响攻击力(对症下药)
     CHANGE_ATK = 0
     # 影响防御力(对症下药)
     CHANGE_DEF = 1
-    # 回复生命(人言可畏)
-    HEAL = 2
-    # 造成伤害(人言可畏)
-    DEAL_DAMAGE = 3
 
 
 class EEffectDesc:

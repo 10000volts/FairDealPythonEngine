@@ -9,10 +9,7 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            if tp.args[0] is self.host:
-                p = self.game.get_player(self.host)
-                op = self.game.players[p.sp]
-                return p.leader.DEF.value < op.leader.DEF.value
+            return tp.args[0] is self.host
         return False
 
     def execute(self):
@@ -21,10 +18,13 @@ class E1(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        p = self.game.get_player(self.host)
+        self.host.ATK.gain_x(self.x, False, self)
+
+    def x(self, c):
+        p = self.game.get_player(c)
         op = self.game.players[p.sp]
         if op.leader.DEF.value > p.leader.DEF.value:
-            self.host.ATK.become(op.leader.DEF.value - p.leader.DEF.value, False, self)
+            return op.leader.DEF.value - p.leader.DEF.value
 
 
 def give(c):
