@@ -5,7 +5,7 @@ from utils.common_effects import EffTriggerCostMixin
 
 class E1(EffTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host, trigger=True)
+        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host, trigger=True, force=True, passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUCC_SUMMON:

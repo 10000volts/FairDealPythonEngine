@@ -1,7 +1,19 @@
 # 伪造推荐信
 from core.game import TimePoint, GameCard
 from utils.constants import EEffectDesc, EEmployeeType, ETimePoint, ELocation, ECardType, ECardRank
-from utils.common_effects import EffCostMixin
+from utils.common_effects import EffCostMixin, EffTriggerCostMixin
+
+
+class E2(EffTriggerCostMixin):
+    def __init__(self, c):
+        super().__init__(desc=EEffectDesc.SEND2EXILED, host=c)
+
+    def condition(self, tp):
+        return tp.tp == ETimePoint.SUCC_ACTIVATE_STRATEGY and tp.args[0] is self.host
+
+    def execute(self):
+        p = self.game.get_player(self.host)
+        self.game.send2exiled(p, p, self.host, self)
 
 
 class E1(EffCostMixin):
