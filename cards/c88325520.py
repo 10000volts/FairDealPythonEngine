@@ -25,6 +25,7 @@ class E1(EffTriggerCostMixin):
         op = self.game.players[p.sp]
         if op.leader.DEF.value > p.leader.DEF.value:
             return op.leader.DEF.value - p.leader.DEF.value
+        return 0
 
 
 def give(c):

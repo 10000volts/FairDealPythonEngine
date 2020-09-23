@@ -90,3 +90,4 @@ def give(c):
     :return:
     """
     c.register_effect(E1(c))
+    c.register_effect(E2(c))
