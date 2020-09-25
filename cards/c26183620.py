@@ -8,21 +8,18 @@ class E1(EffCommonStrategy):
         super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, passive=True)
 
     def execute(self):
-        for ef in self.host.effects:
-            if ef.ef_id == '261835200':
-                return
-        self.host.register_effect(E2(self.host))
+        pass
 
 
 class E2(EffTriggerCostMixin):
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, trigger=True, force=True, no_reset=True,
-                         ef_id='261836200')
+        super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, trigger=True, force=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
             op = self.game.players[self.game.get_player(self.host).sp]
-            if ((tp.args[0].location & (2 - op.sp)) > 0) & (tp.args[1] is op.leader):
+            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover)\
+                    & ((tp.args[0].location & (2 - op.sp)) > 0) & (tp.args[1] is op.leader):
                 return True
         return False
 
@@ -32,8 +29,8 @@ class E2(EffTriggerCostMixin):
 
 def give(c):
     """
-    将效果给予卡片。
     :param c:
     :return:
     """
     c.register_effect(E1(c))
+    c.register_effect(E2(c))

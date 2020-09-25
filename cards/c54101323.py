@@ -21,7 +21,7 @@ class E1(EffTriggerCostMixin):
     交换ATK/DEF。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host)
+        super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host)
 
     def condition(self, tp):
         from core.game import TimePoint

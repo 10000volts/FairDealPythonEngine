@@ -32,6 +32,12 @@ class EChoice:
     CHANGE_ATK = 0
     # 影响防御力(对症下药)
     CHANGE_DEF = 1
+    # 复古左轮(枪械艺术家)
+    C50526002 = 2
+    # 耍帅左轮(枪械艺术家)
+    C79047277 = 3
+    # 连发左轮(枪械艺术家)
+    C82751803 = 4
 
 
 class EEffectDesc:
