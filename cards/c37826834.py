@@ -40,7 +40,7 @@ class E1(Effect):
             c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '79047277', is_token=True)
             c.ATK.change_adv(self.scr_arg)
             self.game.send2hand(p, p, c, self)
-        elif r == EChoice.C82751803:
+        else:
             c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '82751803', is_token=True)
             c.ATK.change_adv(self.scr_arg)
             self.game.send2hand(p, p, c, self)
