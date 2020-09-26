@@ -289,7 +289,7 @@ class ETimePoint:
     #
     PH_TAKE_CARD = 75
     # 对筹码的一次取走操作完成后 在此时点发动效果的卡：
-    # args: 卡
+    # args[0]: 卡 args[1]: 取走数目
     CARD_TOOK = 80
     # 取走阶段结束时 在此时点发动效果的卡：
     #

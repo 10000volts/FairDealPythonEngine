@@ -17,7 +17,7 @@ class E1(EffLazyTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        return tp.tp == ETimePoint.CARD_TOOK and tp.args is self.host
+        return tp.tp == ETimePoint.CARD_TOOK and tp.args[0] is self.host and tp.args[1] == 2
 
     def execute(self):
         """

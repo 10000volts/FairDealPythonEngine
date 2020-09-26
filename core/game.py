@@ -1162,20 +1162,19 @@ class Game:
                 return 0 if self.chessboard[self.scale * _y + _x + direction] is not None\
                     else EErrorCode.DONT_EXIST
             x, y, d = p.input(check, 'req_tk_crd')
-            # 将卡取走。
-            if d:
+            # 将卡取走。最多只能取到一半的卡
+            if d != 0 and len(p.hand) < self.scale ** 2 / 2 - 1:
                 cards = [self.scale * y + x, self.scale * y + x + d]
             else:
                 cards = [self.scale * y + x]
             for pos in cards:
-                if len(p.hand) < self.scale ** 2 / 2:
-                    card = self.chessboard[pos]
-                    self.chessboard[pos] = None
-                    p.hand.append(card)
-                    card.location = 2 - p.sp + ELocation.HAND
-                    p.update_vc(card)
-                    self.batch_sending('tk_crd', [pos, 0], p)
-                    self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, card))
+                card = self.chessboard[pos]
+                self.chessboard[pos] = None
+                p.hand.append(card)
+                card.location = 2 - p.sp + ELocation.HAND
+                p.update_vc(card)
+                self.batch_sending('tk_crd', [pos, 0], p)
+                self.enter_time_point(TimePoint(ETimePoint.CARD_TOOK, None, [card, len(cards)]))
 
         f = True
         while f:
