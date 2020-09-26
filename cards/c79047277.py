@@ -60,7 +60,7 @@ class E1(EffSingleStgE1Mixin):
             self.host.register_effect(EffSingleStgE2(self.host, [tgt]))
             for c in p.hand:
                 if c.cid == '25930167':
-                    c.ATK.change_adv(self.host.ATK.add_val, self)
+                    c.ATK.change_adv(c.ATK.add_val + self.host.ATK.add_val, self)
 
 
 def give(c):

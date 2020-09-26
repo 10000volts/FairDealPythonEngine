@@ -2273,6 +2273,7 @@ class Game:
         :param pt: 送去目标玩家的手牌。
         :param c:
         :param ef:
+        :param shuffle:
         :return:
         """
         f = True
