@@ -145,9 +145,10 @@ class GamePlayer:
         :return:
         """
         def check(*_ind):
-            if _ind in option:
-                return 0
-            return EErrorCode.ILLEGAL_OPTIONS
+            for i in _ind:
+                if i not in option:
+                    return EErrorCode.OVERSTEP
+            return 0
 
         if force:
             return self.input(check, 'req_chs', [option, count])
