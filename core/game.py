@@ -145,14 +145,10 @@ class GamePlayer:
         :return:
         """
         def check(*_ind):
-            if (count == 0) | (len(_ind) == count):
-                for i in _ind:
-                    if i not in range(0, _len):
-                        return EErrorCode.OVERSTEP
+            if _ind in option:
                 return 0
             return EErrorCode.ILLEGAL_OPTIONS
 
-        _len = len(option)
         if force:
             return self.input(check, 'req_chs', [option, count])
         else:
