@@ -145,10 +145,12 @@ class GamePlayer:
         :return:
         """
         def check(*_ind):
-            for i in _ind:
-                if i not in option:
-                    return EErrorCode.OVERSTEP
-            return 0
+            if (count == 0) | (len(_ind) == count):
+                for i in _ind:
+                    if i not in option:
+                        return EErrorCode.OVERSTEP
+                return 0
+            return EErrorCode.ILLEGAL_OPTIONS
 
         if force:
             return self.input(check, 'req_chs', [option, count])
@@ -2435,8 +2437,8 @@ class Game:
                     self.send_to_grave(self.get_player(sender), self.get_player(target), target, ef)
                     self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
 
-    def choose_target(self, p: GamePlayer, pt: GamePlayer, func,
-                      ef: Effect, force=True, with_tp=True) -> GameCard:
+    def choose_target_from_func(self, p: GamePlayer, pt: GamePlayer, func,
+                                ef: Effect, force=True, with_tp=True) -> GameCard:
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
@@ -2447,11 +2449,6 @@ class Game:
         :param with_tp:
         :return:
         """
-        def check_ind(_ind):
-            if _ind not in range(0, _len):
-                return EErrorCode.OVERSTEP
-            return 0
-
         cs = list()
         if with_tp:
             for c in self.vid_manager.get_cards():
@@ -2461,6 +2458,32 @@ class Game:
                     self.enter_time_point(tp)
                     if tp.args[-1]:
                         cs.append(c.vid)
+            return self.choose_target(p, pt, cs, ef, force, True)
+        else:
+            for c in self.vid_manager.get_cards():
+                if func(c):
+                    cs.append(c.vid)
+            return self.choose_target(p, pt, cs, ef, force, False)
+        return None
+
+    def choose_target(self, p: GamePlayer, pt: GamePlayer, cs,
+                      ef: Effect, force=True, with_tp=True) -> GameCard:
+        """
+        选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
+        :param p:
+        :param pt:
+        :param cs: 选项。
+        :param ef:
+        :param force: 是否强制
+        :param with_tp:
+        :return:
+        """
+        def check_ind(_ind):
+            if _ind not in range(0, _len):
+                return EErrorCode.OVERSTEP
+            return 0
+
+        if with_tp:
             _len = len(cs)
             if _len > 0:
                 # 打乱
@@ -2483,9 +2506,6 @@ class Game:
                     self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
                     return c
         else:
-            for c in self.vid_manager.get_cards():
-                if func(c):
-                    cs.append(c.vid)
             _len = len(cs)
             if _len > 0:
                 # 打乱
@@ -2505,7 +2525,7 @@ class Game:
         return None
 
     def choose_target_multi(self, p: GamePlayer, pt: GamePlayer, func,
-                      ef: Effect, count, force=True, with_tp=True) -> GameCard:
+                            ef: Effect, count, force=True, with_tp=True) -> GameCard:
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
@@ -2518,10 +2538,10 @@ class Game:
         :return:
         """
         def check_ind(*_args):
-            if len(_args) != count + 1:
+            if len(_args) != count:
                 return EErrorCode.ILLEGAL_OPTIONS
             _ins = dict()
-            for _ind in _args[:-1]:
+            for _ind in _args:
                 if _ind not in range(0, _len):
                     return EErrorCode.OVERSTEP
                 if _ind in _ins:
@@ -2542,9 +2562,9 @@ class Game:
             if _len > 0:
                 # 询问选项
                 if force:
-                    ins = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                    ins = pt.input(check_ind, 'req_chs_mtg_f', [cs, 1])
                 else:
-                    ins = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                    ins = pt.free_input(check_ind, 'req_chs_mtg_f', [cs, 1])
                     if ins is None:
                         return None
                 cs = list()
@@ -2676,7 +2696,7 @@ class Game:
                     return True
 
         # 选择1张卡丢弃
-        tgt = self.choose_target(p, p, check_discard, ef, False, False)
+        tgt = self.choose_target_from_func(p, p, check_discard, ef, False, False)
         if tgt is not None:
             self.discard(p, p, tgt, ef)
             return True
@@ -2698,7 +2718,7 @@ class Game:
                 return func(c)
 
         # 选择1张卡移除
-        tgt = self.choose_target(p, p, check, ef, False, False)
+        tgt = self.choose_target_from_func(p, p, check, ef, False, False)
         if tgt is not None:
             self.send2exiled(p, p, tgt, ef)
             return tgt

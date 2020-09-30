@@ -27,7 +27,7 @@ class E1(EffTriggerCostMixin):
         """
 
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
+        tgt = self.game.choose_target_from_func(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
                                                        (c.type == ECardType.STRATEGY)), self, True)
         self.game.destroy(self.host, tgt, self)
 

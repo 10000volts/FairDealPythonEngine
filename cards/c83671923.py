@@ -4,18 +4,6 @@ from utils.constants import EEffectDesc, EEmployeeType, ETimePoint, ELocation, E
 from utils.common_effects import EffCostMixin, EffTriggerCostMixin
 
 
-class E2(EffTriggerCostMixin):
-    def __init__(self, c):
-        super().__init__(desc=EEffectDesc.SEND2EXILED, host=c)
-
-    def condition(self, tp):
-        return tp.tp == ETimePoint.SUCC_ACTIVATE_STRATEGY and tp.args[0] is self.host
-
-    def execute(self):
-        p = self.game.get_player(self.host)
-        self.game.send2exiled(p, p, self.host, self)
-
-
 class E1(EffCostMixin):
     """
     特召。
@@ -73,7 +61,8 @@ class E1(EffCostMixin):
                         if tp.args[-1]:
                             return True
                 return False
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        self.game.send2exiled(p, p, self.host, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             atk = tgt.ATK.value
             self.game.special_summon(p, op, tgt, self, 0)
@@ -90,4 +79,3 @@ def give(c):
     :return:
     """
     c.register_effect(E1(c))
-    c.register_effect(E2(c))

@@ -47,7 +47,7 @@ class E1(EffSingleStgE1Mixin):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择1雇员ATK+EFF
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, True)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True)
         if tgt is not None:
             eff = 1000 if self.host.ATK.value > 1000 else self.host.ATK.value
             op, v = tgt.ATK.gain(eff, False, self)

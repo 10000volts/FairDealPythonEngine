@@ -28,7 +28,7 @@ class E1(EffTriggerCostMixin):
         amax = op.hand[0].ATK.add_val
         for c in op.hand:
             amax = max(c.ATK.add_val, amax)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.host.ATK.change_adv(tgt.ATK.add_val)
             for i in range(0, 2):

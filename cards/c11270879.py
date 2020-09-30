@@ -24,7 +24,7 @@ class E3(EffTriggerCostMixin):
         for pos in range(3, 6):
             p = self.game.get_player(self.host)
             if p.on_field[pos] is None:
-                tgt = self.game.choose_target(p, p, check, self, True, False)
+                tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
                     tgt.ATK.gain(self.host.ATK.value, False, self)
                     self.game.activate_strategy(p, p, tgt)

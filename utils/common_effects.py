@@ -254,7 +254,7 @@ class EffCommonStrategy(Effect):
     常规策略的缺省效果。
     """
     def __init__(self, desc, host, **kwargs):
-        super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD, host=host, **kwargs)
+        super().__init__(desc=desc, host=host, **kwargs)
 
     def condition(self, tp):
         return tp is None

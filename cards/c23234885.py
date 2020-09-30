@@ -37,7 +37,7 @@ class E1(EffSingleStgE1Mixin):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         # 选择1雇员本回合可最多3次向雇员攻击
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             tgt.attack_times += 2
             e3 = E2(tgt)

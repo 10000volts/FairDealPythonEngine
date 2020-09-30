@@ -20,12 +20,13 @@ class E1(Effect):
     def execute(self):
         p = self.game.get_player(self.host)
         op = self.game.players[p.sp]
-        tgtA = self.game.choose_target(p, p, lambda c: ((c.location == ELocation.ON_FIELD + 2 - op.sp) &
-                                                        (c.type == ECardType.EMPLOYEE)), self, True)
+        tgtA = self.game.choose_target_from_func(
+            p, p, lambda c: ((c.location == ELocation.ON_FIELD + 2 - op.sp) &
+                             (c.type == ECardType.EMPLOYEE)), self, True)
         if tgtA is not None:
-            tgtB = self.game.choose_target(p, p, lambda c: ((c.location == ELocation.ON_FIELD + 2 - op.sp) &
-                                                            (c.type == ECardType.EMPLOYEE) & (c is not tgtA)),
-                                           self, True)
+            tgtB = self.game.choose_target_from_func(
+                p, p, lambda c: ((c.location == ELocation.ON_FIELD + 2 - op.sp) &
+                                 (c.type == ECardType.EMPLOYEE) & (c is not tgtA)), self, True)
             tgtB.ATK.gain(-tgtA.ATK.value, False, self)
 
 

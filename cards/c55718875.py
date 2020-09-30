@@ -18,11 +18,11 @@ class E1(EffSingleStgE1Mixin):
         p = self.game.get_player(self.host)
         r = p.req4option([EChoice.CHANGE_ATK, EChoice.CHANGE_DEF])
         if r == EChoice.CHANGE_ATK:
-            tgt = self.game.choose_target(p, p, check, self)
+            tgt = self.game.choose_target_from_func(p, p, check, self)
             if tgt is not None:
                 tgt.ATK.gain(-self.host.ATK.value, False, self)
         else:
-            tgt = self.game.choose_target(p, p, check, self)
+            tgt = self.game.choose_target_from_func(p, p, check, self)
             if tgt is not None:
                 tgt.DEF.gain(-self.host.ATK.value, False, self)
 

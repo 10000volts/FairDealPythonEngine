@@ -16,7 +16,7 @@ class E1(EffSingleStgE1Mixin):
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             for ef in tgt.effects:
                 self.game.invalid_effect(tgt, ef, self)

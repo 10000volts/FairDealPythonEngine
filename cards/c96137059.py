@@ -29,7 +29,7 @@ class E1(EffCommonStrategy):
 
         # 摧毁选择的卡
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             self.game.destroy(self.host, tgt, self)
 

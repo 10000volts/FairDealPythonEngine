@@ -47,7 +47,7 @@ class E1(EffTriggerCostMixin):
         def check(c):
             return (c.location == ELocation.ON_FIELD + 2 - p.sp) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, True)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True)
         if tgt is not None:
             atk = tgt.ATK.value
             tgt.ATK.become(tgt.DEF.value, False, self)

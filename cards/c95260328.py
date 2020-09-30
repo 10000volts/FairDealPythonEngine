@@ -29,7 +29,7 @@ class E1(EffLazyTriggerCostMixin):
             return (self.game.get_player(c) is self.game.get_player(self.host)) & \
                    ((c.location & ELocation.HAND) > 0)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             tgt.ATK.change_adv(1000)
 

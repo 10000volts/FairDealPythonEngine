@@ -22,7 +22,7 @@ class E2(EffTriggerCostMixin):
 
     def execute(self):
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, lambda c: c in p.on_field, self, True)
+        tgt = self.game.choose_target_from_func(p, p, lambda c: c in p.on_field, self, True)
         self.game.destroy(self.host, tgt, self)
 
 

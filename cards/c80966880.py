@@ -38,9 +38,9 @@ class E1(EffTriggerCostMixin):
 
     def execute(self):
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
-                                                      (c.type == ECardType.EMPLOYEE) & (c.posture > 0)), self,
-                                      True)
+        tgt = self.game.choose_target_from_func(
+            p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
+                             (c.type == ECardType.EMPLOYEE) & (c.posture > 0)), self, True)
         if tgt is not None:
             e2 = E2(self.host, tgt)
             self.host.register_effect(e2, True)

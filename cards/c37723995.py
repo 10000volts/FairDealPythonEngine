@@ -81,7 +81,7 @@ class E1(EffTriggerCostMixin):
             return (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY) & \
                    ((c.subtype & EStrategyType.COUNTER) > 0)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.set_strategy(p, p, tgt, self)
 

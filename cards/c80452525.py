@@ -33,7 +33,7 @@ class E1(EffTriggerCostMixin):
             return (c in op.on_field) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
         op = self.game.players[p.sp]
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             tgt.ATK.plus(2, False, self)
             self.host.ATK.plus(2, False, self)

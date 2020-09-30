@@ -50,7 +50,7 @@ class E1(EffTurnCostMixin):
                             if tp.args[-1]:
                                 return True
                 return False
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target_from_func(p, p, check, self, False, False)
         if tgt is not None:
             tgt.ATK.become(self.host.ATK.value, False, self)
             tgt.DEF.become(self.host.ATK.value, False, self)

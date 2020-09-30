@@ -49,7 +49,7 @@ class E1(EffCommonStrategy):
 
         # 选择的卡回到墓地
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.send_to_grave(p, p, tgt, self)
 

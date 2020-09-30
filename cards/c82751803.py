@@ -45,7 +45,7 @@ class E1(EffSingleStgE1Mixin):
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, True)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True)
         if tgt is not None:
             from core.game import TimePoint
             tp = TimePoint(ETimePoint.INFLUENCING, self, [self.scr_arg, 1])

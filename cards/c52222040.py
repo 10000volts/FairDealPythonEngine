@@ -32,7 +32,7 @@ class E1(EffTriggerCostMixin):
         p = self.game.get_player(self.host)
         for c in p.grave:
             if c.cid == '63128732':
-                tgt = self.game.choose_target(p, p, check, self, True, False)
+                tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
                     self.game.send2hand(p, p, tgt, self)
                 return

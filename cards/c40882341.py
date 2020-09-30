@@ -71,7 +71,7 @@ class E1(Effect):
             return tp1.args[1]
         # 奉献是cost，不取对象
         # 有特殊处理，不能使用默认的奉献函数
-        c1 = self.game.choose_target(p, p, check, self, False, False)
+        c1 = self.game.choose_target_from_func(p, p, check, self, True, False)
         if c1 is not None:
             tp = TimePoint(ETimePoint.DEVOTING, self, [c1, 1])
             self.game.enter_time_point(tp)
@@ -91,8 +91,9 @@ class E1(Effect):
                     self.game.enter_time_point(tp)
                     if tp.args[-1] == 0:
                         return
-        tgt = self.game.choose_target(p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
-                                                      (c.type == ECardType.EMPLOYEE)), self, True)
+        tgt = self.game.choose_target_from_func(
+            p, p, lambda c: (((c.location & ELocation.ON_FIELD) > 0) &
+                             (c.type == ECardType.EMPLOYEE)), self, True)
         if tgt is not None:
             op, v = tgt.ATK.gain(self.scr_arg, False, self)
             e3 = E3(self.host, tgt)

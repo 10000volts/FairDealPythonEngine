@@ -35,13 +35,13 @@ class E1(EffTriggerCostMixin):
 
         p = self.game.get_player(self.host)
         op = self.game.players[p.sp]
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             self.game.destroy(self.host, tgt, self)
             if len(op.hand) > 0:
                 def check_dcd(c):
                     return c.location == ELocation.HAND + 1 + p.sp
-                tgt = self.game.choose_target(p, p, check_dcd, self)
+                tgt = self.game.choose_target_from_func(p, p, check_dcd, self, True, False)
                 self.game.discard(p, op, tgt, self)
 
 

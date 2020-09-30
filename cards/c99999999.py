@@ -48,7 +48,7 @@ class E6(EffTriggerCostMixin):
 
         # 选择的卡特招
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.special_summon(p, p, tgt, self, 1)
             e7 = E7(tgt)

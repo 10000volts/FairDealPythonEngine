@@ -26,7 +26,7 @@ class E1(EffCommonStrategy):
             tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
             self.game.enter_time_point(tp)
             if tp.args[-1]:
-                tgt = self.game.choose_target(p, p, check, self, True, False)
+                tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
                     self.game.discard(p, p, tgt, self)
                 break
@@ -35,7 +35,7 @@ class E1(EffCommonStrategy):
             tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
             self.game.enter_time_point(tp)
             if tp.args[-1]:
-                tgt = self.game.choose_target(p, p, check, self, True, False)
+                tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
                     self.game.discard(p, p, tgt, self)
                 break

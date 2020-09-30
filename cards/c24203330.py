@@ -23,7 +23,7 @@ class E1(EffCommonSummon):
                 self.game.enter_time_point(tp)
                 return tp.args[-1]
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             self.game.change_posture(self.game.get_player(self.host), tgt, 1)
 

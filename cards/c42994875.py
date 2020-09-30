@@ -38,7 +38,7 @@ class E1(Effect):
 
         def check(c):
             return c in p.grave
-        tgt = self.game.choose_target(p, p, check, self, False, False)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)
 

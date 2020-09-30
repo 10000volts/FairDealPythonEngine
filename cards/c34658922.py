@@ -20,8 +20,8 @@ class E1(EffLazyTriggerCostMixin):
         p = self.game.get_player(self.host)
         self.game.destroy(self.host, self.host, self)
         if len(p.on_field) > 0:
-            tgt = self.game.choose_target(p, self.game.players[p.sp],
-                                          lambda c: c.location == ELocation.ON_FIELD + 2 - p.sp, self, False)
+            tgt = self.game.choose_target_from_func(
+                p, self.game.players[p.sp],lambda c: c.location == ELocation.ON_FIELD + 2 - p.sp, self, False)
             self.game.destroy(self.host, tgt, self)
 
 

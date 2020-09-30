@@ -32,7 +32,7 @@ class E1(EffCommonStrategy):
         # 摧毁选择的卡
         p = self.game.get_player(self.host)
         op = self.game.players[p.sp]
-        tgt = self.game.choose_target(p, op, check, self)
+        tgt = self.game.choose_target_from_func(p, op, check, self)
         if tgt.subtype & EStrategyType.COUNTER:
             p.strategy_times += 1
         self.game.destroy(self.host, tgt, self)

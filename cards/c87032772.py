@@ -16,13 +16,16 @@ class E1(EffSingleStgE1Mixin):
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             count = 0
+            cs = list()
             for c in p.grave:
                 if '冥思' in c.series:
-                    self.game.send2exiled(p, p, c, self)
-                    count += 1
+                    cs.append(c)
+            for c in cs:
+                self.game.send2exiled(p, p, c, self)
+                count += 1
             tgt.ATK.gain(self.host.ATK.value if count * 300 > self.host.ATK.value else count * 300, False, self)
 
 
