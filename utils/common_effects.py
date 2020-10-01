@@ -207,7 +207,7 @@ class EffProtectProtocol(Effect):
         def check(c):
             return (c.location == ELocation.ON_FIELD + 2 - p.sp) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target(p, p, check, self)
+        tgt = self.game.choose_target_from_func(p, p, check, self)
         e = EffProtect(tgt, False)
         # 直到下次我方回合开始时不会被摧毁
         tgt.register_effect(e, True)
