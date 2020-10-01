@@ -1,15 +1,18 @@
 # 金钱教主
-from utils.common_effects import EffTriggerCostMixin, EffTurnEndMixin
+from utils.common_effects import EffTriggerCostMixin
 from utils.constants import EEffectDesc, ETimePoint, ECardType, ECardRank, ELocation
 
 
-class E2(EffTurnEndMixin):
+class E2(EffTriggerCostMixin):
     """
     回合结束时回复攻击力。
     """
     def __init__(self, host, op, v):
         super().__init__(desc=EEffectDesc.EFFECT_END,
                          host=host, trigger=True, force=True, scr_arg=[op, v], no_reset=True, passive=True)
+
+    def condition(self, tp):
+        return (tp.tp == ETimePoint.TURN_END) & (self.game.turn_player is self.game.get_player(self.host))
 
     def execute(self):
         self.host.ATK.remove(self.scr_arg[0], self.scr_arg[1])
