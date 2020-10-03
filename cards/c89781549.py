@@ -47,7 +47,8 @@ class E3(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRIED_ACTIVATE_STRATEGY:
-            return (tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0
+            return ((tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0) & \
+                   (tp.args[0].cid != '89781549')
         return False
 
     def execute(self):
@@ -98,7 +99,7 @@ class E1(EffCommonStrategy):
         调用基类方法进行输出。
         :return:
         """
-        e2 = E2(self.host, self.host.ATK.value)
+        e2 = E2(self.host, self.host.ATK.value if self.host.ATK.value < 2000 else 2000)
         self.host.register_effect(e2)
         self.host.register_effect(E4(self.host, e2))
 

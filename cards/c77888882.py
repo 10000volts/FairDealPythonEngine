@@ -20,7 +20,7 @@ class E1(EffSingleStgE1Mixin):
         tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             op = self.game.players[p.sp]
-            v = self.host.ATK.value
+            v = self.host.ATK.value if self.host.ATK.value < 1500 else 1500
             tgt.ATK.gain(v, False, self)
             self.game.deal_damage(self.host, op.leader, v, self)
             self.game.heal(self.host, p.leader, v, self)
