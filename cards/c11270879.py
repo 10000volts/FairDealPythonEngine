@@ -1,12 +1,12 @@
 # 紧急致电
 from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin, EffTriggerCostMixin
-from utils.constants import ETimePoint, EEffectDesc, ELocation, ECardType
+from utils.constants import ETimePoint, EEffectDesc, ELocation, ECardType, EStrategyType
 
 
 class E3(EffTriggerCostMixin):
-    def __init__(self, host):
+    def __init__(self, host, tp):
         super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host,
-                         passive=True, trigger=True, force=True, no_reset=True)
+                         passive=True, trigger=True, force=True, no_reset=True, scr_arg=tp)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD_END:
@@ -17,7 +17,10 @@ class E3(EffTriggerCostMixin):
         def check(c):
             if (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY):
                 c.ATK.value += self.host.ATK.value
-                f = c.effects[0].condition(None)
+                if (c.subtype & EStrategyType.COUNTER) > 0:
+                    f = c.effects[1].condition(self.scr_arg)
+                else:
+                    f = c.effects[0].condition(None)
                 c.ATK.value -= self.host.ATK.value
                 return f
             return False
@@ -37,7 +40,7 @@ class E1(EffCounterStgE1Mixin):
         super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
-        self.host.register_effect(E3(self.host))
+        self.host.register_effect(E3(self.host, self.scr_arg[0]))
 
 
 class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
@@ -52,8 +55,11 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
                    self.host.cover & \
                    ((tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0):
                     for c in p.hand:
-                        if c.type == ECardType.STRATEGY and c.effects[0].condition(None):
-                            return True
+                        if c.type == ECardType.STRATEGY:
+                            if (c.subtype & EStrategyType.COUNTER) > 0:
+                                return c.effects[1].condition(tp)
+                            else:
+                                return c.effects[0].condition(None)
         return False
 
 

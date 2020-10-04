@@ -4,7 +4,7 @@ from core.game import GameCard, ETimePoint, Effect
 from utils.constants import EEffectDesc, ELocation
 
 
-class E4(Effect):
+class E2(Effect):
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.DISCARD, host=host)
 
@@ -56,4 +56,4 @@ def give(c):
     :return:
     """
     c.register_effect(E1(c))
-    c.register_effect(E4(c))
+    c.register_effect(E2(c))

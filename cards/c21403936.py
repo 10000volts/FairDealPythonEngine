@@ -46,7 +46,7 @@ class E2(Effect):
     """
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.HP_COST,
-                         host=c, trigger=True, force=True, scr_arg=1)
+                         host=c, trigger=True, force=True, scr_arg=1, can_invalid=False)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
