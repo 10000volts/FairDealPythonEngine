@@ -17,7 +17,7 @@ class E3(EffTriggerCostMixin):
         def check(c):
             if (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY):
                 c.ATK.value += self.host.ATK.value
-                if (c.subtype & EStrategyType.COUNTER) > 0:
+                if ((c.subtype & EStrategyType.COUNTER) > 0) & (c.cid != '11270879'):
                     f = c.effects[1].condition(self.scr_arg)
                 else:
                     f = c.effects[0].condition(None)
@@ -56,10 +56,12 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
                    ((tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0):
                     for c in p.hand:
                         if c.type == ECardType.STRATEGY:
-                            if (c.subtype & EStrategyType.COUNTER) > 0:
-                                return c.effects[1].condition(tp)
+                            if ((c.subtype & EStrategyType.COUNTER) > 0) & (c.cid != '11270879'):
+                                if c.effects[1].condition(tp):
+                                    return True
                             else:
-                                return c.effects[0].condition(None)
+                                if c.effects[0].condition(None):
+                                    return True
         return False
 
 
