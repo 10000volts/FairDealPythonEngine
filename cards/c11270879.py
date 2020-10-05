@@ -19,6 +19,8 @@ class E3(EffTriggerCostMixin):
             if (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY):
                 c.ATK.value += self.host.ATK.value
                 if ((c.subtype & EStrategyType.COUNTER) > 0) & (c.cid != '11270879'):
+                    print('qwq')
+                    print(self.scr_arg.description)
                     f = c.effects[1].condition(TimePoint(ETimePoint.REDIRECT_COUNTER, self,
                                                          [self.scr_arg]))
                 else:
@@ -42,6 +44,8 @@ class E1(EffCounterStgE1Mixin):
         super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
+        print('qaq')
+        print(self.scr_arg[0].description)
         self.host.register_effect(E3(self.host, self.scr_arg[0]))
 
 
