@@ -1223,7 +1223,7 @@ class Game:
                     _tc += 1
             if _s1 in range(0, len(pn.side)):
                 if pn.side[_s1].rank == ECardRank.TRUMP:
-                    _tc += 1
+                    _tcs += 1
             if _s2 in range(0, len(pn.side)):
                 # 连续交换副卡组中同一位置的牌。
                 if _s2 == _s1:

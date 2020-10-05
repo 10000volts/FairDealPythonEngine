@@ -17,14 +17,17 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.INVALID, host=host, scr_arg=[ef], trigger=True)
 
     def condition(self, tp):
-        if (self.host.turns > 0) & (tp.tp == ETimePoint.PAID_COST):
-            if self.host.location & ELocation.ON_FIELD:
-                if self.host.cover:
-                    if (tp.args[0].ATK.value <= self.host.ATK.value) & \
-                            ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0) & \
-                            (tp.args[0].type == ECardType.EMPLOYEE) & (not tp.sender.passive) & \
-                            (not tp.sender.no_reset) & tp.sender.can_invalid:
-                        return True
+        if tp.tp == ETimePoint.REDIRECT_COUNTER:
+            tp = tp.args[0]
+        else:
+            if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
+                return False
+        if tp.tp == ETimePoint.PAID_COST:
+            if (tp.args[0].ATK.value <= self.host.ATK.value) & \
+                    ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0) & \
+                    (tp.args[0].type == ECardType.EMPLOYEE) & (not tp.sender.passive) & \
+                    (not tp.sender.no_reset) & tp.sender.can_invalid:
+                return True
         return False
 
 

@@ -699,3 +699,7 @@ class ETimePoint:
     # 高级智库
     # args[0]: 目标
     INFLUENCING = 227
+    # 转发反制 在此时点发动效果的卡：
+    # 全部反制策略
+    # args[0]: 转发时点
+    REDIRECT_COUNTER = 228

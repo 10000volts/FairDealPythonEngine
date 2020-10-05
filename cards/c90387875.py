@@ -6,7 +6,7 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 
 class E1(EffLazyTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.SEND2DECK, host=host, trigger=True, force=True)
+        super().__init__(desc=EEffectDesc.SEND2DECK, host=host, trigger=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYED:

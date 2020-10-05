@@ -18,14 +18,16 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[ef], trigger=True)
 
     def condition(self, tp):
-        if self.host.turns:
-            if tp.tp == ETimePoint.DESTROYING:
-                if self.host.location & ELocation.ON_FIELD:
-                    p = self.game.get_player(self.host)
-                    if self.host.cover:
-                        if (tp.args[1].location == ELocation.ON_FIELD + 2 - p.sp) & \
-                                (tp.args[1].type == ECardType.EMPLOYEE):
-                            return True
+        if tp.tp == ETimePoint.REDIRECT_COUNTER:
+            tp = tp.args[0]
+        else:
+            if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
+                return False
+        if tp.tp == ETimePoint.DESTROYING:
+            p = self.game.get_player(self.host)
+            if (tp.args[1].location == ELocation.ON_FIELD + 2 - p.sp) & \
+                    (tp.args[1].type == ECardType.EMPLOYEE):
+                return True
         return False
 
 

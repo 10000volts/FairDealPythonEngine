@@ -20,16 +20,18 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.INVALID, host=host, scr_arg=[ef], trigger=True)
 
     def condition(self, tp):
-        if self.host.turns:
-            if tp.tp == ETimePoint.ATTACKING:
-                if self.host.location & ELocation.ON_FIELD:
-                    if self.host.cover:
-                        p = self.game.get_player(self.host)
-                        op = self.game.players[p.sp]
-                        if tp.args[1] is p.leader:
-                            return True
-                        elif tp.args[0] is op.on_field[self.host.inf_pos - 3]:
-                            return True
+        if tp.tp == ETimePoint.REDIRECT_COUNTER:
+            tp = tp.args[0]
+        else:
+            if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
+                return False
+        if tp.tp == ETimePoint.ATTACKING:
+            p = self.game.get_player(self.host)
+            op = self.game.players[p.sp]
+            if tp.args[1] is p.leader:
+                return True
+            elif tp.args[0] is op.on_field[self.host.inf_pos - 3]:
+                return True
         return False
 
 

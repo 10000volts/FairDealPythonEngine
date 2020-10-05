@@ -5,6 +5,19 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 from utils.common_effects import EffPierce, EffTriggerCostMixin, EffNextTurnMixin, EffUntil
 
 
+class E8(EffTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(desc=EEffectDesc.EXTRA_CHANCE, host=host, trigger=True, force=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.RESET_TIMES:
+            return tp.args is self.host
+        return False
+
+    def execute(self):
+        self.host.attack_times += 1
+
+
 class E7(EffTriggerCostMixin):
     """
     不能改变姿态。
@@ -70,7 +83,7 @@ class E5(EffNextTurnMixin):
 
 class E4(EffTriggerCostMixin):
     """
-    造成伤害时对方丢弃手牌、赋予自身解放效果。
+    造成伤害后赋予自身解放效果。
     """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.DISCARD, host=host, trigger=True, force=True)
@@ -83,13 +96,13 @@ class E4(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        op = self.game.players[self.game.get_player(self.host).sp]
-        for c in op.hand:
-            tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
-            self.game.enter_time_point(tp)
-            if tp.args[-1]:
-                self.game.req4discard(op, 1, self)
-                break
+        # op = self.game.players[self.game.get_player(self.host).sp]
+        # for c in op.hand:
+        #     tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+        #     self.game.enter_time_point(tp)
+        #     if tp.args[-1]:
+        #         self.game.req4discard(op, 1, self)
+        #         break
         self.host.register_effect(E5(self.host))
 
 
@@ -184,3 +197,4 @@ def give(c):
     c.register_effect(EffPierce(c))
     c.register_effect(E4(c))
     c.register_effect(E6(c))
+    c.register_effect(E8(c))

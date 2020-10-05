@@ -20,11 +20,12 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[ef], trigger=True)
 
     def condition(self, tp):
-        if self.host.turns:
-            if tp.tp == ETimePoint.SUCC_SUMMON:
-                return ((self.host.location & ELocation.ON_FIELD) > 0) &\
-                       self.host.cover
-        return False
+        if tp.tp == ETimePoint.REDIRECT_COUNTER:
+            tp = tp.args[0]
+        else:
+            if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
+                return False
+        return tp.tp == ETimePoint.SUCC_SUMMON
 
 
 def give(c):
