@@ -13,7 +13,7 @@ class E1(EffCounterStgE1Mixin):
         self.game.destroy(self.host, self.scr_arg[0].args[0], self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     """
     我方玩家被攻击时
     """

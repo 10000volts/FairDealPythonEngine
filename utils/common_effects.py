@@ -282,7 +282,7 @@ class EffExile(Effect):
         return self.game.send2exiled(p, p, self.host, self)
 
 
-class EffCounterStgE2Mixin(Effect):
+class EffCounterStgE2Mixin(EffTriggerCostMixin):
     """
     反制策略的E2效果，用来触发其真正效果。
     """

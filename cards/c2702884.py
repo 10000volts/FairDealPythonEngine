@@ -12,7 +12,7 @@ class E1(EffCounterStgE1Mixin):
         self.scr_arg[0].args[0].ATK.gain(-self.host.ATK.value, False, self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     """
     下降500攻击力
     """

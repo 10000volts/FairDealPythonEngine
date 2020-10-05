@@ -13,7 +13,7 @@ class E1(EffCounterStgE1Mixin):
                                              self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[ef], trigger=True)
 

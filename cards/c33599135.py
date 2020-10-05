@@ -20,7 +20,7 @@ class E1(EffCounterStgE1Mixin):
             self.game.heal(self.host, c, v, self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     """
     我方玩家被攻击时
     """

@@ -12,7 +12,7 @@ class E1(EffCounterStgE1Mixin):
         self.game.invalid_tp(self.scr_arg[0], self.scr_arg[0].args[0], self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.INVALID, host=host, scr_arg=[ef], trigger=True)
 

@@ -11,7 +11,7 @@ class E1(EffCounterStgE1Mixin):
         self.scr_arg[0].sender.host.ATK.become(0, True, self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host, scr_arg=[ef], trigger=True)
 

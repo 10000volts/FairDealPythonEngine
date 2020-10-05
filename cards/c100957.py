@@ -12,7 +12,7 @@ class E1(EffCounterStgE1Mixin):
         self.game.invalid_tp(self.scr_arg[0], self.scr_arg[0].args[0], self)
 
 
-class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
+class E2(EffCounterStgE2Mixin):
     """
     我方玩家被攻击或正对的对方雇员发动攻击时
     """
