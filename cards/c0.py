@@ -8,6 +8,6 @@ def give(c):
     :param c:
     :return:
     """
+    c.register_effect(EffHPLimit(c))
     # 保护协议
     c.register_effect(EffProtectProtocol(c))
-    c.register_effect(EffHPLimit(c))

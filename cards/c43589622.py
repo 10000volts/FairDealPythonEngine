@@ -4,9 +4,6 @@ from utils.constants import EEffectDesc
 
 
 class E1(EffSummon):
-    """
-    对对方玩家造成500伤害。
-    """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host)
 

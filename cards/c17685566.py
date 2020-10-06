@@ -5,15 +5,12 @@ from utils.constants import EEffectDesc, ETimePoint
 
 
 class E1(EffSingleStgE1Mixin):
-    """
-    回复5000生命力并增加额外效果。
-    """
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.HEAL, host=host)
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """

@@ -42,6 +42,8 @@ class E1(EffCounterStgE1Mixin):
         super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
+        print('q2q')
+        print(self.scr_arg[0].tp)
         self.host.register_effect(E3(self.host, self.scr_arg[0]))
 
 
