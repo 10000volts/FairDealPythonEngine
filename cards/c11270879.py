@@ -32,6 +32,9 @@ class E3(EffTriggerCostMixin):
                 tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
                     tgt.ATK.gain(self.host.ATK.value, False, self)
+                    if tgt.subtype & EStrategyType.COUNTER:
+                        # 设置时点
+                        tgt.effects[0].scr_arg[0] = self.scr_arg
                     self.game.activate_strategy(p, p, tgt)
                 self.host.remove_effect(self.host)
                 break

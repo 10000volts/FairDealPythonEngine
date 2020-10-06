@@ -22,7 +22,6 @@ class E2(EffCounterStgE2Mixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.REDIRECT_COUNTER:
             tp = tp.args[0]
-            self.reacted.append(tp)
         else:
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
