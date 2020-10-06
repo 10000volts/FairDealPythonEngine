@@ -42,8 +42,6 @@ class E1(EffCounterStgE1Mixin):
         super().__init__(desc=EEffectDesc.ACTIVATE_STRATEGY, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
-        print('q2q')
-        print(self.scr_arg[0].tp)
         self.host.register_effect(E3(self.host, self.scr_arg[0]))
 
 
@@ -57,9 +55,10 @@ class E2(EffCounterStgE2Mixin):
         else:
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
-        if tp.tp == ETimePoint.ACTIVATING_STRATEGY:
+        if tp.tp == ETimePoint.PAID_COST:
             p = self.game.get_player(self.host)
-            if (tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0:
+            if ((tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0) & \
+                    (tp.args[0].type == ECardType.STRATEGY):
                 for c in p.hand:
                     if c.type == ECardType.STRATEGY:
                         c.ATK.value += self.host.ATK.value

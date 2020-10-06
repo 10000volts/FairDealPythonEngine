@@ -1,10 +1,10 @@
 # 桶金
 from core.game import TimePoint
-from utils.common_effects import EffSingleStgE1Mixin
+from utils.common_effects import EffCommonStrategy
 from utils.constants import EEffectDesc, ETimePoint
 
 
-class E1(EffSingleStgE1Mixin):
+class E1(EffCommonStrategy):
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.HEAL, host=host)
 
