@@ -297,6 +297,12 @@ class EffCounterStgE2Mixin(EffTriggerCostMixin):
             self.game.activate_strategy(p, p, self.host, self.host.inf_pos)
         self.game.enter_time_point(TimePoint(ETimePoint.UNCOVERED_STRATEGY, None, [self.host]))
 
+    def cost(self, tp):
+        if super().cost(tp):
+            self.host.cover = 0
+            return True
+        return False
+
 
 class EffSingleStgE1Mixin(EffTriggerCostMixin):
     """
