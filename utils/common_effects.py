@@ -180,7 +180,7 @@ class EBattleDamage0(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
-            if (tp.args[0] == self.host):
+            if tp.args[0] == self.host:
                 return True
         return False
 
@@ -360,9 +360,9 @@ class EffSummon(EffLazyTriggerCostMixin):
     """
     入场后效果模板。
     """
-    def __init__(self, desc, host):
+    def __init__(self, desc, host, **kwargs):
         super().__init__(desc=desc, act_phase=EGamePhase.PLAY_CARD,
-                         host=host, trigger=True)
+                         host=host, trigger=True, **kwargs)
 
     def condition(self, tp):
         """

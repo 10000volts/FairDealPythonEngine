@@ -68,7 +68,7 @@ class E3(EffSummon):
     入场时赋予效果。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.FORBIDDEN, host=host)
+        super().__init__(desc=EEffectDesc.FORBIDDEN, host=host, force=True, can_invalid=False)
 
     def execute(self):
         """
