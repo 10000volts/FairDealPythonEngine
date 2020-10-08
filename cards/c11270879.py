@@ -59,10 +59,9 @@ class E2(EffCounterStgE2Mixin):
         else:
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
-        if tp.tp == ETimePoint.PAID_COST:
+        if tp.tp == ETimePoint.ACTIVATING_STRATEGY:
             p = self.game.get_player(self.host)
-            if ((tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0) & \
-                    (tp.args[0].type == ECardType.STRATEGY):
+            if (tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0:
                 for c in p.hand:
                     if c.type == ECardType.STRATEGY:
                         c.ATK.value += self.host.ATK.value

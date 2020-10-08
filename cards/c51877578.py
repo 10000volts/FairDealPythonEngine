@@ -1,6 +1,6 @@
 # 皮亚娜
 from utils.common_effects import EffLazyTriggerCostMixin
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint
+from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ELocation
 
 
 class E1(EffLazyTriggerCostMixin):
@@ -12,7 +12,7 @@ class E1(EffLazyTriggerCostMixin):
                          act_phase=EGamePhase.EXTRA_DATA)
 
     def condition(self, tp):
-        return tp.tp == ETimePoint.PH_EXTRA_DATA_END
+        return (tp.tp == ETimePoint.PH_EXTRA_DATA_END) & ((self.host.location & ELocation.HAND) > 0)
 
     def execute(self):
         self.host.ATK.change_adv(-10000)

@@ -2,7 +2,7 @@
 from utils.common_effects import EffLazyTriggerCostMixin
 from models.effect import Effect
 from core.game import TimePoint
-from utils.constants import EEffectDesc, EGamePhase, ETimePoint, EErrorCode
+from utils.constants import EEffectDesc, EGamePhase, ETimePoint, EErrorCode, ELocation
 from utils.common import adj_pos
 
 
@@ -69,11 +69,12 @@ class E1(Effect):
         :return:
         """
         if tp.tp == ETimePoint.PH_EXTRA_DATA_END:
-            p = self.game.get_player(self.host)
-            tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 1000, 1])
-            self.game.enter_time_point(tp2)
-            if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
-                return True
+            if self.host.location & ELocation.HAND:
+                p = self.game.get_player(self.host)
+                tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 1000, 1])
+                self.game.enter_time_point(tp2)
+                if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
+                    return True
         return False
 
     def cost(self, tp):

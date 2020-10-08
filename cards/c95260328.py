@@ -17,7 +17,14 @@ class E1(EffLazyTriggerCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        return tp.tp == ETimePoint.EXTRA_DATA_GENERATED
+        if tp.tp == ETimePoint.EXTRA_DATA_GENERATED:
+            if (self.host.location & ELocation.HAND) > 0:
+                return True
+            p = self.game.get_player(self.host)
+            for c in p.side:
+                if ('水星乐队' in c.series) & (c is not self.host):
+                    return True
+        return False
 
     def execute(self):
         """
