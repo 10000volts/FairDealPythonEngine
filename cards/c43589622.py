@@ -19,7 +19,7 @@ class E1(EffSummon):
 
     def execute(self):
         p = self.game.players[self.game.get_player(self.host).sp]
-        v = max(self.host.ATK.value * 2, 7000)
+        v = min(self.host.ATK.value * 2, 7000)
         self.game.deal_damage(self.host, p.leader, v, self)
 
 

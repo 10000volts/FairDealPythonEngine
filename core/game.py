@@ -238,14 +238,6 @@ class GamePlayer:
         self.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
 
 
-class ObjList(list):
-    def remove(self, obj) -> None:
-        for i in range(0, len(self)):
-            if obj is self[i]:
-                self.pop(i)
-                return
-
-
 class CardProperty:
     def __init__(self, v, tp0, tp1, tp2, c):
         """
@@ -262,9 +254,9 @@ class CardProperty:
         # 附加值。additional value
         self.add_val = 0
         # 运算符栈。包含+、*、=(变成)、++(永久上升)、**、==、+x(上升不定值)、*x、=x、++x、**x、==x
-        self.op_st = ObjList()
+        self.op_st = list()
         # 数值栈。
-        self.val_st = ObjList()
+        self.val_st = list()
         self.tp0 = tp0
         self.tp1 = tp1
         self.tp2 = tp2
@@ -416,9 +408,12 @@ class CardProperty:
         return None, None
 
     def remove(self, op, v):
-        self.op_st.remove(op)
-        self.val_st.remove(v)
-        self.update()
+        for i in range(0, len(self.op_st)):
+            if self.op_st[i] is op:
+                self.op_st.pop(i)
+                self.val_st.pop(i)
+                self.update()
+                return
 
     def change_adv(self, adv, ef: Effect = None):
         flag = True
