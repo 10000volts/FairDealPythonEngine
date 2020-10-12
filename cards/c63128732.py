@@ -27,7 +27,7 @@ class E3(EffLazyTriggerCostMixin):
         super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=host, trigger=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYING:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             p = self.game.get_player(self.host)
             return (tp.sender is None) & ((tp.args[1].location & (2 - p.sp)) > 0) & \
                    (tp.args[1].ATK.value == self.host.ATK.value) & \

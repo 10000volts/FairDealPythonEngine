@@ -63,7 +63,7 @@ class E1(EffTriggerCostMixin):
                 p = self.game.get_player(self.host)
                 for pos in range(3, 6):
                     if p.on_field[pos] is None:
-                        for c in p.hand:
+                        for c in p.grave:
                             if (c.type == ECardType.STRATEGY) & ((c.subtype & EStrategyType.COUNTER) > 0):
                                 tp = TimePoint(ETimePoint.TRY_SET_STRATEGY, self, [c, 1])
                                 self.game.enter_time_point(tp)

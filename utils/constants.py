@@ -703,3 +703,7 @@ class ETimePoint:
     # 全部反制策略
     # args[0]: 转发时点
     REDIRECT_COUNTER = 228
+    # 确定被摧毁时 在此时点发动效果的卡：
+    # 首席隐私执行官、高级易容、贴身保镖……
+    # args[0]: 摧毁者 args[1]: 目标
+    DESTROYING_SURE = 229

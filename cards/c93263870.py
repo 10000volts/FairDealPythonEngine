@@ -53,7 +53,7 @@ class E1(Effect):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if (tp.tp == ETimePoint.DESTROYING) and (tp.args[1] is self.host):
+        if (tp.tp == ETimePoint.DESTROYING) and ((self.host.location & ELocation.ON_FIELD) > 0):
             return True
         return False
 
@@ -64,7 +64,8 @@ class E1(Effect):
         :return:
         """
         # 摧毁无效
-        self.reacted.pop().args[-1] = 0
+        tp = self.reacted.pop()
+        self.game.invalid_tp(tp, tp.args[1], self)
         self.host.remove_effect(self)
 
 

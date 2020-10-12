@@ -55,7 +55,7 @@ class E1(EffTriggerCostMixin):
 
     def execute(self):
         tp = self.reacted.pop()
-        self.game.invalid_tp(tp, tp.args[0], self)
+        self.game.invalid_tp(tp, tp.args[1], self)
         op, v = self.host.ATK.gain(1000, False, self)
         self.host.register_effect(E2(self.host, op, v))
 

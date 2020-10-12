@@ -24,7 +24,7 @@ class E2(EffTriggerCostMixin):
         super().__init__(host=host, desc=EEffectDesc.ATK_LOSE, trigger=True, force=True, no_reset=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYING:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             return (self.game.get_player(tp.args[1]) is self.game.get_player(self.host)) & \
                    (tp.sender is None) & (tp.args[1].type == ECardType.EMPLOYEE)
         return False

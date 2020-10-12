@@ -23,7 +23,7 @@ class E2(EffCounterStgE2Mixin):
         else:
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
-        if tp.tp == ETimePoint.DESTROYING:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             p = self.game.get_player(self.host)
             if (tp.args[1].location == ELocation.ON_FIELD + 2 - p.sp) & \
                     (tp.args[1].type == ECardType.EMPLOYEE):

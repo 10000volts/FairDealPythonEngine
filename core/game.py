@@ -2423,6 +2423,8 @@ class Game:
             self.enter_time_point(tp)
             if tp.args[-1]:
                 sender, target = tp.args[:-1]
+                tp = TimePoint(ETimePoint.DESTROYING_SURE, ef, [sender, target])
+                self.enter_time_point(tp)
                 if target.type == ECardType.LEADER:
                     self.winner = self.players[self.get_player(target).sp]
                     self.win_reason = 0

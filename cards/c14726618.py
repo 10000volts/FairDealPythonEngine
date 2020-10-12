@@ -1,6 +1,19 @@
 # 流量明星
-from utils.constants import EEffectDesc, ECardType, ELocation, ETurnPhase
-from utils.common_effects import EffCommonSummon, EffAttackLimit, EffUntil
+from utils.constants import EEffectDesc, ECardType, ETimePoint
+from utils.common_effects import EffCommonSummon, EffAttackLimit, EffUntil, EffTurnEndMixin
+
+
+class E2(EffTurnEndMixin):
+    """
+    回合结束时回复攻击力。
+    """
+    def __init__(self, host, c, op, v):
+        super().__init__(desc=EEffectDesc.EFFECT_END,
+                         host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True, passive=True)
+
+    def execute(self):
+        self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
+        self.host.remove_effect(self)
 
 
 class E1(EffCommonSummon):
@@ -16,15 +29,14 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        def check(c):
-            return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
         p = self.game.get_player(self.host)
-        tgt = self.game.choose_target_from_func(p, p, check, self)
-        if tgt is not None:
-            tgt.ATK.plus(2, False, self)
-            e2 = EffAttackLimit(tgt, False)
-            tgt.register_effect(e2)
-            tgt.register_effect(EffUntil(tgt, e2, lambda tp: tp.tp == ETurnPhase.ENDING))
+        for c in p.on_field:
+            if c is not None and c.type == ECardType.EMPLOYEE:
+                op, v = c.ATK.plus(2, False, self)
+                c.register_effect(E2(self.host, c, op, v))
+                e3 = EffAttackLimit(c, False)
+                c.register_effect(e3)
+                c.register_effect(EffUntil(c, e3, lambda tp: tp.tp == ETimePoint.TURN_END))
 
 
 def give(c):

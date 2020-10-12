@@ -59,7 +59,8 @@ class E3(EffTriggerCostMixin):
         :return:
         """
         # 无效
-        self.reacted.pop().args[-1] = 0
+        tp = self.reacted.pop()
+        self.game.invalid_tp(tp, tp.args[1], self)
         self.host.remove_effect(self)
 
 
