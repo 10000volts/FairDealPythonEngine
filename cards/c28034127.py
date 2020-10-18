@@ -23,7 +23,7 @@ class E1(EffCommonStrategy):
 
         p = self.game.get_player(self.host)
         for c in p.hand:
-            tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+            tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, True, 1])
             self.game.enter_time_point(tp)
             if tp.args[-1]:
                 tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
@@ -32,7 +32,7 @@ class E1(EffCommonStrategy):
                 break
         p = self.game.players[p.sp]
         for c in p.hand:
-            tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+            tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, True, 1])
             self.game.enter_time_point(tp)
             if tp.args[-1]:
                 tgt = self.game.choose_target_from_func(p, p, check, self, True, False)

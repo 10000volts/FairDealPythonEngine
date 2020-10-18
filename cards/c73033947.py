@@ -18,7 +18,7 @@ class E1(Effect):
         if tp.tp == ETimePoint.SUCC_SUMMON:
             if (tp.sender is None) & (tp.args[0] is self.host):
                 for c in self.game.get_player(self.host).hand:
-                    tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+                    tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, False, 1])
                     self.game.enter_time_point(tp)
                     if tp.args[-1]:
                         return True

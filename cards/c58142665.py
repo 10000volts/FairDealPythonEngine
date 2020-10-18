@@ -37,12 +37,10 @@ class E1(Effect):
         def check(c):
             return c.location == ELocation.HAND + 2 - p.sp
         p = self.game.get_player(self.host)
-        self.game.send2exiled(p, p, self.host, self)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.send2deck_above(p, p, tgt, self)
             cs = [GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '87032772', is_token=True),
-                  GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '58142665', is_token=True),
                   GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '23643378', is_token=True)]
             for c in cs:
                 c.ATK.change_adv(self.host.ATK.add_val, self)

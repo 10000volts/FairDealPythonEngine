@@ -1,5 +1,5 @@
 # 陷阱合同
-from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin, EffTriggerCostMixin
+from utils.common_effects import EffCounterStgE2Mixin, EffCounterStgE1Mixin
 from utils.constants import ETimePoint, EEffectDesc, ELocation
 
 

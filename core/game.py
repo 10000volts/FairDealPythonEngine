@@ -238,6 +238,11 @@ class GamePlayer:
         self.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
 
 
+class Value:
+    def __init__(self, v):
+        self.value = v
+
+
 class CardProperty:
     def __init__(self, v, tp0, tp1, tp2, c):
         """
@@ -331,8 +336,8 @@ class CardProperty:
             flag = tp.args[-1]
         if flag:
             new_op = '++' if perm else '+'
-            self.op_st.append(new_op)
-            self.val_st.append(v)
+            self.op_st.append(Value(new_op))
+            self.val_st.append(Value(v))
             self.update()
             return new_op, v
         return None, None
@@ -345,8 +350,8 @@ class CardProperty:
             flag = tp.args[-1]
         if flag:
             new_op = '++x' if perm else '+x'
-            self.op_st.append('++x' if perm else '+x')
-            self.val_st.append(x)
+            self.op_st.append(Value(new_op))
+            self.val_st.append(Value(x))
             self.update()
             return new_op, x
         return None, None
@@ -359,8 +364,8 @@ class CardProperty:
             flag = tp.args[-1]
         if flag:
             new_op = '==' if perm else '='
-            self.op_st.append('==' if perm else '=')
-            self.val_st.append(v)
+            self.op_st.append(Value(new_op))
+            self.val_st.append(Value(v))
             self.update()
             return new_op, v
         return None, None
@@ -373,8 +378,8 @@ class CardProperty:
             flag = tp.args[-1]
         if flag:
             new_op = '==x' if perm else '=x'
-            self.op_st.append('==x' if perm else '=x')
-            self.val_st.append(x)
+            self.op_st.append(Value(new_op))
+            self.val_st.append(Value(x))
             self.update()
             return new_op, x
         return None, None
@@ -387,8 +392,8 @@ class CardProperty:
             flag = tp.args[-1]
         if flag:
             new_op = '**' if perm else '*'
-            self.op_st.append('**' if perm else '*')
-            self.val_st.append(v)
+            self.op_st.append(Value(new_op))
+            self.val_st.append(Value(v))
             self.update()
             return new_op, v
         return None, None
@@ -401,8 +406,8 @@ class CardProperty:
             flag = tp.args[-1]
         if flag:
             new_op = '**x' if perm else '*x'
-            self.op_st.append('**x' if perm else '*x')
-            self.val_st.append(x)
+            self.op_st.append(Value(new_op))
+            self.val_st.append(Value(x))
             self.update()
             return new_op, x
         return None, None
@@ -753,7 +758,7 @@ class GameCard:
                 self.game.skip_times = 0
             else:
                 self.turns = 0
-            tp4 = TimePoint(etp4, ef, [self, loc])
+            tp4 = TimePoint(etp4, ef, [self, loc, pre_loc])
             self.game.temp_tp_stack.append(tp4)
             yield True
         else:

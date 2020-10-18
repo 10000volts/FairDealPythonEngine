@@ -32,7 +32,7 @@ class E1(EffTriggerCostMixin):
         if tp.tp == ETimePoint.TURN_END:
             if (self.host.location & ELocation.ON_FIELD) > 0:
                 for c in self.game.get_player(self.host).hand:
-                    tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+                    tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, False, 1])
                     self.game.enter_time_point(tp)
                     if tp.args[-1]:
                         return True

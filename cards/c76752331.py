@@ -10,12 +10,14 @@ class E5(EffTriggerCostMixin):
     击溃对方雇员时给予伤害并回复生命力。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True)
+        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True, force=True)
 
     def condition(self, tp):
+        # todo: 总不能在对方回合攻击吧？
         if tp.tp == ETimePoint.DESTROYED:
             return (tp.args[0] is self.host) & (tp.sender is None) & \
-                   (self.game.get_player(tp.args[1]) is not self.game.get_player(self.host))
+                   (self.game.get_player(tp.args[1]) is not self.game.get_player(self.host)) & \
+                   (self.game.get_player(self.host) is self.game.turn_player)
         return False
 
     def execute(self):

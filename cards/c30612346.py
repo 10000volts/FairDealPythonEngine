@@ -29,13 +29,13 @@ class E1(Effect):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & \
-                    (c.type == ECardType.EMPLOYEE) & (c.ATK.value >= self.host.ATK.value)
+                    (c.type == ECardType.EMPLOYEE) & (c.ATK.value >= self.host.ATK.value) & (c.ATK.value >= 4000)
 
         # 摧毁选择的卡
         p = self.game.get_player(self.host)

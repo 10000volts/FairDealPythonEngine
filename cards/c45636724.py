@@ -15,7 +15,7 @@ class E1(EffCommonSummon):
         p = self.game.get_player(self.host)
         for c in p.hand:
             if c.type == ECardType.EMPLOYEE:
-                tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, 1])
+                tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, False, 1])
                 self.game.enter_time_point(tp)
                 if tp.args[-1]:
                     cl.append(c)

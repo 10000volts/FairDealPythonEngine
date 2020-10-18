@@ -36,7 +36,7 @@ class E1(Effect):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
         c.create('幕后黑手的人偶', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.TRUMP,
-                 1000, 0)
+                 1000, 1000)
 
         for pos in range(0, 3):
             for posture in range(0, 2):

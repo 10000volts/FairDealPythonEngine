@@ -499,7 +499,7 @@ class ETimePoint:
     IN_EXILED_END = 171
     # 尝试丢弃手牌 在此时点发动效果的卡：
     #
-    # args[0]: 丢弃的卡
+    # args[0]: 丢弃的卡 args[1]: 是否是选择丢弃
     TRY_DISCARD = 172
     # 丢弃手牌时 在此时点发动效果的卡：
     #
