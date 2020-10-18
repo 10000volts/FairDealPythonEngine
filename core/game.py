@@ -270,7 +270,7 @@ class CardProperty:
     def reset(self):
         i = 0
         while i < len(self.op_st):
-            if self.op_st[i] in '+*=+x*x=x':
+            if self.op_st[i].value in '+*=+x*x=x':
                 self.op_st.pop(i)
                 self.val_st.pop(i)
                 i -= 1
@@ -290,21 +290,22 @@ class CardProperty:
             v = 0
         i = 0
         for op in self.op_st:
-            if (op == '+') | (op == '++'):
-                v += self.val_st[i]
-            elif (op == '*') | (op == '**'):
-                v *= self.val_st[i]
-            elif (op == '=') | (op == '=='):
-                v = self.val_st[i]
-            elif (op == '+x') | (op == '++x'):
+            _op = op.value
+            if (_op == '+') | (_op == '++'):
+                v += self.val_st[i].value
+            elif (_op == '*') | (_op == '**'):
+                v *= self.val_st[i].value
+            elif (_op == '=') | (_op == '=='):
+                v = self.val_st[i].value
+            elif (_op == '+x') | (_op == '++x'):
                 # 回调函数。
-                x = self.val_st[i]
+                x = self.val_st[i].value
                 v += x(self.card)
-            elif (op == '*x') | (op == '**x'):
-                x = self.val_st[i]
+            elif (_op == '*x') | (_op == '**x'):
+                x = self.val_st[i].value
                 v *= x(self.card)
-            elif (op == '=x') | (op == '==x'):
-                x = self.val_st[i]
+            elif (_op == '=x') | (_op == '==x'):
+                x = self.val_st[i].value
                 v = x(self.card)
             if v < 0:
                 v = 0
