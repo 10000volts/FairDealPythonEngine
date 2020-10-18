@@ -37,6 +37,7 @@ class E1(Effect):
         def check(c):
             return c.location == ELocation.HAND + 2 - p.sp
         p = self.game.get_player(self.host)
+        self.game.send_to_grave(p, p, self.host, None)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.send2deck_above(p, p, tgt, self)
