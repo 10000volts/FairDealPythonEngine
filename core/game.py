@@ -1989,6 +1989,7 @@ class Game:
                 for i in range(0, draw_count):
                     if len(p.deck) > 0:
                         c = p.deck.pop()
+                        print(c.name)
                         cs.append(c)
                         self.send2hand(p, p, c)
                     else:
@@ -2693,7 +2694,7 @@ class Game:
         """
         def check_discard(c):
             if c in p.hand:
-                tp = TimePoint(ETimePoint.TRY_DISCARD, ef, [c, 1])
+                tp = TimePoint(ETimePoint.TRY_DISCARD, ef, [c, True, 1])
                 self.enter_time_point(tp)
                 if tp.args[-1]:
                     return True
