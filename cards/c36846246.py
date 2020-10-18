@@ -26,7 +26,7 @@ class E3(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TRY_DISCARD:
-            return (tp.args[0] is self.host) & (not tp.args[1])
+            return (tp.args[0] is self.host) & (tp.args[1])
         return False
 
     def execute(self):
