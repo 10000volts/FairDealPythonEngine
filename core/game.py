@@ -531,7 +531,6 @@ class GameCard:
         self.cover = 0
         self.series = list()
         self.is_token = True
-        self.effects = list()
         # 在对局中获得的效果。{eff: desc}
         self.buff_eff = dict()
         # in field position 在自己场上的位置。0-2: 雇员区 3-5: 策略区

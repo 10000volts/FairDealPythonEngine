@@ -71,7 +71,7 @@ class E2(Effect):
         if tp.tp == ETimePoint.ASK4EFFECT:
             if self.host.location & ELocation.HAND:
                 sd = self.game.get_player(self.host)
-                if (sd.leader.DEF.value > 1000) | (self.host not in sd.hand):
+                if sd.leader.DEF.value > 1000:
                     return False
                 for posture in range(0, 2):
                     for pos in range(0, 3):
@@ -79,7 +79,7 @@ class E2(Effect):
                             tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, sd, pos, posture, 1])
                             self.game.enter_time_point(tp)
                             # 入场被允许
-                            return tp.args[-1]
+                            return tp.args[-1] == 1
         return False
 
     def execute(self):
