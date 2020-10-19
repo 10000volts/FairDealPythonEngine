@@ -500,6 +500,7 @@ class GameCard:
             m.give(self)
         else:
             self.cid = None
+            self.effects = list()
 
     def create(self, name, ty, subtype, rank, src_atk, src_def):
         """
