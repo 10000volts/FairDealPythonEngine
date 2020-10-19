@@ -292,20 +292,20 @@ class CardProperty:
         for op in self.op_st:
             _op = op.value
             if (_op == '+') | (_op == '++'):
-                v += self.val_st[i].value
+                v += self.val_st[i]
             elif (_op == '*') | (_op == '**'):
-                v *= self.val_st[i].value
+                v *= self.val_st[i]
             elif (_op == '=') | (_op == '=='):
-                v = self.val_st[i].value
+                v = self.val_st[i]
             elif (_op == '+x') | (_op == '++x'):
                 # 回调函数。
-                x = self.val_st[i].value
+                x = self.val_st[i]
                 v += x(self.card)
             elif (_op == '*x') | (_op == '**x'):
-                x = self.val_st[i].value
+                x = self.val_st[i]
                 v *= x(self.card)
             elif (_op == '=x') | (_op == '==x'):
-                x = self.val_st[i].value
+                x = self.val_st[i]
                 v = x(self.card)
             if v < 0:
                 v = 0
@@ -336,9 +336,9 @@ class CardProperty:
             self.card.game.enter_time_point(tp)
             flag = tp.args[-1]
         if flag:
-            new_op = '++' if perm else '+'
-            self.op_st.append(Value(new_op))
-            self.val_st.append(Value(v))
+            new_op = Value('++' if perm else '+')
+            self.op_st.append(new_op)
+            self.val_st.append(v)
             self.update()
             return new_op, v
         return None, None
@@ -350,9 +350,9 @@ class CardProperty:
             self.card.game.enter_time_point(tp)
             flag = tp.args[-1]
         if flag:
-            new_op = '++x' if perm else '+x'
-            self.op_st.append(Value(new_op))
-            self.val_st.append(Value(x))
+            new_op = Value('++x' if perm else '+x')
+            self.op_st.append(new_op)
+            self.val_st.append(x)
             self.update()
             return new_op, x
         return None, None
@@ -364,9 +364,9 @@ class CardProperty:
             self.card.game.enter_time_point(tp)
             flag = tp.args[-1]
         if flag:
-            new_op = '==' if perm else '='
-            self.op_st.append(Value(new_op))
-            self.val_st.append(Value(v))
+            new_op = Value('==' if perm else '=')
+            self.op_st.append(new_op)
+            self.val_st.append(v)
             self.update()
             return new_op, v
         return None, None
@@ -378,9 +378,9 @@ class CardProperty:
             self.card.game.enter_time_point(tp)
             flag = tp.args[-1]
         if flag:
-            new_op = '==x' if perm else '=x'
-            self.op_st.append(Value(new_op))
-            self.val_st.append(Value(x))
+            new_op = Value('==x' if perm else '=x')
+            self.op_st.append(new_op)
+            self.val_st.append(x)
             self.update()
             return new_op, x
         return None, None
@@ -392,9 +392,9 @@ class CardProperty:
             self.card.game.enter_time_point(tp)
             flag = tp.args[-1]
         if flag:
-            new_op = '**' if perm else '*'
-            self.op_st.append(Value(new_op))
-            self.val_st.append(Value(v))
+            new_op = Value('**' if perm else '*')
+            self.op_st.append(new_op)
+            self.val_st.append(v)
             self.update()
             return new_op, v
         return None, None
@@ -406,9 +406,9 @@ class CardProperty:
             self.card.game.enter_time_point(tp)
             flag = tp.args[-1]
         if flag:
-            new_op = '**x' if perm else '*x'
-            self.op_st.append(Value(new_op))
-            self.val_st.append(Value(x))
+            new_op = Value('**x' if perm else '*x')
+            self.op_st.append(new_op)
+            self.val_st.append(x)
             self.update()
             return new_op, x
         return None, None
@@ -437,7 +437,7 @@ class HPProperty(CardProperty):
         super().update()
         # HP不存储过程。
         self.op_st = [Value('=')]
-        self.val_st = [Value(self.value)]
+        self.val_st = [self.value]
         if self.value <= 0:
             self.card.game.destroy(None, self.card)
 
