@@ -8,7 +8,7 @@ class E1(EffCounterStgE1Mixin):
         super().__init__(desc=EEffectDesc.PROPERTY_CHANGE, host=host, scr_arg=[None], passive=True)
 
     def execute(self):
-        self.scr_arg[0].args[0].host.ATK.become(0, True, self)
+        self.scr_arg[0].args[0].ATK.become(0, True, self)
 
 
 class E2(EffCounterStgE2Mixin):
