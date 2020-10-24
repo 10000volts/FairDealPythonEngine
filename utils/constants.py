@@ -163,6 +163,8 @@ class EGamePhase:
     MULLIGAN = 6
     # 使用阶段
     PLAY_CARD = 7
+    # 随机放置阶段
+    RANDOM_PUT = 8
 
 
 class ETurnPhase:
@@ -707,3 +709,9 @@ class ETimePoint:
     # 首席隐私执行官、高级易容、贴身保镖……
     # args[0]: 摧毁者 args[1]: 目标
     DESTROYING_SURE = 229
+    # 随机放置阶段开始时 在此时点发动效果的卡：
+    #
+    PH_RANDOM_PUT = 230
+    # 随机放置阶段末尾 在此时点发动效果的卡：
+    #
+    PH_RANDOM_PUT_END = 231

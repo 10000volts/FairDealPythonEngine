@@ -1029,6 +1029,10 @@ class Game:
         elif ph == EGamePhase.PLAY_CARD:
             self.__enter_phase(ETimePoint.PH_PLAY_CARD)
             self.__ph_play_card()
+        elif ph == EGamePhase.RANDOM_PUT:
+            self.__enter_phase(ETimePoint.PH_RANDOM_PUT)
+            self.__ph_random_put()
+            self.__end_phase(ETimePoint.PH_RANDOM_PUT_END)
 
     def __enter_phase(self, tp):
         self.enter_time_point(TimePoint.generate(tp), False)
@@ -1107,10 +1111,35 @@ class Game:
 
         self.batch_sending('lst_all_ano')
 
-    # def __ph_random_put(self):
-    #     p1pos = [x for x in range(0, self.scale ** 2)]
-    #     p2pos = [x for x in range(0, self.scale ** 2)]
-    #     def put():
+    def __ph_random_put(self):
+        exclude = {-12: [-7, -5], -5: [-12, -7, 2, 7], 2: [7, -5], 7: [-5, 2, 5, 12],
+                   +12: [7, 5], 5: [12, 7, -2, -7], -2: [-7, 5], -7: [5, -2, -5, -12]}
+        p1pos = [x for x in range(0, self.scale ** 2)]
+        p2pos = [x for x in range(0, self.scale ** 2)]
+
+        def put(p, ppos):
+            while True:
+                c = self.p1.hand[randint(0, len(self.p1.hand) - 1)]
+                if c.can_random_put:
+                    break
+            pos = ppos[randint(0, len(ppos) - 1)]
+            self.chessboard[pos] = c
+            p.hand.remove(c)
+            self.batch_sending('rnd_put', [pos, c.vid], p)
+            c.ATK.change_adv(0)
+            p1pos.remove(pos)
+            p2pos.remove(pos)
+            for k in exclude.keys():
+                if (pos + k) in range(0, self.scale ** 2):
+                    if self.chessboard[pos + k] is not None:
+                        if (self.chessboard[pos + k].location & (2 - p.sp)) > 0:
+                            for ex in exclude[k]:
+                                if (pos + ex) in ppos:
+                                    ppos.remove(pos + ex)
+
+        for i in range(0, 6):
+            put(self.p1, p1pos)
+            put(self.p2, p2pos)
 
     def __ph_put_card(self):
         # 落子
