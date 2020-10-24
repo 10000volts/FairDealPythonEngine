@@ -486,6 +486,8 @@ class GameCard:
             self.posture = 0
             # 是否拥有"风行"效果
             self.charge = False
+            # 能否被随机放下
+            self.can_random_put = True
             # 剩余攻击次数(入场、回合开始时重置)。为负数则可无限次数攻击。
             self.attack_times = 0
             # 剩余阻挡次数(入场、回合开始时重置)。为负数则可无限次数阻挡。
@@ -1091,6 +1093,7 @@ class Game:
             i = randint(0, len(p.hand) - 1)
             p.hand[i].ATK.add_val = 0
             p.hand[i].register_effect(EffInvestigator(p.hand[i]), True)
+            p.hand[i].can_random_put = False
             p.update_vc(p.hand[i])
             self.enter_time_point(TimePoint(ETimePoint.INVESTIGATOR_GENERATED, None, p.hand[i]))
 
@@ -1103,6 +1106,11 @@ class Game:
         self.p2.shuffle()
 
         self.batch_sending('lst_all_ano')
+
+    # def __ph_random_put(self):
+    #     p1pos = [x for x in range(0, self.scale ** 2)]
+    #     p2pos = [x for x in range(0, self.scale ** 2)]
+    #     def put():
 
     def __ph_put_card(self):
         # 落子
@@ -1464,6 +1472,9 @@ class Game:
                     return EErrorCode.ALREADY_UNCOVERED
                 else:
                     return EErrorCode.OVERSTEP
+            # end turn 主动结束回合
+            elif _args[0] == 8:
+                return 0
             else:
                 return EErrorCode.INVALID_INPUT
 
@@ -1511,13 +1522,13 @@ class Game:
                     _len = len(efs)
                     if _len:
                         self.turn_player.output('req_rct', [ETimePoint.ASK4EFFECT])
-                        if self.turn_player.input(lambda yn: 0, 'req_yn'):
-                            ef_ind = self.turn_player.free_input(
-                                check_ind,
-                                'req_chs_eff', [[[ef.host.vid, ef.description] for ef in efs]])
-                            # 发动了效果。
-                            if ef_ind is not None:
-                                self.activate_effect(efs[ef_ind], self.turn_player, TimePoint(ETimePoint.ASK4EFFECT))
+                        # if self.turn_player.input(lambda yn: 0, 'req_yn'):
+                        ef_ind = self.turn_player.free_input(
+                            check_ind,
+                            'req_chs_eff', [[[ef.host.vid, ef.description] for ef in efs]])
+                        # 发动了效果。
+                        if ef_ind is not None:
+                            self.activate_effect(efs[ef_ind], self.turn_player, TimePoint(ETimePoint.ASK4EFFECT))
                 # set 将手牌盖放到场上
                 elif cmd[0] == 2:
                     c = self.turn_player.hand[cmd[1]]
@@ -1618,6 +1629,14 @@ class Game:
                             attacker.attack(tgt, True)
                         else:
                             attacker.attack(tgt)
+                # end turn 主动结束自己回合(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
+                elif cmd[0] == 8:
+                    while self.turn_phase != ETurnPhase.ENDING:
+                        self.skip_times += 1
+                        if self.skip_times >= self.max_skip:
+                            self.judge()
+                            break
+                        self.enter_turn_phase(next(ntp))
 
     def next_turn_phase(self):
         for p in self.turn_process:
@@ -1762,16 +1781,16 @@ class Game:
                         p_react_list.append(ef)
         if len(p_react_list) > 0 or not p.auto_skip:
             p.output('req_rct', [tp.tp])
-            if p.input(lambda yn: 0, 'req_yn'):
-                ind_max = len(p_react_list)
-                p_react_ef_ind = p.free_input(
-                    check_eff_ind,
-                    'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
-                if p_react_ef_ind is not None:
-                    # 响应了效果。
-                    self.activate_effect(p_react_list[p_react_ef_ind], p, tp)
-                    # 3 - 1 = 2
-                    self.react_times = rt + 3
+            # if p.input(lambda yn: 0, 'req_yn'):
+            ind_max = len(p_react_list)
+            p_react_ef_ind = p.free_input(
+                check_eff_ind,
+                'req_chs_eff', [[[ef.host.vid, ef.description] for ef in p_react_list]])
+            if p_react_ef_ind is not None:
+                # 响应了效果。
+                self.activate_effect(p_react_list[p_react_ef_ind], p, tp)
+                # 3 - 1 = 2
+                self.react_times = rt + 3
         self.react_times -= 1
         if self.react_times > rt:
             self.react(self.players[p.sp], tp, rt)

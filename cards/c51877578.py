@@ -16,6 +16,7 @@ class E1(EffLazyTriggerCostMixin):
 
     def execute(self):
         self.host.ATK.change_adv(-10000)
+        self.host.can_random_put = False
 
 
 def give(c):

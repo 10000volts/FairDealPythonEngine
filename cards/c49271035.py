@@ -101,6 +101,7 @@ class E1(Effect):
         # 变成调查筹码后影响力值归零
         self.host.ATK.add_val = 0
         self.host.register_effect(E2(self.host), True)
+        self.host.can_random_put = False
 
 
 def give(c):

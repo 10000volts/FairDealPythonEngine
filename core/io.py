@@ -62,7 +62,7 @@ def input_from_socket(p, msg, check_func, special_func, force=True):
             # print('ans ' + ans)
             if re.match('[0-9 -]+$', ans) is None:
                 if force:
-                    output_2_socket(p.upstream, make_output('in_err', [0]))
+                    # output_2_socket(p.upstream, make_output('in_err', [0]))
                     continue
                 else:
                     return None
@@ -96,7 +96,7 @@ def input_from_socket(p, msg, check_func, special_func, force=True):
             #     raise ex
             if force:
                 print(ex)
-                output_2_socket(p.upstream, make_output('in_err', [0]))
+                # output_2_socket(p.upstream, make_output('in_err', [0]))
                 continue
             return None
 
