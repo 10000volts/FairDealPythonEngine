@@ -1127,8 +1127,10 @@ class Game:
             p.hand.remove(c)
             self.batch_sending('rnd_put', [pos, c.vid], p)
             c.ATK.change_adv(0)
-            p1pos.remove(pos)
-            p2pos.remove(pos)
+            if pos in p1pos:
+                p1pos.remove(pos)
+            if pos in p2pos:
+                p2pos.remove(pos)
             for k in exclude.keys():
                 if (pos + k) in range(0, self.scale ** 2):
                     if self.chessboard[pos + k] is not None:
