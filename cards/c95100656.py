@@ -48,7 +48,7 @@ class E1(Effect):
         """
         p = self.game.get_player(self.host)
         self.game.special_summon(p, p, self.host, self)
-        self.scr_arg.remove(self.scr_arg[1])
+        self.scr_arg[0].remove(self.scr_arg[1])
 
 
 def give(c):
