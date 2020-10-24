@@ -1119,7 +1119,7 @@ class Game:
 
         def put(p, ppos):
             while True:
-                c = self.p1.hand[randint(0, len(self.p1.hand) - 1)]
+                c = p.hand[randint(0, len(p.hand) - 1)]
                 if c.can_random_put:
                     break
             pos = ppos[randint(0, len(ppos) - 1)]
