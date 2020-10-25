@@ -30,7 +30,7 @@ class E2(EffTriggerCostMixin):
         op = self.game.players[self.game.get_player(self.host).sp]
         for c in op.on_field:
             if c is not None and c.type == ECardType.EMPLOYEE:
-                c.ATK.gain(-self.host.ATK.value)
+                c.ATK.gain(-500)
 
 
 def give(c):
