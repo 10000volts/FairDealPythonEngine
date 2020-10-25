@@ -1112,6 +1112,7 @@ class Game:
         self.batch_sending('lst_all_ano')
 
     def __ph_random_put(self):
+        extra = [-500, -500, 0, 500]
         exclude = {-12: [-7, -5], -5: [-12, -7, 2, 7], 2: [7, -5], 7: [-5, 2, 5, 12],
                    +12: [7, 5], 5: [12, 7, -2, -7], -2: [-7, 5], -7: [5, -2, -5, -12]}
         p1pos = [x for x in range(0, self.scale ** 2)]
@@ -1130,7 +1131,7 @@ class Game:
             self.chessboard[pos] = c
             p.hand.remove(c)
             self.batch_sending('rnd_put', [pos, c.vid], p)
-            c.ATK.change_adv(0)
+            c.ATK.change_adv(extra[randint(0, 3)])
             if pos in p1pos:
                 p1pos.remove(pos)
             if pos in p2pos:
