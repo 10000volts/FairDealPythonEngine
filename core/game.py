@@ -2042,8 +2042,7 @@ class Game:
                 cs = list()
                 for i in range(0, draw_count):
                     if len(p.deck) > 0:
-                        c = p.deck.pop()
-                        print(c.name)
+                        c = p.deck[-1]
                         cs.append(c)
                         self.send2hand(p, p, c)
                     else:
