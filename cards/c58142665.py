@@ -6,18 +6,40 @@ from models.effect import Effect
 
 class E1(Effect):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.SET_CARD, host=host)
+        super().__init__(desc=EEffectDesc.SEND2DECK, host=host, scr_arg=False)
 
     def condition(self, tp):
         if tp is None:
-            p = self.game.get_player(self.host)
-            for c in p.grave:
-                if '冥思' in c.series:
-                    return len(p.hand) > 0
+            for c in self.game.get_player(self.host).hand:
+                # todo: 放入卡组不会被禁止吧？不会吧不会吧？
+                # tp = TimePoint(ETimePoint.IN_DECK_END, self, [c, 1])
+                # self.game.enter_time_point(tp)
+                # if tp.args[-1]:
+                return True
         return False
 
     def cost(self, tp):
         p = self.game.get_player(self.host)
+
+        def check(c):
+            return c.location == ELocation.HAND + 2 - p.sp
+        cc = self.game.choose_target_from_func(p, p, check, self, True, False)
+        if cc is not None:
+            self.game.send2deck_above(p, p, cc, self)
+            return True
+        return False
+
+    def execute(self):
+        """
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
+        调用基类方法进行输出。
+        :return:
+        """
+        p = self.game.get_player(self.host)
+        c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, '87032772', is_token=True)
+        c.ATK.change_adv(self.host.ATK.add_val, self)
+        self.game.send2deck_above(p, p, c, self)
+
         f = False
         cs = list()
         for c in p.grave:
@@ -26,28 +48,10 @@ class E1(Effect):
         for c in cs:
             self.game.send2exiled(p, p, c, self)
             f = True
-        return f
-
-    def execute(self):
-        """
-        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
-        调用基类方法进行输出。
-        :return:
-        """
-        def check(c):
-            return c.location == ELocation.HAND + 2 - p.sp
-        p = self.game.get_player(self.host)
-        self.game.send_to_grave(p, p, self.host, None)
-        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
-        if tgt is not None:
-            self.game.send2deck_above(p, p, tgt, self)
-            cs = [GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '87032772', is_token=True),
-                  GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '23643378', is_token=True)]
-            for c in cs:
-                c.ATK.change_adv(self.host.ATK.add_val, self)
-            tgt = self.game.choose_target(p, p, [c.vid for c in cs], self, True, False)
-            if tgt is not None:
-                self.game.set_strategy(p, p, tgt, self)
+        if f:
+            c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, '23643378', is_token=True)
+            c.ATK.change_adv(self.host.ATK.add_val, self)
+            self.game.send2deck_above(p, p, c, self)
 
 
 def give(c):

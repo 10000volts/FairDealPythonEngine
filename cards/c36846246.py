@@ -35,7 +35,7 @@ class E3(EffTriggerCostMixin):
 
 class E4(EffTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True)
+        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, trigger=True, force=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.IN_GRAVE_END:

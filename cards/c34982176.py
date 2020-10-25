@@ -17,7 +17,8 @@ class E1(EffCommonSummon):
         :return:
         """
         def check(c):
-            return ((c.location & ELocation.ON_FIELD) > 0) & (c.type == ECardType.EMPLOYEE)
+            return (c.type == ECardType.EMPLOYEE) & ((c is self.host) |
+                                                     (c.location == ELocation.ON_FIELD + 1 + p.sp))
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:

@@ -1,5 +1,4 @@
 # 匆忙的上班族
-
 from utils.common_effects import EffTurnCostMixin
 from utils.constants import EEffectDesc, ETimePoint, ELocation
 from core.game import TimePoint

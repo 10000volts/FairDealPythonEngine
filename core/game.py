@@ -1121,6 +1121,10 @@ class Game:
             while True:
                 c = p.hand[randint(0, len(p.hand) - 1)]
                 if c.can_random_put:
+                    # 王牌随机放置的概率减半
+                    if c.rank == ECardRank.TRUMP:
+                        if randint(0, 1) == 1:
+                            continue
                     break
             pos = ppos[randint(0, len(ppos) - 1)]
             self.chessboard[pos] = c
