@@ -71,7 +71,7 @@ class E1(EffTriggerCostMixin):
     """
     def __init__(self, host):
         super().__init__(host=host, desc=EEffectDesc.REGISTER_EFFECT, trigger=True, force=True,
-                         passive=True)
+                         passive=True, ef_id=EEffectDesc.PIERCE)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.ATTACKING:

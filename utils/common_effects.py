@@ -394,10 +394,11 @@ class EffCommonSummon(EffTriggerCostMixin):
 
 class EffPierce(EffLazyTriggerCostMixin):
     """
-    常规入场后效果模板。
+    穿透。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.PIERCE, host=host, trigger=True, force=True)
+        super().__init__(desc=EEffectDesc.PIERCE, host=host, trigger=True, force=True,
+                         ef_id=EEffectDesc.PIERCE)
 
     def condition(self, tp):
         """

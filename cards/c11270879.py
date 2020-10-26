@@ -17,13 +17,13 @@ class E3(EffTriggerCostMixin):
     def execute(self):
         def check(c):
             if (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY):
-                c.ATK.value += self.host.ATK.value
+                c.ATK.value += v
                 if ((c.subtype & EStrategyType.COUNTER) > 0) & (c.cid != '11270879'):
                     f = c.effects[1].condition(TimePoint(ETimePoint.REDIRECT_COUNTER, self,
                                                          [self.scr_arg]))
                 else:
                     f = c.effects[0].condition(None)
-                c.ATK.value -= self.host.ATK.value
+                c.ATK.value -= v
                 return f
             return False
         for pos in range(3, 6):
@@ -31,7 +31,8 @@ class E3(EffTriggerCostMixin):
             if p.on_field[pos] is None:
                 tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
-                    tgt.ATK.gain(self.host.ATK.value, False, self)
+                    v = min(self.host.value, 1000)
+                    tgt.ATK.gain(v, False, self)
                     if tgt.subtype & EStrategyType.COUNTER:
                         # 设置时点
                         tgt.effects[0].scr_arg[0] = self.scr_arg
@@ -64,17 +65,18 @@ class E2(EffCounterStgE2Mixin):
             if (tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0:
                 for c in p.hand:
                     if c.type == ECardType.STRATEGY:
-                        c.ATK.value += self.host.ATK.value
+                        v = min(self.host.value, 1000)
+                        c.ATK.value += v
                         if ((c.subtype & EStrategyType.COUNTER) > 0) & (c.cid != '11270879'):
                             if c.effects[1].condition(TimePoint(ETimePoint.REDIRECT_COUNTER, self,
                                                                 [tp])):
-                                c.ATK.value -= self.host.ATK.value
+                                c.ATK.value -= v
                                 return True
                         else:
                             if c.effects[0].condition(None):
-                                c.ATK.value -= self.host.ATK.value
+                                c.ATK.value -= v
                                 return True
-                        c.ATK.value -= self.host.ATK.value
+                        c.ATK.value -= v
         return False
 
 

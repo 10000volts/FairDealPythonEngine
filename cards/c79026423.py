@@ -28,8 +28,13 @@ class E4(EffLazyTriggerCostMixin):
 
     def execute(self):
         e5 = EffPierce(self.scr_arg[0])
-        self.scr_arg[0].register_effect(e5, True)
-        self.scr_arg[1].scr_arg[3] = e5
+        f = True
+        for ef in self.scr_arg[0].effects:
+            if ef.ef_id == EEffectDesc.PIERCE:
+                f = False
+        if f:
+            self.scr_arg[0].register_effect(e5, True)
+            self.scr_arg[1].scr_arg[3] = e5
         self.host.remove_effect(self)
 
 
