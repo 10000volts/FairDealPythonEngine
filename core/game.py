@@ -1124,7 +1124,7 @@ class Game:
                 if c.can_random_put:
                     # 王牌随机放置的概率减半
                     if c.rank == ECardRank.TRUMP:
-                        if randint(0, 1) == 1:
+                        if randint(0, 2) < 2:
                             continue
                     break
             pos = ppos[randint(0, len(ppos) - 1)]
