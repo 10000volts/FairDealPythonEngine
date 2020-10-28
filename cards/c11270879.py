@@ -31,7 +31,7 @@ class E3(EffTriggerCostMixin):
             if p.on_field[pos] is None:
                 tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
-                    v = min(self.host.value, 1000)
+                    v = min(self.host.ATK.value, 1000)
                     tgt.ATK.gain(v, False, self)
                     if tgt.subtype & EStrategyType.COUNTER:
                         # 设置时点
@@ -65,7 +65,7 @@ class E2(EffCounterStgE2Mixin):
             if (tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0:
                 for c in p.hand:
                     if c.type == ECardType.STRATEGY:
-                        v = min(self.host.value, 1000)
+                        v = min(self.host.ATK.value, 1000)
                         c.ATK.value += v
                         if ((c.subtype & EStrategyType.COUNTER) > 0) & (c.cid != '11270879'):
                             if c.effects[1].condition(TimePoint(ETimePoint.REDIRECT_COUNTER, self,
