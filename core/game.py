@@ -811,11 +811,12 @@ class GCIDManager:
         self.cards = dict()
 
     def register(self, c: GameCard):
-        gcid = randint(0, 99999999)
-        while gcid in self.cards.keys():
+        if c not in self.cards.values():
             gcid = randint(0, 99999999)
-        self.cards[gcid] = c
-        c.vid = gcid
+            while gcid in self.cards.keys():
+                gcid = randint(0, 99999999)
+            self.cards[gcid] = c
+            c.vid = gcid
 
     def change(self, gcid):
         c = self.cards.pop(gcid)

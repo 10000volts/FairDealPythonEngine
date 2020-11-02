@@ -17,6 +17,7 @@ class E4(EffLazyTriggerCostMixin):
     def execute(self):
         p = self.game.get_player(self.host)
         self.game.send2hand(p, p, self.host, self)
+        self.host.remove_effect(self)
 
 
 class E2(EffLazyTriggerCostMixin):

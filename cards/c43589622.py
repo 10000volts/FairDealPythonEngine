@@ -5,7 +5,7 @@ from utils.constants import EEffectDesc
 
 class E1(EffSummon):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host)
+        super().__init__(desc=EEffectDesc.DEAL_DAMAGE, host=host, force=True)
 
     def condition(self, tp):
         if super().condition(tp):
