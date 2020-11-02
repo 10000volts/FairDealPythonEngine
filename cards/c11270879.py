@@ -29,9 +29,9 @@ class E3(EffTriggerCostMixin):
         for pos in range(3, 6):
             p = self.game.get_player(self.host)
             if p.on_field[pos] is None:
+                v = min(self.host.ATK.value, 1000)
                 tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
                 if tgt is not None:
-                    v = min(self.host.ATK.value, 1000)
                     tgt.ATK.gain(v, False, self)
                     if tgt.subtype & EStrategyType.COUNTER:
                         # 设置时点
