@@ -840,6 +840,8 @@ class TimePoint:
         self.tp = tp_id
         self.sender = sender
         self.args = args
+        # 是否可被连锁
+        self.can_react = True
 
     @staticmethod
     def generate(tp_id):
@@ -1770,11 +1772,11 @@ class Game:
         self.tp_stack.append(tp)
         # if out:
         #     self.batch_sending('ent_tp', [tp.tp])
-        if tp.sender is None:
+        if tp.sender is None and tp.can_react:
             # 先询问对方。
             self.react_times += 2
             self.react(self.op_player, tp, self.react_times - 2)
-        else:
+        elif tp.can_react:
             self.react_times += 2
             self.react(self.players[self.get_player(tp.sender.host).sp], tp, self.react_times - 2)
         self.tp_stack.remove(tp)
@@ -1788,11 +1790,12 @@ class Game:
             tts.append(t)
             self.temp_tp_stack.pop(0)
         for t in tts:
-            p = p if t.sender is None else self.get_player(t.sender.host)
-            # self.batch_sending('ent_tp', [t.tp])
-            # 先询问对方。
-            self.react_times += 2
-            self.react(self.players[p.sp], t, self.react_times - 2)
+            if t.can_react:
+                p = p if t.sender is None else self.get_player(t.sender.host)
+                # self.batch_sending('ent_tp', [t.tp])
+                # 先询问对方。
+                self.react_times += 2
+                self.react(self.players[p.sp], t, self.react_times - 2)
         # 不需要倒序移除。
         for t in tts:
             self.tp_stack.remove(t)
