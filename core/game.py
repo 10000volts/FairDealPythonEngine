@@ -453,9 +453,9 @@ class GameCard:
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
         self.game = g
         self.location = ori_loc
+        self.vid = 0
+        g.vid_manager.register(self)
         if cid is not None:
-            self.vid = 0
-            g.vid_manager.register(self)
             self.cid = cid
             self.name = rds.hget(cid, 'name').decode()
             self.type = int(rds.hget(cid, 'type').decode())
@@ -517,8 +517,6 @@ class GameCard:
         :param ori_loc:
         """
         # visual id 模拟实际的玩家视野，洗牌等行为后vid改变
-        self.vid = 0
-        self.game.vid_manager.register(self)
         self.name = name
         self.type = ty
         self.subtype = subtype
@@ -811,12 +809,11 @@ class GCIDManager:
         self.cards = dict()
 
     def register(self, c: GameCard):
-        if c not in self.cards.values():
+        gcid = randint(0, 99999999)
+        while gcid in self.cards.keys():
             gcid = randint(0, 99999999)
-            while gcid in self.cards.keys():
-                gcid = randint(0, 99999999)
-            self.cards[gcid] = c
-            c.vid = gcid
+        self.cards[gcid] = c
+        c.vid = gcid
 
     def change(self, gcid):
         c = self.cards.pop(gcid)
