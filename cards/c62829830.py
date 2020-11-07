@@ -1,4 +1,6 @@
 # 对现状的恐惧
+from random import randint
+
 from utils.common_effects import EffTriggerCostMixin
 from core.game import GameCard, ETimePoint, Effect
 from utils.constants import EEffectDesc, ELocation
@@ -20,8 +22,11 @@ class E2(Effect):
         for c in p.hand:
             if '冥思' in c.series:
                 cs.append(c)
-        for c in cs:
-            self.game.discard(p, p, c, self)
+        for i in range(0, 3):
+            if len(cs) > 0:
+                self.game.discard(p, p, cs[randint(0, len(cs) - 1)], self)
+            else:
+                return
 
 
 class E1(EffTriggerCostMixin):

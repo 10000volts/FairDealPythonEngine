@@ -1094,7 +1094,12 @@ class Game:
                 self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
                 p.update_vc(c)
             # 调查筹码
-            i = randint(0, len(p.hand) - 1)
+            f = 1
+            i = 0
+            while f == 1:
+                i = randint(0, len(p.hand) - 1)
+                if p.hand[i].rank == ECardRank.TRUMP:
+                    f = randint(0, 2)
             p.hand[i].ATK.add_val = 0
             p.hand[i].register_effect(EffInvestigator(p.hand[i]), True)
             p.hand[i].can_random_put = False
