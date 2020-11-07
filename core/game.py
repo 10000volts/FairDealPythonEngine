@@ -718,7 +718,7 @@ class GameCard:
                 if loc & ELocation.EXILED:
                     return ETimePoint.IN_EXILED, ETimePoint.IN_EXILED_END, p.exiled
 
-            # 离开我放半场去到对方半场不算离场，其他区域同理
+            # 离开我方半场去到对方半场不算离场
             etp1, etp3, _from = leave()
             etp2, etp4, _to = enter()
             f = True
@@ -741,9 +741,7 @@ class GameCard:
             if (loc & ELocation.ON_FIELD) == 0:
                 _to.append(self)
             if etp3:
-                if etp3 == ETimePoint.OUT_FIELD_END:
-                    # 离场后重置
-                    self.game.skip_times = 0
+                if (etp3 == ETimePoint.OUT_FIELD_END) & (etp2 != ETimePoint.IN_FIELD):
                     self.reset()
                 tp3 = TimePoint(etp3, ef, [self, pre_loc])
                 self.game.temp_tp_stack.append(tp3)
@@ -838,8 +836,6 @@ class TimePoint:
         self.tp = tp_id
         self.sender = sender
         self.args = args
-        # 是否可被连锁
-        self.can_react = True
 
     @staticmethod
     def generate(tp_id):
@@ -2094,6 +2090,7 @@ class Game:
                     self.batch_sending('upd_vc', [em.vid, em.serialize()])
                     self.batch_sending('smn', [em.vid, int(ef is None)], p)
                     self.enter_time_points()
+                self.enter_time_point(TimePoint(ETimePoint.SUMMONED, ef, [em, pos, posture]))
 
     def special_summon(self, p: GamePlayer, pt: GamePlayer, em: GameCard, ef: Effect, posture=None):
         """
@@ -2861,6 +2858,8 @@ class Game:
         pos = p.input(check_pos, 'req_pos', [pt is p])
         if pos is not None:
             cm = em.move_to(ef, ELocation.ON_FIELD + 2 - pt.sp)
+            # TODO: DELETE
+            print('control: {}'.format(self.players[pt.sp].on_field[em.inf_pos]))
             if next(cm):
                 self.enter_time_points()
                 if next(cm):

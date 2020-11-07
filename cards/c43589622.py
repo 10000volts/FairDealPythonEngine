@@ -10,7 +10,7 @@ class E3(EffTriggerCostMixin):
 
     def condition(self, tp):
         # 已经移除了所有其他效果，入场必定成功。
-        if tp.tp == ETimePoint.SUCC_SUMMON:
+        if tp.tp == ETimePoint.SUMMONED:
             return tp.args[0] is self.host
         return False
 
@@ -30,9 +30,12 @@ class E2(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        for ef in self.game.ef_listener:
-            if ef.host is not self.host:
-                self.game.ef_listener.remove(ef)
+        i = 0
+        while i < len(self.game.ef_listener):
+            if self.game.ef_listener[i].host is not self.host:
+                self.game.ef_listener.pop(i)
+                i -= 1
+            i += 1
         self.host.register_effect(E3(self.host))
 
 

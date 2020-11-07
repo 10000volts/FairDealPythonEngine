@@ -12,10 +12,10 @@ class E2(EffTriggerCostMixin):
         return (tp.tp == ETimePoint.TURN_END) & (self.game.turn_player is self.game.get_player(self.host))
 
     def execute(self):
-        self.scr_arg -= 1
-        if self.scr_arg <= 0:
+        self.scr_arg[1] -= 1
+        if self.scr_arg[1] <= 0:
             p = self.game.get_player(self.host)
-            self.game.send_to_grave(p, self.scr_arg, self.host, self)
+            self.game.send_to_grave(p, self.scr_arg[0], self.host, self)
             self.host.remove_effect(self)
 
 
@@ -36,7 +36,6 @@ class E1(EffTriggerCostMixin):
                         if c is not None:
                             if (c.type == ECardType.EMPLOYEE) & (c.ATK.value == self.host.ATK.value):
                                 return True
-        print('mind control')
         return False
 
     def execute(self):
@@ -45,14 +44,14 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         def check(c):
-            return ((c.location & ELocation.ON_FIELD) > 0) & (c.ATK.value == self.host.ATK.value) & \
+            return (c.location == ELocation.ON_FIELD + 1 + p.sp) & (c.ATK.value == self.host.ATK.value) & \
                 (c.type == ECardType.EMPLOYEE)
 
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             self.game.control(p, p, tgt, self)
-            tgt.register_effect(E2(tgt, p))
+            tgt.register_effect(E2(tgt, self.game.players[p.sp]))
 
 
 def give(c):
