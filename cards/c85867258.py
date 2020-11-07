@@ -27,13 +27,12 @@ class E1(Effect):
 
     def cost(self, tp):
         p = self.game.get_player(self.host)
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            # 支付1000生命力
-            f = p.leader.hp_cost(1000, self)
-            if next(f):
-                next(f)
-                return True
+        self.reacted.append(tp)
+        # 支付1000生命力
+        f = p.leader.hp_cost(1000, self)
+        if next(f):
+            next(f)
+            return True
         return False
 
     def execute(self):

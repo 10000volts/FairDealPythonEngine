@@ -23,10 +23,8 @@ class E1(Effect):
 
     def cost(self, tp):
         # 选择1手牌丢弃
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            return self.game.req4discard(self.game.get_player(self.host), 1, self)
-        return False
+        self.reacted.append(tp)
+        return self.game.req4discard(self.game.get_player(self.host), 1, self)
 
     def execute(self):
         """

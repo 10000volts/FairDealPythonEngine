@@ -8,10 +8,8 @@ class EffTriggerCostMixin(Effect):
     默认的触发式效果cost行为。
     """
     def cost(self, tp):
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            return True
-        return False
+        self.reacted.append(tp)
+        return True
 
 
 class EffInvestigator(EffTriggerCostMixin):

@@ -21,15 +21,13 @@ class E1(EffLazyTriggerCostMixin):
 
     def cost(self, tp):
         # 选择1牌移除
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            p = self.game.get_player(self.host)
+        self.reacted.append(tp)
+        p = self.game.get_player(self.host)
 
-            def check(c):
-                return (c.location == ELocation.GRAVE + 2 - p.sp) & ('和声姐妹花' not in c.series) & \
-                       (c.type == ECardType.EMPLOYEE)
-            return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
-        return False
+        def check(c):
+            return (c.location == ELocation.GRAVE + 2 - p.sp) & ('和声姐妹花' not in c.series) & \
+                   (c.type == ECardType.EMPLOYEE)
+        return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
 
     def execute(self):
         p = self.game.get_player(self.host)

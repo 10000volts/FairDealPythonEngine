@@ -50,14 +50,12 @@ class E1(Effect):
 
     def cost(self, tp):
         # 选择1手牌移除
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            p = self.game.get_player(self.host)
+        self.reacted.append(tp)
+        p = self.game.get_player(self.host)
 
-            def check(c):
-                return c in p.hand
-            return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
-        return False
+        def check(c):
+            return c in p.hand
+        return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
 
     def execute(self):
         e2 = E2(self.host)

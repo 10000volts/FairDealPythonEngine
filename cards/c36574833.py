@@ -25,15 +25,14 @@ class E2(Effect):
 
     def cost(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
-            if tp not in self.reacted:
-                p = self.game.get_player(self.host)
-                self.reacted.append(tp)
-                # 支付生命力
-                f = p.leader.hp_cost(int(p.leader.DEF.value / 2), self)
-                if next(f):
-                    next(f)
-                    return False
-                return True
+            p = self.game.get_player(self.host)
+            self.reacted.append(tp)
+            # 支付生命力
+            f = p.leader.hp_cost(int(p.leader.DEF.value / 2), self)
+            if next(f):
+                next(f)
+                return False
+            return True
         return False
 
     def execute(self):

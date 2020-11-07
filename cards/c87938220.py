@@ -16,11 +16,10 @@ class E1(Effect):
         return False
 
     def cost(self, tp):
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            if self.condition(tp):
-                self.game.show_card(self.game.get_player(self.host), self.host.vid, self)
-                return True
+        self.reacted.append(tp)
+        if self.condition(tp):
+            self.game.show_card(self.game.get_player(self.host), self.host.vid, self)
+            return True
         return False
 
     def execute(self):

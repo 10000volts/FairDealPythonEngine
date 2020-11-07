@@ -129,6 +129,8 @@ class EEffectDesc:
     SET_CARD = 64
     # 发动策略
     ACTIVATE_STRATEGY = 65
+    # 控制
+    CONTROL = 66
 
 
 class ELocation:
@@ -390,8 +392,8 @@ class ETimePoint:
     # 龙骑士 盖亚coser、偶像新星……
     # args[0]: 攻击者 args[1]: 目标 args[2]: 目标所属的玩家应受到的伤害量
     ATTACK_DAMAGE_JUDGE = 144
-    # 攻击后(意味着攻击方在攻击后仍在场上表侧存在) 在此时点发动效果的卡：
-    #
+    # 攻击后 在此时点发动效果的卡：
+    # 精神控制
     ATTACKED = 145
     # 尝试被摧毁 在此时点发动效果的卡：
     #
@@ -715,3 +717,15 @@ class ETimePoint:
     # 随机放置阶段末尾 在此时点发动效果的卡：
     #
     PH_RANDOM_PUT_END = 231
+    # 尝试控制权转移 在此时点发动效果的卡：
+    # 不会被控制的雇员
+    # args[0]: 目标
+    TRY_CONTROL = 232
+    # 回复生命时 在此时点发动效果的卡：
+    #
+    # args[0]: 效果发动者 args[1]: 目标 args[2]: 回复量
+    # CONTROLLING = 233
+    # # 回复生命后 在此时点发动效果的卡：
+    # #
+    # # args[0]: 效果发动者 args[1]: 目标 args[2]: 回复量
+    # CONTROLLED = 234

@@ -83,14 +83,12 @@ class E1(Effect):
         :return:
         """
         sd = self.game.get_player(self.host)
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            # 支付1000生命力
-            f = sd.leader.hp_cost(1000, self)
-            if next(f):
-                next(f)
-                return True
-        return False
+        self.reacted.append(tp)
+        # 支付1000生命力
+        f = sd.leader.hp_cost(1000, self)
+        if next(f):
+            next(f)
+            return True
 
     def execute(self):
         """

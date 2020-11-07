@@ -44,13 +44,12 @@ class E1(EffTriggerCostMixin):
         def check(c):
             return (c.location == ELocation.HAND + 2 - p.sp) & (c.rank == ECardRank.TRUMP) & (c.ATK.value > 0)
 
-        if tp not in self.reacted:
-            self.reacted.append(tp)
-            p = self.game.get_player(self.host)
-            tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
-            if tgt is not None:
-                tgt.ATK.become(0, False, self)
-                return True
+        self.reacted.append(tp)
+        p = self.game.get_player(self.host)
+        tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
+        if tgt is not None:
+            tgt.ATK.become(0, False, self)
+            return True
         return False
 
     def execute(self):

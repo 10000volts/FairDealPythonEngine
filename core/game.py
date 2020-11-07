@@ -1367,6 +1367,8 @@ class Game:
                 return EErrorCode.UNKNOWN_CARD
             # act 询问可发动的效果
             elif _args[0] == 1:
+                if (self.turn_phase != ETurnPhase.M1) & (self.turn_phase != ETurnPhase.M2):
+                    return EErrorCode.WRONG_PHASE
                 return 0
             # set 将手牌盖放到场上
             elif _args[0] == 2:
@@ -2144,7 +2146,7 @@ class Game:
                             return
         # 未成功，送去场下
         self.send_to_grave(p, pt, em)
-            
+
     def activate_strategy(self, p: GamePlayer, pt: GamePlayer, s: GameCard, pos: int = -1):
         """
         发动策略。
@@ -2834,3 +2836,38 @@ class Game:
         for p in self.players:
             if (p is self.get_player(c)) | (c.cover == 0):
                 p.update_vc(c)
+
+    def control(self, p: GamePlayer, pt: GamePlayer, em: GameCard, ef: Effect = None):
+        """
+        控制对方雇员。
+        :param p: 发起的玩家
+        :param pt: player target 召唤到
+        :param em: 雇员
+        :param pos: 入场位置(0-2)
+        :param ef:
+        :return:
+        """
+        def check_pos(_pos):
+            if _pos not in range(0, 3):
+                return EErrorCode.OVERSTEP
+            if pt.on_field[_pos] is not None:
+                return EErrorCode.INVALID_PUT
+            return 0
+        # 询问入场位置
+        pos = p.input(check_pos, 'req_pos', [pt is p])
+        if pos is not None:
+            cm = em.move_to(ef, ELocation.ON_FIELD + 2 - pt.sp)
+            if next(cm):
+                self.enter_time_points()
+                if next(cm):
+                    tp = TimePoint(ETimePoint.TRY_CONTROL, ef, [em, 1])
+                    self.enter_time_point(tp)
+                    if tp.args[-1]:
+                        em = tp.args[0]
+                        pt.on_field[pos] = em
+                        em.inf_pos = pos
+                        next(cm)
+                        # 重置攻击、阻挡次数
+                        em.reset_times()
+                        self.batch_sending('upd_vc', [em.vid, em.serialize()])
+                        self.batch_sending('ctn', [em.vid], p)

@@ -39,18 +39,17 @@ class E2(Effect):
 
     def cost(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
-            if tp not in self.reacted:
-                p = self.game.get_player(self.host)
-                self.reacted.append(tp)
+            p = self.game.get_player(self.host)
+            self.reacted.append(tp)
 
-                def check(c):
-                    return (c in p.hand) & (c.type == ECardType.EMPLOYEE) & (c is not self.host)
+            def check(c):
+                return (c in p.hand) & (c.type == ECardType.EMPLOYEE) & (c is not self.host)
 
-                tgt = self.game.req4exile(check, self.game.get_player(self.host), 1, self)
-                if tgt is None:
-                    return True
-                else:
-                    self.host.register_effect(E3(self.host, int(tgt.ATK.value / 2)))
+            tgt = self.game.req4exile(check, self.game.get_player(self.host), 1, self)
+            if tgt is None:
+                return True
+            else:
+                self.host.register_effect(E3(self.host, int(tgt.ATK.value / 2)))
         return False
 
     def execute(self):
