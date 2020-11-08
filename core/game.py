@@ -753,7 +753,6 @@ class GameCard:
                 self.turns = 0
                 self.cover = 0
             elif etp4 == ETimePoint.IN_FIELD_END:
-                self.turns = 0
                 self.game.skip_times = 0
             else:
                 self.turns = 0
@@ -2606,7 +2605,7 @@ class Game:
             for _ind in _args:
                 if _ind not in range(0, _len):
                     return EErrorCode.OVERSTEP
-                if _ind in _ins:
+                if _ind in _ins.keys():
                     return EErrorCode.REPEAT_CHOOSE
                 _ins[_ind] = 1
             return 0
@@ -2624,9 +2623,9 @@ class Game:
             if _len > 0:
                 # 询问选项
                 if force:
-                    ins = pt.input(check_ind, 'req_chs_mtg_f', [cs, 1])
+                    ins = pt.input(check_ind, 'req_chs_mtg_f', [cs, count])
                 else:
-                    ins = pt.free_input(check_ind, 'req_chs_mtg_f', [cs, 1])
+                    ins = pt.free_input(check_ind, 'req_chs_mtg_f', [cs, count])
                     if ins is None:
                         return None
                 cs = list()
