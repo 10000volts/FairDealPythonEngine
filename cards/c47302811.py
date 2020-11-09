@@ -8,4 +8,4 @@ def give(c):
     :param c:
     :return:
     """
-    c.register_effect(EffPierce(c))
+    c.register_effect(EffPierce(c, 5000))

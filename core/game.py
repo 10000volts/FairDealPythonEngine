@@ -1084,10 +1084,13 @@ class Game:
 
     def __ph_extra_data(self):
         def gen(p: GamePlayer):
-            for c in p.hand:
-                c.ATK.add_val = randint(-2, 2) * 500
-                self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, c))
-                p.update_vc(c)
+            nums = [-1000, -500, 500, 1000]
+            for i in range(4, 18):
+                nums.append(randint(-2, 2) * 500)
+            for i in range(0, 18):
+                p.hand[i].ATK.add_val = nums[i]
+                self.enter_time_point(TimePoint(ETimePoint.EXTRA_DATA_GENERATING, None, p.hand[i]))
+                p.update_vc(p.hand[i])
             # 调查筹码
             f = 1
             i = 0
@@ -2191,11 +2194,8 @@ class Game:
                 self.activate_effect(s.effects[0], p)
                 self.enter_time_points()
                 # 非持续/单人策略发动后离场
-                if not ((s.subtype & EStrategyType.LASTING) |
-                         (s.subtype & EStrategyType.ATTACHMENT)):
-                    if (s.location & ELocation.ON_FIELD) > 0:
-                        self.send_to_grave(p, p, s)
-                return
+                if ((s.subtype & EStrategyType.LASTING) > 0) | ((s.subtype & EStrategyType.ATTACHMENT) > 0):
+                    return
         if (s.location & ELocation.ON_FIELD) > 0:
             self.send_to_grave(p, p, s)
 

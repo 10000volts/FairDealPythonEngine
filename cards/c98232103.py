@@ -48,7 +48,7 @@ class E2(EffLazyTriggerCostMixin):
                                 break
                 else:
                     break
-        self.host.register_effect(EffPierce(self.host), True)
+        self.host.register_effect(EffPierce(self.host, 3000), True)
         self.host.register_effect(E4(self.host), True)
         self.host.remove_effect(self)
 

@@ -27,7 +27,7 @@ class E4(EffLazyTriggerCostMixin):
         return False
 
     def execute(self):
-        e5 = EffPierce(self.scr_arg[0])
+        e5 = EffPierce(self.scr_arg[0], 5000)
         f = True
         for ef in self.scr_arg[0].effects:
             if ef.ef_id == EEffectDesc.PIERCE:

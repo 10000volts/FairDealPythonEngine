@@ -394,9 +394,9 @@ class EffPierce(EffLazyTriggerCostMixin):
     """
     穿透。
     """
-    def __init__(self, host):
+    def __init__(self, host, threshold=-1):
         super().__init__(desc=EEffectDesc.PIERCE, host=host, trigger=True, force=True,
-                         ef_id=EEffectDesc.PIERCE)
+                         ef_id=EEffectDesc.PIERCE, scr_arg=threshold)
 
     def condition(self, tp):
         """
@@ -417,6 +417,9 @@ class EffPierce(EffLazyTriggerCostMixin):
             tp.args[2] -= tp.args[1].DEF.value
         else:
             tp.args[2] -= tp.args[1].ATK.value
+        if self.scr_arg >= 0:
+            if tp.args[2] > self.scr_arg:
+                tp.args[2] -= (tp.args - self.scr_arg) / 2
 
 
 class EffTaunt(EffTriggerCostMixin):
