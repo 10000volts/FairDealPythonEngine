@@ -9,7 +9,7 @@ class E3(EffLazyTriggerCostMixin):
     """
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.REMOVE_EFFECT,
-                         host=host, trigger=True, force=True, scr_arg=[ef, 0])
+                         host=host, trigger=True, force=True, scr_arg=[ef, 0], passive=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.TURN_BEGIN:

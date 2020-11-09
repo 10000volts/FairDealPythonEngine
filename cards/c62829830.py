@@ -24,7 +24,9 @@ class E2(Effect):
                 cs.append(c)
         for i in range(0, 3):
             if len(cs) > 0:
-                self.game.discard(p, p, cs[randint(0, len(cs) - 1)], self)
+                c = cs[randint(0, len(cs) - 1)]
+                self.game.discard(p, p, c, self)
+                cs.remove(c)
             else:
                 return
 
