@@ -1091,10 +1091,12 @@ class Game:
             # 调查筹码
             f = 1
             i = 0
-            while f == 1:
+            while f >= 1:
                 i = randint(0, len(p.hand) - 1)
                 if p.hand[i].rank == ECardRank.TRUMP:
                     f = randint(0, 2)
+                else:
+                    break
             p.hand[i].ATK.add_val = 0
             p.hand[i].register_effect(EffInvestigator(p.hand[i]), True)
             p.hand[i].can_random_put = False
