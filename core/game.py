@@ -1084,8 +1084,8 @@ class Game:
 
     def __ph_extra_data(self):
         def gen(p: GamePlayer):
-            nums = [-1000, -500, 500, 1000]
-            for i in range(4, 18):
+            nums = [-1000, -500, 500, 1000, -1000, -500, 500, 1000]
+            for i in range(8, 18):
                 nums.append(randint(-2, 2) * 500)
             for i in range(0, 18):
                 p.hand[i].ATK.add_val = nums[i]
