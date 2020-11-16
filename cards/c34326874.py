@@ -18,7 +18,7 @@ class E1(EffCommonStrategy):
         """
         # 对对方造成EFF伤害
         op = self.game.players[self.game.get_player(self.host).sp]
-        self.game.deal_damage(self.host, op.leader, self.host.ATK.value)
+        self.game.deal_damage(self.host, op.leader, min(2000, self.host.ATK.value))
 
 
 def give(c):

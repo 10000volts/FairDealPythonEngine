@@ -1,15 +1,16 @@
 # 金属乐迷
-from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
+from random import randint
+
+from utils.constants import EEffectDesc, ETimePoint, ECardType
 from utils.common_effects import EffTriggerCostMixin
-from core.game import GameCard
 
 
 class E1(EffTriggerCostMixin):
     """
-    击溃对方雇员时拿走。
+    击溃对方雇员时。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.SEND2HAND, host=host, trigger=True)
+        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host, trigger=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYED:
@@ -18,13 +19,12 @@ class E1(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        # todo: 应该不会在效果发动时转移控制权吧？
         p = self.game.get_player(self.host)
-        tgt = self.reacted.pop().args[1]
-        c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, tgt.cid, is_token=True)
-        c.create(tgt.name, tgt.type, tgt.subtype, tgt.rank,
-                 tgt.ATK.value, tgt.DEF.value)
-        self.game.send2hand(p, p, c, self)
+        cs = list()
+        for c in p.hand:
+            if c.type == ECardType.EMPLOYEE:
+                cs.append(c)
+        cs[randint(0, len(cs) - 1)].ATK.gain(500, False, self)
 
 
 def give(c):
