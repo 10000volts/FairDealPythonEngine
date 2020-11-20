@@ -51,6 +51,9 @@ class E1(EffSingleStgE1Mixin):
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.FORBIDDEN, host=host)
 
+    def condition(self, tp):
+        return super().condition(tp) & (self.game.turn_player is self.game.get_player(self.host))
+
     def execute(self):
         """
         执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。

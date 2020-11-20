@@ -25,8 +25,11 @@ class E2(EffTriggerCostMixin):
         c = self.reacted.pop().args[1]
         tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
-            m = import_module('cards.c{}'.format(c.cid))
-            m.give(tgt)
+            try:
+                m = import_module('cards.c{}'.format(c.cid))
+                m.give(tgt)
+            except Exception as ex:
+                pass
 
 
 class E1(Effect):
@@ -61,8 +64,11 @@ class E1(Effect):
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
-            m = import_module('cards.c{}'.format(self.scr_arg))
-            m.give(tgt)
+            try:
+                m = import_module('cards.c{}'.format(self.scr_arg))
+                m.give(tgt)
+            except Exception as ex:
+                pass
 
 
 def give(c):
