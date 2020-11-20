@@ -15,7 +15,7 @@ class E4(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.HP_COSTING:
-            return (tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0
+            return tp.args[0] is self.game.players[self.game.get_player(self.host).sp]
         return False
 
     def execute(self):
@@ -41,7 +41,7 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRY_HP_COST:
-            return (tp.args[0].location & (2 - self.game.get_player(self.host).sp)) > 0
+            return tp.args[0] is self.game.players[self.game.get_player(self.host).sp]
         return False
 
     def execute(self):

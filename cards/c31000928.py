@@ -1,7 +1,7 @@
 # 法医博士
 from importlib import import_module
 
-from utils.constants import ETimePoint, EEffectDesc, ELocation, ECardType, EStrategyType, EChoice
+from utils.constants import ETimePoint, EEffectDesc, ELocation, ECardType
 from models.effect import Effect
 from utils.common_effects import EffTriggerCostMixin
 
@@ -78,3 +78,4 @@ def give(c):
     :return:
     """
     c.register_effect(E1(c))
+    c.register_effect(E2(c))
