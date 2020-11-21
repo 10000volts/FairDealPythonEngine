@@ -23,7 +23,7 @@ class E1(Effect):
 
         def check(c):
             return c.location == ELocation.HAND + 2 - p.sp
-        return self.game.req4exile(check, self.game.get_player(self.host), 1, self) is not None
+        return self.game.req4exile(check, p, p, 1, self) is not None
 
     def execute(self):
         for p in self.game.players:

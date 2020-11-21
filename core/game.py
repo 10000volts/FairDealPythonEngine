@@ -2743,10 +2743,11 @@ class Game:
                 return True
         return False
 
-    def req4discard(self, p: GamePlayer, count, ef: Effect):
+    def req4discard(self, p: GamePlayer, pt: GamePlayer, count, ef: Effect):
         """
         选择指定的手牌丢弃。
         :param p: 。
+        :param pt:
         :param count: 丢弃数量
         :param ef:
         :return:
@@ -2761,14 +2762,15 @@ class Game:
         # 选择1张卡丢弃
         tgt = self.choose_target_from_func(p, p, check_discard, ef, False, False)
         if tgt is not None:
-            self.discard(p, p, tgt, ef)
-            return True
-        return False
+            self.discard(p, pt, tgt, ef)
+            return tgt
+        return None
 
-    def req4exile(self, func, p: GamePlayer, count, ef: Effect):
+    def req4exile(self, func, p: GamePlayer, pt: GamePlayer, count, ef: Effect):
         """
         选择指定的牌移除。
         :param p: 。
+        :param pt:
         :param func: 检查函数
         :param count: 移除数量
         :param ef:
@@ -2783,7 +2785,7 @@ class Game:
         # 选择1张卡移除
         tgt = self.choose_target_from_func(p, p, check, ef, False, False)
         if tgt is not None:
-            self.send2exiled(p, p, tgt, ef)
+            self.send2exiled(p, pt, tgt, ef)
             return tgt
         return None
 

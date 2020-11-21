@@ -419,7 +419,7 @@ class EffPierce(EffLazyTriggerCostMixin):
             tp.args[2] -= tp.args[1].ATK.value
         if self.scr_arg >= 0:
             if tp.args[2] > self.scr_arg:
-                tp.args[2] -= (tp.args - self.scr_arg) / 2
+                tp.args[2] -= (tp.args[2] - self.scr_arg) / 2
 
 
 class EffTaunt(EffTriggerCostMixin):

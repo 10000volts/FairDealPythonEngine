@@ -101,7 +101,7 @@ class E4(EffTriggerCostMixin):
             tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, True, 1])
             self.game.enter_time_point(tp)
             if tp.args[-1]:
-                self.game.req4discard(op, 1, self)
+                self.game.req4discard(op, op, 1, self)
                 break
         self.host.register_effect(E5(self.host))
 

@@ -50,7 +50,7 @@ class E1(Effect):
 
         def check(c):
             return (c.location == ELocation.GRAVE + 2 - p.sp) & (c.type == ECardType.EMPLOYEE)
-        c = self.game.req4exile(check, self.game.get_player(self.host), 1, self)
+        c = self.game.req4exile(check, p, p, 1, self)
         if c is not None and c.cid is not None:
             self.scr_arg = c.cid
             return True

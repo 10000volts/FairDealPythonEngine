@@ -1,37 +1,24 @@
-# 坑害同事的男雇员
+# 黄钻看门人
 from models.effect import Effect
 from core.game import TimePoint
-from utils.constants import EEffectDesc, ETimePoint, ECardType, ELocation
-from utils.common_effects import EffTriggerCostMixin, EffCommonSummon
-
-
-class E3(EffCommonSummon):
-    """
-    ATK up
-    """
-    def __init__(self, host, v):
-        super().__init__(desc=EEffectDesc.ATK_GAIN, host=host, force=True, passive=True,
-                         scr_arg=v)
-
-    def execute(self):
-        self.host.ATK.gain(self.scr_arg, False, self)
-        self.host.remove_effect(self)
+from utils.constants import EEffectDesc, ETimePoint, ELocation
+from utils.common_effects import EffTriggerCostMixin
 
 
 class E2(Effect):
     """
-    常规入场时移除手牌。
+    常规入场时舍弃手牌。
     """
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.SEND2EXILED,
+        super().__init__(desc=EEffectDesc.SEND2GRAVE,
                          host=c, trigger=True, force=True)
 
     def condition(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
             if (tp.args[0] is self.host) & (tp.sender is None):
                 for c in self.game.get_player(self.host).hand:
-                    if (c.type == ECardType.EMPLOYEE) & (c is not self.host):
-                        tp = TimePoint(ETimePoint.IN_EXILED, self, [c, 1])
+                    if c is not self.host:
+                        tp = TimePoint(ETimePoint.IN_GRAVE, self, [c, 1])
                         self.game.enter_time_point(tp)
                         if tp.args[-1]:
                             return True
@@ -41,16 +28,7 @@ class E2(Effect):
         if tp.tp == ETimePoint.SUMMONING:
             p = self.game.get_player(self.host)
             self.reacted.append(tp)
-
-            def check(c):
-                return (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.EMPLOYEE) & \
-                       (c is not self.host)
-
-            tgt = self.game.req4exile(check, p, p, 1, self)
-            if tgt is None:
-                return True
-            else:
-                self.host.register_effect(E3(self.host, int(tgt.ATK.value / 2)))
+            return self.game.req4discard(p, self.game.players[p.sp], 1, self) is not None
         return False
 
     def execute(self):
@@ -75,8 +53,8 @@ class E1(EffTriggerCostMixin):
         if tp.tp == ETimePoint.TRY_SUMMON:
             if (tp.sender is None) & (tp.args[0] is self.host):
                 for c in self.game.get_player(self.host).hand:
-                    if (c.type == ECardType.EMPLOYEE) & (c is not self.host):
-                        tp = TimePoint(ETimePoint.IN_EXILED, self, [c, 1])
+                    if c is not self.host:
+                        tp = TimePoint(ETimePoint.IN_GRAVE, self, [c, 1])
                         self.game.enter_time_point(tp)
                         if tp.args[-1]:
                             return False
