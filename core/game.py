@@ -2737,7 +2737,7 @@ class Game:
         tp = TimePoint(ETimePoint.DISCARDING, ef, [c, 1])
         self.enter_time_point(tp)
         if tp.args[-1]:
-            if c in pt.hand:
+            if c.location & ELocation.HAND:
                 self.send_to_grave(p, pt, c, ef)
                 self.enter_time_point(TimePoint(ETimePoint.DISCARDED, ef, [c]))
                 return True

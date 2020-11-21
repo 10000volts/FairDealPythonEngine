@@ -36,7 +36,7 @@ class E1(Effect):
               GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '82751803', is_token=True)]
         for c in cs:
             c.ATK.change_adv(self.scr_arg)
-        tgt = self.game.choose_target(p, p, cs, self, True, False)
+        tgt = self.game.choose_target(p, p, [c.vid for c in cs], self, True, False)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)
         # r = p.req4option([EChoice.C50526002, EChoice.C79047277, EChoice.C82751803])

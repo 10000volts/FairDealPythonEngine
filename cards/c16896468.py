@@ -1,7 +1,7 @@
 # 黄钻看门人
 from models.effect import Effect
 from core.game import TimePoint
-from utils.constants import EEffectDesc, ETimePoint, ELocation
+from utils.constants import EEffectDesc, ETimePoint
 from utils.common_effects import EffTriggerCostMixin
 
 

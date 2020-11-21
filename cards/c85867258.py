@@ -19,7 +19,7 @@ class E1(Effect):
         """
         if tp.tp == ETimePoint.SUCC_SUMMON and tp.args[0] is self.host:
             p = self.game.get_player(self.host)
-            tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p, 1000, 1])
+            tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p.leader, 1000, 1])
             self.game.enter_time_point(tp2)
             if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
                 return True
