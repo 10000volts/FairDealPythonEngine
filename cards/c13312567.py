@@ -41,7 +41,6 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRY_HP_COST:
-            print('faf')
             return tp.args[0] is self.game.get_player(self.host).leader
         return False
 
@@ -51,7 +50,6 @@ class E2(EffTriggerCostMixin):
         调用基类方法进行输出。
         :return:
         """
-        print('kak')
         self.reacted.pop().args[1] = 0
 
 

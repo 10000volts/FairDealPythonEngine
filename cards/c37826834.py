@@ -32,7 +32,7 @@ class E1(Effect):
     def execute(self):
         p = self.game.get_player(self.host)
         cs = [GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '50526002', is_token=True),
-              GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '50526002', is_token=True),
+              GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '79047277', is_token=True),
               GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '82751803', is_token=True)]
         for c in cs:
             c.ATK.change_adv(self.scr_arg)

@@ -13,16 +13,6 @@ class E2(Effect):
         super().__init__(desc=EEffectDesc.HP_COST,
                          host=c, trigger=True, force=True, scr_arg=1, can_invalid=False)
 
-    def condition(self, tp):
-        if tp.tp == ETimePoint.SUMMONING:
-            if (tp.args[0] is self.host) & (tp.sender is None):
-                p = self.game.get_player(self.host)
-                tp2 = TimePoint(ETimePoint.TRY_HP_COST, self, [p.leader, 3000, 1])
-                self.game.enter_time_point(tp2)
-                if tp2.args[-1] & (p.leader.DEF.value > tp2.args[1]):
-                    return True
-        return False
-
     def cost(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
             p = self.game.get_player(self.host)

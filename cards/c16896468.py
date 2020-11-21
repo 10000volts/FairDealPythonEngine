@@ -28,7 +28,7 @@ class E2(Effect):
         if tp.tp == ETimePoint.SUMMONING:
             p = self.game.get_player(self.host)
             self.reacted.append(tp)
-            return self.game.req4discard(p, self.game.players[p.sp], 1, self) is not None
+            return self.game.req4discard(p, self.game.players[p.sp], 1, self) is None
         return False
 
     def execute(self):

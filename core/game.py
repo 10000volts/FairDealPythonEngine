@@ -619,7 +619,7 @@ class GameCard:
         tp = TimePoint(ETimePoint.TRY_HP_COST, ef, [self, v, 1])
         self.game.enter_time_point(tp)
         p = self.ATK.value if self.type == ECardType.STRATEGY else self.DEF.value
-        if tp.args[-1] & (p > v):
+        if tp.args[-1] & (p > tp.args[1]):
             yield True
             tp = TimePoint(ETimePoint.HP_COSTING, ef, [self, v, 1])
             self.game.enter_time_point(tp)
@@ -688,6 +688,7 @@ class GameCard:
         """
         if loc != self.location:
             p = self.game.players[(self.location & ELocation.P1) == 0]
+            pt = self.game.players[(loc & ELocation.P1) == 0]
 
             def leave():
                 if self.location & ELocation.HAND:
@@ -706,17 +707,17 @@ class GameCard:
 
             def enter():
                 if loc & ELocation.HAND:
-                    return ETimePoint.IN_HAND, ETimePoint.IN_HAND_END, p.hand
+                    return ETimePoint.IN_HAND, ETimePoint.IN_HAND_END, pt.hand
                 if loc & ELocation.DECK:
-                    return ETimePoint.IN_DECK, ETimePoint.IN_DECK_END, p.deck
+                    return ETimePoint.IN_DECK, ETimePoint.IN_DECK_END, pt.deck
                 if loc & ELocation.SIDE:
-                    return ETimePoint.IN_SIDE, ETimePoint.IN_SIDE_END, p.side
+                    return ETimePoint.IN_SIDE, ETimePoint.IN_SIDE_END, pt.side
                 if loc & ELocation.ON_FIELD:
-                    return ETimePoint.IN_FIELD, ETimePoint.IN_FIELD_END, p.on_field
+                    return ETimePoint.IN_FIELD, ETimePoint.IN_FIELD_END, pt.on_field
                 if loc & ELocation.GRAVE:
-                    return ETimePoint.IN_GRAVE, ETimePoint.IN_GRAVE_END, p.grave
+                    return ETimePoint.IN_GRAVE, ETimePoint.IN_GRAVE_END, pt.grave
                 if loc & ELocation.EXILED:
-                    return ETimePoint.IN_EXILED, ETimePoint.IN_EXILED_END, p.exiled
+                    return ETimePoint.IN_EXILED, ETimePoint.IN_EXILED_END, pt.exiled
 
             # 离开我方半场去到对方半场不算离场
             etp1, etp3, _from = leave()
