@@ -2530,7 +2530,7 @@ class Game:
         return None
 
     def choose_target(self, p: GamePlayer, pt: GamePlayer, cs,
-                      ef: Effect, force=True, with_tp=True) -> GameCard:
+                      ef: Effect, force=True, with_tp=True, count=1) -> GameCard:
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
@@ -2539,52 +2539,45 @@ class Game:
         :param ef:
         :param force: 是否强制
         :param with_tp:
+        :param count:
         :return:
         """
-        def check_ind(_ind):
-            if _ind not in range(0, _len):
-                return EErrorCode.OVERSTEP
+        def check_ind(*_args):
+            if len(_args) != count:
+                return EErrorCode.ILLEGAL_OPTIONS
+            _ins = dict()
+            for _ind in _args:
+                if _ind not in range(0, _len):
+                    return EErrorCode.OVERSTEP
+                if _ind in _ins.keys():
+                    return EErrorCode.REPEAT_CHOOSE
+                _ins[_ind] = 1
             return 0
 
+        _len = len(cs)
+        if _len >= count:
+            # 打乱
+            for i in range(0, _len):
+                j = randint(0, _len - 1)
+                temp = cs[j]
+                cs[j] = cs[i]
+                cs[i] = temp
+            # 询问选项
+            if force:
+                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+            else:
+                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                if ind is None:
+                    return None
+        c = self.vid_manager.get_card(cs[ind])
         if with_tp:
-            _len = len(cs)
-            if _len > 0:
-                # 打乱
-                for i in range(0, _len):
-                    j = randint(0, _len - 1)
-                    temp = cs[j]
-                    cs[j] = cs[i]
-                    cs[i] = temp
-                # 询问选项
-                if force:
-                    ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                else:
-                    ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                    if ind is None:
-                        return None
-                c = self.vid_manager.get_card(cs[ind])
-                tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
-                self.enter_time_point(tp)
-                if tp.args[-1]:
-                    self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
-                    return c
+            tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
+                return c
         else:
-            _len = len(cs)
-            if _len > 0:
-                # 打乱
-                for i in range(0, _len):
-                    j = randint(0, _len - 1)
-                    temp = cs[j]
-                    cs[j] = cs[i]
-                    cs[i] = temp
-                # 询问选项
-                if force:
-                    ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                else:
-                    ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                    if ind is None:
-                        return None
-                return self.vid_manager.get_card(cs[ind])
+            return c
         return None
 
     def choose_target_multi(self, p: GamePlayer, pt: GamePlayer, func,
