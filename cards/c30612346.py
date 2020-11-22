@@ -35,7 +35,7 @@ class E1(Effect):
         """
         def check(c):
             return ((c.location & ELocation.ON_FIELD) > 0) & \
-                    (c.type == ECardType.EMPLOYEE) & (c.ATK.value >= self.host.ATK.value) & (c.ATK.value >= 4000)
+                    (c.type == ECardType.EMPLOYEE) & (c.ATK.value >= self.host.ATK.value) & (c.ATK.value >= 3500)
 
         # 摧毁选择的卡
         p = self.game.get_player(self.host)

@@ -2166,10 +2166,7 @@ class Game:
         next(cm)
         self.enter_time_points()
         if next(cm):
-            if pos > -1:
-                pt.on_field[pos] = s
-                s.inf_pos = pos
-            else:
+            if pos == -1:
                 def check_pos(_pos):
                     if _pos not in range(3, 6):
                         return EErrorCode.OVERSTEP
@@ -2179,8 +2176,9 @@ class Game:
 
                 # 询问入场位置、姿态
                 pos = p.input(check_pos, 'req_pos_stg', [pt is p])
-                pt.on_field[pos] = s
-                s.inf_pos = pos
+            pt.on_field[pos] = s
+            s.posture = 0
+            s.inf_pos = pos
             s.cover = 0
             next(cm)
             self.batch_sending('upd_vc', [s.vid, s.serialize()])
@@ -2247,10 +2245,7 @@ class Game:
             tp = TimePoint(ETimePoint.SET_STRATEGY, ef, [s, 1])
             self.enter_time_point(tp)
             if tp.args[-1]:
-                if pos > -1:
-                    pt.on_field[pos] = s
-                    s.inf_pos = pos
-                else:
+                if pos == -1:
                     def check_pos(_pos):
                         if _pos not in range(3, 6):
                             return EErrorCode.OVERSTEP
@@ -2260,9 +2255,13 @@ class Game:
 
                     # 询问入场位置、姿态
                     pos = p.input(check_pos, 'req_pos_stg', [pt is p])
-                    pt.on_field[pos] = s
-                    s.inf_pos = pos
+                pt.on_field[pos] = s
+                s.inf_pos = pos
                 s.cover = 1
+                if (s.subtype & EStrategyType.COUNTER) > 0:
+                    s.posture = 1
+                else:
+                    s.posture = 0
                 next(cm)
                 for pi in self.players:
                     if pi is p:
