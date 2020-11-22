@@ -27,7 +27,7 @@ class E1(EffCommonSummon):
         调用基类方法进行输出。
         :return:
         """
-        for p in self.game.get_players():
+        for p in self.game.get_players(self.host):
             for c in p.on_field:
                 if c is not None and c.type == ECardType.EMPLOYEE and c is not self.host:
                     if p.on_field[c.inf_pos + 3] is not None:
