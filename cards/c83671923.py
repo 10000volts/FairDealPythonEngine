@@ -9,7 +9,7 @@ class E1(EffCostMixin):
     特召。
     """
     def __init__(self, c):
-        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=c)
+        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=c, ef_id='836719230')
 
     def condition(self, tp):
         """
@@ -17,7 +17,7 @@ class E1(EffCostMixin):
         触发式效果需要额外判断所需的时点是否已被连锁过，否则会造成无限连锁或死循环。
         :return:
         """
-        if tp is None:
+        if tp is None and self.ef_id not in self.game.get_player(self.host).ef_g_limiter:
             p = self.game.get_player(self.host)
             op = self.game.players[p.sp]
             for c in p.hand:
@@ -61,7 +61,6 @@ class E1(EffCostMixin):
                         if tp.args[-1]:
                             return True
                 return False
-        self.game.send2exiled(p, p, self.host, self)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             atk = tgt.ATK.value
@@ -70,6 +69,7 @@ class E1(EffCostMixin):
             c.create('随行者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.COMMON,
                      atk, 0)
             self.game.special_summon(p, p, c, self, 0)
+        self.game.get_player(self.host).ef_g_limiter[self.ef_id] = 1
 
 
 def give(c):

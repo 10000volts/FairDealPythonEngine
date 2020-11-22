@@ -6,7 +6,12 @@ from core.game import TimePoint
 
 class E1(EffCommonStrategy):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.SEND2HAND, host=host, scr_arg=0)
+        super().__init__(desc=EEffectDesc.SEND2HAND, host=host, ef_id='264407230')
+
+    def condition(self, tp):
+        if self.ef_id not in self.game.get_player(self.host).ef_g_limiter:
+            return True
+        return self.game.get_player(self.host).ef_g_limiter[self.ef_id] < 5
 
     def execute(self):
         """
@@ -15,8 +20,6 @@ class E1(EffCommonStrategy):
         :return:
         """
         p1 = self.game.get_player(self.host)
-        if self.scr_arg >= 5:
-            self.game.send2exiled(p1, p1, self.host, self)
         count = 0
         for p in self.game.players:
             for c in p.on_field:
@@ -30,7 +33,10 @@ class E1(EffCommonStrategy):
             self.game.enter_time_point(tp)
             if tp.args[-1]:
                 self.game.heal(self.host, p1.leader, self.host.ATK.value * count, self)
-        self.scr_arg += 1
+        if self.ef_id not in self.game.get_player(self.host).ef_g_limiter:
+            self.game.get_player(self.host).ef_g_limiter[self.ef_id] = 1
+        else:
+            self.game.get_player(self.host).ef_g_limiter[self.ef_id] += 1
 
 
 def give(c):
