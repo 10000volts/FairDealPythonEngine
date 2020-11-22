@@ -25,7 +25,7 @@ class E1(Effect):
             return c.location == ELocation.HAND + 2 - p.sp
         cc = self.game.choose_target_from_func(p, p, check, self, True, False)
         if cc is not None:
-            self.game.send2deck_above(p, p, cc, self)
+            self.game.send2deck(p, p, cc, self)
             return True
         return False
 
@@ -38,7 +38,7 @@ class E1(Effect):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, '87032772', is_token=True)
         c.ATK.change_adv(self.host.ATK.add_val, self)
-        self.game.send2deck_above(p, p, c, self)
+        self.game.send2deck(p, p, c, self)
 
         f = False
         cs = list()
@@ -51,7 +51,7 @@ class E1(Effect):
         if f:
             c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, '23643378', is_token=True)
             c.ATK.change_adv(self.host.ATK.add_val, self)
-            self.game.send2deck_above(p, p, c, self)
+            self.game.send2deck(p, p, c, self)
 
 
 def give(c):

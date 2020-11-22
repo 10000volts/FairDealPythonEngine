@@ -1,7 +1,7 @@
 # 黄钻看门人
 from models.effect import Effect
 from core.game import TimePoint
-from utils.constants import EEffectDesc, ETimePoint
+from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin
 
 
@@ -26,9 +26,12 @@ class E2(Effect):
 
     def cost(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
+            def check(c):
+                return (c.location == ELocation.HAND + 2 - p.sp) & (c is not self.host)
+
             p = self.game.get_player(self.host)
             self.reacted.append(tp)
-            return self.game.req4discard(p, self.game.players[p.sp], 1, self) is None
+            return self.game.req4grave(check, p, self.game.players[p.sp], 1, self) is None
         return False
 
     def execute(self):

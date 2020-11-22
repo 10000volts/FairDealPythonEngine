@@ -17,8 +17,9 @@ class E1(EffCommonStrategy):
         :return:
         """
         # 对双方造成EFF伤害。
-        for p in self.game.players:
-            self.game.deal_damage(self.host, p.leader, self.host.ATK.value)
+        p = self.game.get_player(self.host)
+        self.game.deal_damage(self.host, p.leader, self.host.ATK.value)
+        self.game.deal_damage(self.host, self.game.players[p.sp].leader, self.host.ATK.value)
 
 
 def give(c):

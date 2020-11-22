@@ -50,7 +50,7 @@ class E1(Effect):
         else:
             c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp, '87032772', is_token=True)
             c.ATK.change_adv(self.host.ATK.add_val, self)
-            self.game.send2deck_above(p, p, c, self)
+            self.game.send2deck(p, p, c, self)
 
 
 def give(c):

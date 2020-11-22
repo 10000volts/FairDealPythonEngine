@@ -679,11 +679,12 @@ class GameCard:
             self.posture_times = 1
         self.game.enter_time_point(TimePoint(ETimePoint.RESET_TIMES, None, self))
 
-    def move_to(self, ef, loc):
+    def move_to(self, ef, loc, ind=-1):
         """
         移动至另一个区域。不能单独使用(但移动区域时必须调用)，不会触发时点。
         :param ef: effect
         :param loc:
+        :param ind: 插入位置
         :return:
         """
         if loc != self.location:
@@ -739,7 +740,12 @@ class GameCard:
             # 进入, 入场的具体位置不在这里处理
             pre_loc = self.location
             self.location = loc
-            if (loc & ELocation.ON_FIELD) == 0:
+            if ind > -1:
+                if (loc & ELocation.ON_FIELD) > 0:
+                    _to[ind] = self
+                else:
+                    _to.insert(ind, self)
+            elif (loc & ELocation.ON_FIELD) == 0:
                 _to.append(self)
             if etp3:
                 if (etp3 == ETimePoint.OUT_FIELD_END) & (etp2 != ETimePoint.IN_FIELD):
@@ -1963,6 +1969,14 @@ class Game:
         """
         return self.players[(c.location & ELocation.P1) == 0]
 
+    def get_players(self, c: GameCard):
+        """
+        [c的持有者, 对手]。
+        :param c:
+        :return:
+        """
+        return self.players[(c.location & ELocation.P1) == 0], self.players[(c.location & ELocation.P1) > 0]
+
     def record(self, p: GamePlayer, msg):
         """
         记录操作，用于卡片效果查询其发动条件是否满足。
@@ -2359,13 +2373,14 @@ class Game:
                 if shuffle:
                     pt.shuffle()
 
-    def send2deck_above(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
+    def send2deck(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None, ind=-1):
         """
         送去卡组。
         :param p:
         :param pt: 送去目标玩家的卡组。
         :param c:
         :param ef:
+        :param ind:
         :return:
         """
         f = True
@@ -2375,7 +2390,7 @@ class Game:
             f = tp.args[-1]
         if f:
             cov = c.cover
-            cm = c.move_to(ef, ELocation.DECK + 2 - pt.sp)
+            cm = c.move_to(ef, ELocation.DECK + 2 - pt.sp, ind)
             next(cm)
             self.enter_time_points()
             if next(cm):
@@ -2501,7 +2516,7 @@ class Game:
                     self.enter_time_point(TimePoint(ETimePoint.DESTROYED, ef, [sender, target]))
 
     def choose_target_from_func(self, p: GamePlayer, pt: GamePlayer, func,
-                                ef: Effect, force=True, with_tp=True) -> GameCard:
+                                ef: Effect, force=True, with_tp=True, count=1):
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
@@ -2510,6 +2525,7 @@ class Game:
         :param ef:
         :param force: 是否强制
         :param with_tp:
+        :param count:
         :return:
         """
         cs = list()
@@ -2517,20 +2533,20 @@ class Game:
             for c in self.vid_manager.get_cards():
                 if func(c):
                     # 模拟选择。
-                    tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, 1])
+                    tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, count])
                     self.enter_time_point(tp)
                     if tp.args[-1]:
                         cs.append(c.vid)
-            return self.choose_target(p, pt, cs, ef, force, True)
+            return self.choose_target(p, pt, cs, ef, force, True, count)
         else:
             for c in self.vid_manager.get_cards():
                 if func(c):
                     cs.append(c.vid)
-            return self.choose_target(p, pt, cs, ef, force, False)
+            return self.choose_target(p, pt, cs, ef, force, False, count)
         return None
 
     def choose_target(self, p: GamePlayer, pt: GamePlayer, cs,
-                      ef: Effect, force=True, with_tp=True, count=1) -> GameCard:
+                      ef: Effect, force=True, with_tp=True, count=1):
         """
         选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
         :param p:
@@ -2564,91 +2580,34 @@ class Game:
                 cs[i] = temp
             # 询问选项
             if force:
-                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, count])
             else:
-                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, count])
                 if ind is None:
                     return None
-        c = self.vid_manager.get_card(cs[ind])
-        if with_tp:
-            tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
-            self.enter_time_point(tp)
-            if tp.args[-1]:
-                self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
-                return c
-        else:
-            return c
-        return None
-
-    def choose_target_multi(self, p: GamePlayer, pt: GamePlayer, func,
-                            ef: Effect, count, force=True, with_tp=True) -> GameCard:
-        """
-        选择效果目标。效果的host(宿主)一定是效果的发动者。已经包含了TRY_CHOOSE_TARGET。
-        :param p:
-        :param pt:
-        :param func:  筛选函数。
-        :param ef:
-        :param count:
-        :param force: 是否强制
-        :param with_tp:
-        :return:
-        """
-        def check_ind(*_args):
-            if len(_args) != count:
-                return EErrorCode.ILLEGAL_OPTIONS
-            _ins = dict()
-            for _ind in _args:
-                if _ind not in range(0, _len):
-                    return EErrorCode.OVERSTEP
-                if _ind in _ins.keys():
-                    return EErrorCode.REPEAT_CHOOSE
-                _ins[_ind] = 1
-            return 0
-
-        cs = list()
-        if with_tp:
-            for c in self.vid_manager.get_cards():
-                if func(c):
-                    # 模拟选择。
-                    tp = TimePoint(ETimePoint.TRY_CHOOSE_TARGET, ef, [c, 1])
-                    self.enter_time_point(tp)
-                    if tp.args[-1]:
-                        cs.append(c.vid)
-            _len = len(cs)
-            if _len > 0:
-                # 询问选项
-                if force:
-                    ins = pt.input(check_ind, 'req_chs_mtg_f', [cs, count])
-                else:
-                    ins = pt.free_input(check_ind, 'req_chs_mtg_f', [cs, count])
-                    if ins is None:
-                        return None
-                cs = list()
-                for ind in ins:
-                    c = self.vid_manager.get_card(cs[ind])
+        if count > 1:
+            tgts = list()
+            for i in ind:
+                c = self.vid_manager.get_card(cs[i])
+                if with_tp:
                     tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
                     self.enter_time_point(tp)
                     if tp.args[-1]:
                         self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
-                        cs.append(c)
-                return cs
-        else:
-            for c in self.vid_manager.get_cards():
-                if func(c):
-                    cs.append(c.vid)
-            _len = len(cs)
-            if _len > 0:
-                # 询问选项
-                if force:
-                    ins = pt.input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                        tgts.append(c)
                 else:
-                    ins = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
-                    if ins is None:
-                        return None
-                cs = list()
-                for ind in ins:
-                    cs.append(self.vid_manager.get_card(cs[ind]))
-                return cs
+                    tgts.append(c)
+            return tgts
+        else:
+            c = self.vid_manager.get_card(cs[ind])
+            if with_tp:
+                tp = TimePoint(ETimePoint.CHOOSING_TARGET, ef, [c, 1])
+                self.enter_time_point(tp)
+                if tp.args[-1]:
+                    self.enter_time_point(TimePoint(ETimePoint.CHOSE_TARGET, ef, [c]))
+                    return c
+            else:
+                return c
         return None
 
     def ceremony(self, p: GamePlayer, func, v, send_to=ELocation.GRAVE, op='>', with_tp=True):
@@ -2756,6 +2715,29 @@ class Game:
         tgt = self.choose_target_from_func(p, p, check_discard, ef, False, False)
         if tgt is not None:
             self.discard(p, pt, tgt, ef)
+            return tgt
+        return None
+
+    def req4grave(self, func, p: GamePlayer, pt: GamePlayer, count, ef: Effect):
+        """
+        选择指定的牌送去场下。
+        :param p: 。
+        :param pt:
+        :param func: 检查函数
+        :param count: 移除数量
+        :param ef:
+        :return:
+        """
+        def check(c):
+            tp = TimePoint(ETimePoint.IN_GRAVE, ef, [c, 1])
+            self.enter_time_point(tp)
+            if tp.args[-1]:
+                return func(c)
+
+        # 选择1张卡移除
+        tgt = self.choose_target_from_func(p, p, check, ef, False, False)
+        if tgt is not None:
+            self.send_to_grave(p, pt, tgt, ef)
             return tgt
         return None
 
