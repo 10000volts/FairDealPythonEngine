@@ -29,7 +29,7 @@ class E1(EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.DISCARD, host=c, trigger=True, force=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.TURN_END:
+        if tp.tp == ETimePoint.TURN_END and self.game.turn_player is self.game.get_player(self.host):
             if (self.host.location & ELocation.ON_FIELD) > 0:
                 for c in self.game.get_player(self.host).hand:
                     tp = TimePoint(ETimePoint.TRY_DISCARD, self, [c, False, 1])
