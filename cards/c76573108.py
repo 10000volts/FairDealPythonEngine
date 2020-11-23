@@ -42,8 +42,15 @@ class E1(EffTriggerCostMixin):
         p = self.game.get_player(self.host)
         # todo: 不会出现不能被丢弃的卡。
         if len(p.hand):
-            i = randint(0, len(p.hand) - 1)
-            self.game.discard(p, p, p.hand[i], self)
+            amin = p.hand[0].ATK.add_val
+            for c in p.hand:
+                amin = min(c.ATK.add_val, amin)
+            cs = list()
+            for c in p.hand:
+                if c.ATK.add_val == amin:
+                    cs.append(c)
+            i = randint(0, len(cs) - 1)
+            self.game.discard(p, p, cs[i], self)
 
 
 def give(c):
