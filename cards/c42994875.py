@@ -1,5 +1,5 @@
 # 挫折大师
-from utils.constants import EEffectDesc, ETimePoint
+from utils.constants import EEffectDesc, ETimePoint, ELocation
 from models.effect import Effect
 from core.game import TimePoint
 
@@ -36,8 +36,10 @@ class E1(Effect):
         p = self.game.get_player(self.host)
 
         def check(c):
-            return c in p.grave
+            return (c.location == ELocation.GRAVE + 2 - p.sp) & (c.cid != '42993875')
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
+        # TODO: DELETE
+        print(type(tgt.cid))
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)
 
