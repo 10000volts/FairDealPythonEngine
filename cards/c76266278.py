@@ -9,7 +9,7 @@ class E1(EffLazyTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYING_SURE:
-            return (tp.args[1] is self.host) & (ef_id not in self.game.get_player(self.host).ef_g_limiter)
+            return (tp.args[1] is self.host) & (self.ef_id not in self.game.get_player(self.host).ef_g_limiter)
         return False
 
     def execute(self):

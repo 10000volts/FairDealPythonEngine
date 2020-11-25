@@ -36,7 +36,7 @@ class E1(Effect):
         p = self.game.get_player(self.host)
 
         def check(c):
-            return (c.location == ELocation.GRAVE + 2 - p.sp) & (c.cid != '42993875')
+            return (c.location == ELocation.GRAVE + 2 - p.sp) & (c.cid != 42993875)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         # TODO: DELETE
         print(type(tgt.cid))
