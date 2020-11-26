@@ -2555,7 +2555,7 @@ class Game:
         :param ef:
         :param force: 是否强制
         :param with_tp:
-        :param count:
+        :param count: 为负时其绝对值表示不选的个数。比如0表示必须全选，-1表示必须剩且仅剩1个不选。
         :return:
         """
         def check_ind(*_args):
@@ -2571,6 +2571,8 @@ class Game:
             return 0
 
         _len = len(cs)
+        if count <= 0:
+            count = _len - count
         if _len >= count:
             # 打乱
             for i in range(0, _len):
