@@ -1075,8 +1075,8 @@ class Game:
 
             card_vid = [c.vid for c in p.hand if c.rank == rank]
             ind_max = len(card_vid)
-            shown_card_index = p.input(check_ind, 'req_chs_tgt_f',
-                                       [card_vid, 1])
+            shown_card_index = p.input(check_ind, 'req_chs_tgt',
+                                       [card_vid, 1, 1])
 
             self.show_card(p, card_vid[shown_card_index])
 
@@ -2558,8 +2558,12 @@ class Game:
         :param count: 为负时其绝对值表示不选的个数。比如0表示必须全选，-1表示必须剩且仅剩1个不选。
         :return:
         """
+        return choose_target_complex(p, pt, cs, ef, force, with_tp, count, count)
+
+    def choose_target_complex(self, p: GamePlayer, pt: GamePlayer, cs,
+                      ef: Effect, force=True, with_tp=True, at_most, at_least):
         def check_ind(*_args):
-            if len(_args) != count:
+            if (len(_args) >= at_least) & (len(_args) <= at_most):
                 return EErrorCode.ILLEGAL_OPTIONS
             _ins = dict()
             for _ind in _args:
@@ -2571,9 +2575,13 @@ class Game:
             return 0
 
         _len = len(cs)
-        if count <= 0:
-            count = _len - count
-        if _len >= count:
+        if at_most <= 0:
+            at_most = _len - at_most
+        if at_least <= 0:
+            at_least = _len - at_least
+        if at_least > at_most:
+            return None
+        if _len >= at_least:
             # 打乱
             for i in range(0, _len):
                 j = randint(0, _len - 1)
@@ -2582,12 +2590,12 @@ class Game:
                 cs[i] = temp
             # 询问选项
             if force:
-                ind = pt.input(check_ind, 'req_chs_tgt_f', [cs, count])
+                ind = pt.input(check_ind, 'req_chs_tgt', [cs, at_least, at_most])
             else:
-                ind = pt.free_input(check_ind, 'req_chs_tgt_f', [cs, count])
+                ind = pt.free_input(check_ind, 'req_chs_tgt', [cs, at_least, at_most])
                 if ind is None:
                     return None
-        if count > 1:
+        if type(ind) is list:
             tgts = list()
             for i in ind:
                 c = self.vid_manager.get_card(cs[i])
@@ -2637,7 +2645,7 @@ class Game:
                     cs.append(c.vid)
             while True:
                 # 询问选项
-                ind = p.free_input(check_ind, 'req_chs_tgt_f', [cs, 1])
+                ind = p.free_input(check_ind, 'req_chs_tgt', [cs, 1, 1])
                 if ind is None:
                     return False
                 c = self.vid_manager.get_card(cs[ind])
