@@ -2561,7 +2561,7 @@ class Game:
         return choose_target_complex(p, pt, cs, ef, force, with_tp, count, count)
 
     def choose_target_complex(self, p: GamePlayer, pt: GamePlayer, cs,
-                      ef: Effect, force=True, with_tp=True, at_most, at_least):
+                      ef: Effect, force=True, with_tp=True, at_most=1, at_least=1):
         def check_ind(*_args):
             if (len(_args) >= at_least) & (len(_args) <= at_most):
                 return EErrorCode.ILLEGAL_OPTIONS
