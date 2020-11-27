@@ -2558,7 +2558,7 @@ class Game:
         :param count: 为负时其绝对值表示不选的个数。比如0表示必须全选，-1表示必须剩且仅剩1个不选。
         :return:
         """
-        return choose_target_complex(p, pt, cs, ef, force, with_tp, count, count)
+        return self.choose_target_complex(p, pt, cs, ef, force, with_tp, count, count)
 
     def choose_target_complex(self, p: GamePlayer, pt: GamePlayer, cs,
                       ef: Effect, force=True, with_tp=True, at_most=1, at_least=1):
