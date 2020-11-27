@@ -5,7 +5,7 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin
 
 
-class E3(EffLazyTriggerCostMixin):
+class E3(EffTriggerCostMixin):
     def __init__(self, host):
         super().__init__(desc=EEffectDesc.SEND2DECK, host=host, trigger=True, force=True)
 

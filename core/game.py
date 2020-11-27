@@ -2563,7 +2563,7 @@ class Game:
     def choose_target_complex(self, p: GamePlayer, pt: GamePlayer, cs,
                       ef: Effect, force=True, with_tp=True, at_most=1, at_least=1):
         def check_ind(*_args):
-            if (len(_args) >= at_least) & (len(_args) <= at_most):
+            if (len(_args) < at_least) | (len(_args) > at_most):
                 return EErrorCode.ILLEGAL_OPTIONS
             _ins = dict()
             for _ind in _args:
