@@ -10,9 +10,10 @@ class E1(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_HAND_END:
-            p = self.game.get_player(self.host)
-            if len(p.hand) == 0:
-                return True
+            if self.host.location & ELocation.GRAVE:
+                p = self.game.get_player(self.host)
+                if len(p.hand) == 0:
+                    return True
         return False
 
     def execute(self):
