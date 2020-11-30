@@ -19,7 +19,7 @@ class E1(Effect):
         p = self.game.get_player(self.host)
 
         def check(c):
-            return c.location == ELocation.HAND + 2 - p.sp
+            return (c.location == ELocation.HAND + 2 - p.sp) & (c.ATK.add_val == self.host.ATK.add_val)
         cs = self.game.choose_target_from_func(p, p, check, self, True, False, 0)
         if cs is not None:
             if type(cs) is list:
