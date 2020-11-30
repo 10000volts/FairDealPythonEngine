@@ -11,7 +11,7 @@ class E1(EffCommonStrategy):
     def condition(self, tp):
         if self.ef_id not in self.game.get_player(self.host).ef_g_limiter:
             return True
-        return self.game.get_player(self.host).ef_g_limiter[self.ef_id] < 5
+        return False
 
     def execute(self):
         """
@@ -25,18 +25,14 @@ class E1(EffCommonStrategy):
             for c in p.on_field:
                 if c is not None and c is not self.host:
                     if self.game.send_to(ELocation.HAND + 2 - p.sp, p1, p, c, self, False):
-                        if p is p1:
-                            count += 1
+                        count += 1
             p.shuffle()
         if count > 0:
             tp = TimePoint(ETimePoint.TRY_HEAL, self, [self.host, p1.leader, self.host.ATK.value * count, 1])
             self.game.enter_time_point(tp)
             if tp.args[-1]:
                 self.game.heal(self.host, p1.leader, self.host.ATK.value * count, self)
-        if self.ef_id not in self.game.get_player(self.host).ef_g_limiter:
-            self.game.get_player(self.host).ef_g_limiter[self.ef_id] = 1
-        else:
-            self.game.get_player(self.host).ef_g_limiter[self.ef_id] += 1
+        self.game.get_player(self.host).ef_g_limiter[self.ef_id] = 1
 
 
 def give(c):

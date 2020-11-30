@@ -52,7 +52,8 @@ class E1(EffTriggerCostMixin):
         p = self.game.get_player(self.host)
         for i in range(0, 2):
             c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), '87032772', is_token=True)
-            c.ATK.become(self.host.ATK.value)
+            c.ATK.src_value = self.host.ATK.src_value
+            c.ATK.change_adv(self.host.ATK.add_val, self)
             self.game.send2hand(p, p, c, self)
 
 

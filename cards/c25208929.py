@@ -27,7 +27,7 @@ class E1(EffTriggerCostMixin):
                         # 入场被允许
                         if tp.args[-1]:
                             self.game.special_summon(p, p, self.host, self)
-                            self.host.ATK.gain(1000, True, self)
+                            self.host.ATK.gain(500, True, self)
 
 
 def give(c):
