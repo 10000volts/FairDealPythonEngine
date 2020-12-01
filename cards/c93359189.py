@@ -25,10 +25,10 @@ class E1(Effect):
             if type(cs) is list:
                 for cc in cs:
                     cc.ATK.gain(200, False, self)
-                    self.game.send2deck(p, p, cc, self, len(p.deck) - 1)
+                    self.game.send2deck(p, p, cc, self, 0)
             else:
                 cs.ATK.gain(200, False, self)
-                self.game.send2deck(p, p, cs, self, len(p.deck) - 1)
+                self.game.send2deck(p, p, cs, self, 0)
 
 
 def give(c):
