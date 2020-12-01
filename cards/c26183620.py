@@ -3,6 +3,34 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin, EffCommonStrategy
 
 
+class E3(EffLazyTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(host=host, desc=EEffectDesc.ADDV_CHANGE, trigger=True,
+                         force=True, passive=True, act_phase=EGamePhase.PUT_CARD)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.SRC_ATK_CALCING:
+            return tp.args[0] is self.host
+        return False
+
+    def execute(self):
+        self.reacted.pop().args[1] /= 5
+
+
+class E4(EffLazyTriggerCostMixin):
+    def __init__(self, host):
+        super().__init__(host=host, desc=EEffectDesc.ADDV_CHANGE, trigger=True,
+                         force=True, passive=True)
+
+    def condition(self, tp):
+        if tp.tp == ETimePoint.SRC_ATK_CALCING:
+            return tp.args[0] is self.host
+        return False
+
+    def execute(self):
+        self.reacted.pop().args[1] /= 5
+
+
 class E1(EffCommonStrategy):
     def __init__(self, c):
         super().__init__(desc=EEffectDesc.DAMAGE_CHANGE, host=c, passive=True)
@@ -24,7 +52,7 @@ class E2(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        self.reacted.pop().args[2] *= 2
+        self.reacted.pop().args[2] += min(self.host.ATK.value, 800)
 
 
 def give(c):
@@ -34,3 +62,5 @@ def give(c):
     """
     c.register_effect(E1(c))
     c.register_effect(E2(c))
+    c.register_effect(E3(c))
+    c.register_effect(E4(c))
