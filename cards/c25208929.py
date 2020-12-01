@@ -28,6 +28,7 @@ class E1(EffTriggerCostMixin):
                         if tp.args[-1]:
                             self.game.special_summon(p, p, self.host, self)
                             self.host.ATK.gain(500, True, self)
+                            return
 
 
 def give(c):

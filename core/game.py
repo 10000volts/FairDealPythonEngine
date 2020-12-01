@@ -2402,6 +2402,7 @@ class Game:
                         pi.output('upd_vc_ano', [c.vid, c.serialize_anonymous()])
                 # todo: 换c的效果不会出。
                 self.batch_sending('crd_snd2dck', [c.vid], p)
+                pt.output('dck', [cc.vid for cc in p.deck])
                 self.enter_time_points()
 
     def send2exiled(self, p: GamePlayer, pt: GamePlayer, c: GameCard, ef: Effect = None):
