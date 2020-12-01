@@ -2065,7 +2065,7 @@ class Game:
                 cs = list()
                 for i in range(0, draw_count):
                     if len(p.deck) > 0:
-                        c = p.deck[-1]
+                        c = p.deck[0]
                         cs.append(c)
                         self.send2hand(p, p, c)
                     else:
@@ -2074,7 +2074,7 @@ class Game:
         else:
             for i in range(0, draw_count):
                 if len(p.deck) > 0:
-                    self.send2hand(p, p, p.deck.pop())
+                    self.send2hand(p, p, p.deck[0])
                 else:
                     break
 
