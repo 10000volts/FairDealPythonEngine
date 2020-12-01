@@ -22,9 +22,13 @@ class E1(Effect):
             return (c.location == ELocation.HAND + 2 - p.sp) & (c.ATK.add_val == self.host.ATK.add_val)
         cs = self.game.choose_target_from_func(p, p, check, self, True, False, 0)
         if cs is not None:
-            for cc in cs:
-                cc.ATK.gain(200, False, self)
-                self.game.send2deck(p, p, cc, self, len(p.deck) - 1)
+            if type(cs) is list:
+                for cc in cs:
+                    cc.ATK.gain(200, False, self)
+                    self.game.send2deck(p, p, cc, self, len(p.deck) - 1)
+            else:
+                cs.ATK.gain(200, False, self)
+                self.game.send2deck(p, p, cs, self, len(p.deck) - 1)
 
 
 def give(c):
