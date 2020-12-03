@@ -3,7 +3,7 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin, EffCommonStrategy
 
 
-class E3(EffLazyTriggerCostMixin):
+class E3(EffTriggerCostMixin):
     def __init__(self, host):
         super().__init__(host=host, desc=EEffectDesc.ADDV_CHANGE, trigger=True,
                          force=True, passive=True, act_phase=EGamePhase.PUT_CARD)
