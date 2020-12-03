@@ -1,5 +1,6 @@
 # 吉祥物
 from utils.constants import EEffectDesc, ETimePoint, ECardType, ELocation
+from core.game import TimePoint
 from utils.common_effects import EffSummon, EffLazyTriggerCostMixin, EffUntil
 
 

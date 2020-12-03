@@ -46,8 +46,7 @@ class E2(EffTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.DEALING_DAMAGE:
             op = self.game.players[self.game.get_player(self.host).sp]
-            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover)\
-                    & ((tp.args[0].location & (2 - op.sp)) > 0) & (tp.args[1] is op.leader):
+            if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) & (tp.args[1] is op.leader):
                 return True
         return False
 
