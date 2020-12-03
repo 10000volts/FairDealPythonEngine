@@ -17,7 +17,7 @@ class E3(EffTriggerCostMixin):
         self.reacted.pop().args[1] /= 5
 
 
-class E4(EffLazyTriggerCostMixin):
+class E4(EffTriggerCostMixin):
     def __init__(self, host):
         super().__init__(host=host, desc=EEffectDesc.ADDV_CHANGE, trigger=True,
                          force=True, passive=True)
