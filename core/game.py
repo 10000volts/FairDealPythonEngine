@@ -2582,7 +2582,7 @@ class Game:
             at_least = _len - at_least
         if at_least > at_most:
             return None
-        if _len >= at_least:
+        if (_len >= at_least) & (_len > 0):
             # 打乱
             for i in range(0, _len):
                 j = randint(0, _len - 1)
