@@ -1,6 +1,6 @@
 # 瓦解
 from utils.constants import EEffectDesc, ETimePoint, ELocation
-from utils.common_effects import EffTriggerCostMixin, EffCommonStrategy
+from utils.common_effects import EffTriggerCostMixin, EffCommonStrategy, EGamePhase
 
 
 class E3(EffTriggerCostMixin):
