@@ -3,6 +3,7 @@ from models.effect import Effect
 from core.game import TimePoint
 from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin
+from core.game import GameCard
 
 
 class E3(EffTriggerCostMixin):
@@ -36,23 +37,16 @@ class E2(Effect):
                 count = 0
                 for c in self.game.get_player(self.host).hand:
                     if c is not self.host:
-                        tp = TimePoint(ETimePoint.IN_DECK, self, [c, 1])
-                        self.game.enter_time_point(tp)
-                        if tp.args[-1]:
-                            count += 1
-                            if count >= 2:
-                                return True
+                        count += 1
+                        if count >= 2:
+                            return True
                 return False
         return False
 
     def cost(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
             def check(c):
-                tp = TimePoint(ETimePoint.IN_DECK, self, [c, 1])
-                self.game.enter_time_point(tp)
-                if tp.args[-1]:
-                    return (c.location == ELocation.HAND + 2 - p.sp) & (c is not self.host)
-                return False
+                return (c.location == ELocation.HAND + 2 - p.sp) & (c is not self.host)
 
             p = self.game.get_player(self.host)
             self.reacted.append(tp)
@@ -88,12 +82,9 @@ class E1(EffTriggerCostMixin):
                 count = 0
                 for c in self.game.get_player(self.host).hand:
                     if c is not self.host:
-                        tp = TimePoint(ETimePoint.IN_DECK, self, [c, 1])
-                        self.game.enter_time_point(tp)
-                        if tp.args[-1]:
-                            count += 1
-                            if count >= 2:
-                                return True
+                        count += 1
+                        if count >= 2:
+                            return True
                 return False
         return False
 
