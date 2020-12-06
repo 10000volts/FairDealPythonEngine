@@ -33,7 +33,6 @@ class E2(Effect):
     def condition(self, tp):
         if tp.tp == ETimePoint.SUMMONING:
             if (tp.args[0] is self.host) & (tp.sender is None):
-                p = self.game.get_player(self.host)
                 count = 0
                 for c in self.game.get_player(self.host).hand:
                     if c is not self.host:
@@ -54,8 +53,8 @@ class E2(Effect):
             if tgts is not None:
                 for tgt in tgts:
                     self.game.send2deck(p, p, tgt, self)
-                return True
-        return False
+                return False
+        return True
 
     def execute(self):
         # 禁止入场。
@@ -78,14 +77,13 @@ class E1(EffTriggerCostMixin):
         """
         if tp.tp == ETimePoint.TRY_SUMMON:
             if (tp.args[0] is self.host) & (tp.sender is None):
-                p = self.game.get_player(self.host)
                 count = 0
                 for c in self.game.get_player(self.host).hand:
                     if c is not self.host:
                         count += 1
                         if count >= 2:
-                            return True
-                return False
+                            return False
+                return True
         return False
 
     def execute(self):
