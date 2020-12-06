@@ -49,7 +49,7 @@ class E2(Effect):
 
             p = self.game.get_player(self.host)
             self.reacted.append(tp)
-            tgts = self.game.choose_target_from_func(p, p, check, self, False, False, 2)
+            tgts = self.game.choose_target_from_func(p, p, check, self, True, False, 2)
             if tgts is not None:
                 for tgt in tgts:
                     self.game.send2deck(p, p, tgt, self)
