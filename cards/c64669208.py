@@ -34,6 +34,7 @@ class E1(EffTriggerCostMixin):
 
         # 选择的卡回到手牌
         p = self.game.get_player(self.host)
+        self.game.send2exiled(p, p, self.host, self)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
             self.game.send2hand(p, p, tgt, self)

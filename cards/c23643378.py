@@ -42,7 +42,7 @@ class E1(Effect):
 
             def check(c):
                 return (c.location == ELocation.GRAVE + 2 - p.sp) & (c.type == ECardType.STRATEGY) & \
-                       (c.rank < ECardRank.TRUMP)
+                       (c.rank < ECardRank.TRUMP) & (c.ATK.value <= self.host.ATK.value)
             tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
             if tgt is not None:
                 self.game.set_strategy(p, p, tgt, self)

@@ -10,7 +10,7 @@ class E4(EffTriggerCostMixin):
                          scr_arg=[op1, v1, op2, v2], no_reset=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.ATTACKED:
+        if tp.tp == ETimePoint.ATTACK_COMPLETE:
             return ((tp.args[0] is self.host) & (tp.args[1].type == ECardType.EMPLOYEE)) | \
                    (tp.args[1] is self.host)
         return False

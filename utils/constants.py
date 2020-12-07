@@ -727,3 +727,8 @@ class ETimePoint:
     # 蓝图设计者（复原）
     # args[0]: 入场雇员 args[1]: 入场位置 args[2]: 入场姿态(非零表示防御姿态)
     SUMMONED = 235
+    # 攻击行为完成 在此时点发动效果的卡：
+    # 诈骗师
+    #
+    ATTACK_COMPLETE = 236
+

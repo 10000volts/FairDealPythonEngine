@@ -650,6 +650,7 @@ class GameCard:
             self.game.enter_time_point(tp)
             if tp.args[2] > 0:
                 self.game.deal_damage(self, self.game.get_player(target).leader, tp.args[2])
+            self.game.enter_time_point(TimePoint(ETimePoint.ATTACK_COMPLETE, None, [self, target]))
             if target.posture:
                 if self.ATK.value > target.DEF.value:
                     self.game.destroy(self, target)

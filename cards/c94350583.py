@@ -28,7 +28,7 @@ class E2(EffTriggerCostMixin):
     def execute(self):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN | (2 - p.sp), self.host.cid, True)
-        c.ATK.become(self.scr_arg, False, self)
+        c.ATK.become(self.scr_arg, True, self)
         self.game.special_summon(p, p, c, self)
         self.host.remove_effect(self)
 
