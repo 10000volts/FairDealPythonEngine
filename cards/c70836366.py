@@ -28,7 +28,7 @@ class E2(EffTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.DESTROYING:
             if (tp.args[1] is self.host) & (tp.args[0].type == ECardType.EMPLOYEE) & \
-                    ((tp.args[0].location & ELocation.ON_FIELD) > 0) & (tp.args[0].inf_pos == self.host.inf_pos):
+                    ((tp.args[0].location & ELocation.ON_FIELD) > 0) & (tp.args[0].inf_pos != self.host.inf_pos):
                 return True
         return False
 
