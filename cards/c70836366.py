@@ -16,7 +16,7 @@ class E3(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        c = self.game.players[1 + self.game.get_player(self.host).sp].on_field[self.host.inf_pos]
+        c = self.game.players[self.game.get_player(self.host).sp].on_field[self.host.inf_pos]
         if c is not None:
             c.ATK.gain(-500, False, self)
 
@@ -38,8 +38,7 @@ class E2(EffTriggerCostMixin):
 
 class E1(EffLazyTriggerCostMixin):
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=host, trigger=True, force=True,
-                         no_reset=True, passive=True, ef_id='708363660')
+        super().__init__(desc=EEffectDesc.SPECIAL_SUMMON, host=host, trigger=True, ef_id='708363660')
 
     def condition(self, tp):
         if tp.tp == ETimePoint.BLOCKED:

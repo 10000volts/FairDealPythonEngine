@@ -16,11 +16,11 @@ class E2(EffLazyTriggerCostMixin):
 
     def execute(self):
         if self.scr_arg[1] == 0:
-            self.host.ATK.gain(-100, False, self)
+            self.reacted.pop().args[0].ATK.gain(-100, False, self)
         elif self.scr_arg[1] == 1:
-            self.host.ATK.gain(-300, False, self)
+            self.reacted.pop().args[0].ATK.gain(-300, False, self)
         elif self.scr_arg[1] == 2:
-            self.host.ATK.gain(-700, False, self)
+            self.reacted.pop().args[0].ATK.gain(-700, False, self)
             self.host.remove_effect(self)
         self.scr_arg[1] += 1
 
