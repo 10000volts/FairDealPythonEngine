@@ -587,6 +587,10 @@ class GameCard:
             if e in self.game.ef_listener:
                 e.removing = True
 
+    def remove_buff(self, op, v):
+        self.ATK.remove(op, v)
+        self.DEF.remove(op, v)
+
     def reset(self):
         """
         离场时，清除所有非永久的buff，效果复原。
@@ -676,7 +680,7 @@ class GameCard:
     def reset_times(self):
         self.attack_times = 1
         self.block_times = 1
-        if self.game.turn_phase == ETurnPhase.BEGINNING:
+        if (self.game.turn_phase == ETurnPhase.BEGINNING) & (self.turns > 1):
             self.posture_times = 1
         self.game.enter_time_point(TimePoint(ETimePoint.RESET_TIMES, None, self))
 
@@ -1618,11 +1622,11 @@ class Game:
                     tgt = self.vid_manager.get_card(atk_tgt[tgt_ind])
                     attacker.attack_times -= 1
                     tp = TimePoint(ETimePoint.ATTACKING, None, [attacker, tgt, 1])
+                    self.batch_sending('atk', [attacker.vid, tgt.vid])
                     self.enter_time_point(tp)
                     # 攻击时离场导致攻击无效。
                     if tp.args[-1] & ((attacker.location & ELocation.ON_FIELD) > 0):
                         tgt = tp.args[1]
-                        self.batch_sending('atk', [attacker.vid, tgt.vid])
                         # 对领袖的攻击，询问阻挡
                         if tgt is self.op_player.leader:
                             tgt = self.req4block(attacker, tgt)

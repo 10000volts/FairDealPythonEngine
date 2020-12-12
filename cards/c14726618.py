@@ -12,7 +12,7 @@ class E2(EffTurnEndMixin):
                          host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True, passive=True)
 
     def execute(self):
-        self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
+        self.scr_arg[0].remove_buff(self.scr_arg[1], self.scr_arg[2])
         self.host.remove_effect(self)
 
 

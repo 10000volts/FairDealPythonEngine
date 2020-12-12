@@ -34,6 +34,7 @@ class E1(EffTurnCostMixin):
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
         c.create('应聘者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.COMMON,
                  self.host.ATK.value, 0)
+        p.ef_limiter[self.ef_id] = 1
 
         for pos in range(0, 3):
             for posture in range(0, 2):

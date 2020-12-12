@@ -8,7 +8,7 @@ class E3(EffSingleStgE3Mixin):
         super().__init__(host=host, scr_arg=[c, op, v])
 
     def execute(self):
-        self.scr_arg[0].ATK.remove(self.scr_arg[1], self.scr_arg[2])
+        self.scr_arg[0].remove_buff(self.scr_arg[1], self.scr_arg[2])
         self.scr_arg[0].ATK.update()
         self.host.remove_effect(self)
 

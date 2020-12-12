@@ -15,7 +15,7 @@ class E2(EffTriggerCostMixin):
         return (tp.tp == ETimePoint.TURN_END) & (self.game.turn_player is self.game.get_player(self.host))
 
     def execute(self):
-        self.host.ATK.remove(self.scr_arg[0], self.scr_arg[1])
+        self.host.remove_buff(self.scr_arg[0], self.scr_arg[1])
         self.host.remove_effect(self)
 
 

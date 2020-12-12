@@ -18,9 +18,9 @@ class E4(EffTriggerCostMixin):
     def execute(self):
         tp = self.reacted.pop()
         if tp.args[0].location & ELocation.ON_FIELD:
-            tp.args[0].ATK.remove(self.scr_arg[0], self.scr_arg[1])
+            tp.args[0].remove_buff(self.scr_arg[0], self.scr_arg[1])
         if tp.args[1].location & ELocation.ON_FIELD:
-            tp.args[1].ATK.remove(self.scr_arg[2], self.scr_arg[3])
+            tp.args[1].remove_buff(self.scr_arg[2], self.scr_arg[3])
         self.host.remove_effect(self)
 
 
