@@ -50,7 +50,8 @@ class E1(EffLazyTriggerCostMixin):
                         tp = TimePoint(ETimePoint.TRY_SUMMON, self, [self.host, p, pos, 1, 1])
                         self.game.enter_time_point(tp)
                         # 入场被允许
-                        return tp.args[-1] == 1
+                        if tp.args[-1]:
+                            return True
         return False
 
     def execute(self):
