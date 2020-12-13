@@ -9,7 +9,7 @@ class E1(EffLazyTriggerCostMixin):
         super().__init__(desc=EEffectDesc.SEND2DECK, host=host, trigger=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYED:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             if tp.args[1] is self.host:
                 for c in self.game.get_player(self.host).grave:
                     if (c.type == ECardType.EMPLOYEE) & ('和声姐妹花' not in c.series):

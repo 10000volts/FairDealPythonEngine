@@ -2847,18 +2847,16 @@ class Game:
         pos = p.input(check_pos, 'req_pos', [pt is p])
         if pos is not None:
             cm = em.move_to(ef, ELocation.ON_FIELD + 2 - pt.sp)
-            # TODO: DELETE
-            print('control: {}'.format(self.players[pt.sp].on_field[em.inf_pos]))
             if next(cm):
                 self.enter_time_points()
                 if next(cm):
                     tp = TimePoint(ETimePoint.TRY_CONTROL, ef, [em, 1])
                     self.enter_time_point(tp)
                     if tp.args[-1]:
+                        next(cm)
                         em = tp.args[0]
                         pt.on_field[pos] = em
                         em.inf_pos = pos
-                        next(cm)
                         # 重置攻击、阻挡次数
                         em.reset_times()
                         self.batch_sending('upd_vc', [em.vid, em.serialize()])

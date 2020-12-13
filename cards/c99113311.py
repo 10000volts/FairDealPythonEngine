@@ -11,7 +11,7 @@ class E3(EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.SEND2DECK, host=host, trigger=True, force=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYED:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             if tp.args[1] is self.host:
                 return True
         return False

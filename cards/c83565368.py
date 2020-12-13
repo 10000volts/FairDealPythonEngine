@@ -12,7 +12,7 @@ class E2(EffTriggerCostMixin):
         super().__init__(desc=EEffectDesc.DESTROY, host=host, trigger=True, force=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYED:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             if tp.args[1] is self.host:
                 p = self.game.get_player(self.host)
                 for c in p.on_field:

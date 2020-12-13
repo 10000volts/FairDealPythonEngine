@@ -9,7 +9,7 @@ class E1(EffLazyTriggerCostMixin):
         super().__init__(desc=EEffectDesc.SEND2HAND, host=host, trigger=True)
 
     def condition(self, tp):
-        if tp.tp == ETimePoint.DESTROYED:
+        if tp.tp == ETimePoint.DESTROYING_SURE:
             return tp.args[1] is self.host
         return False
 
