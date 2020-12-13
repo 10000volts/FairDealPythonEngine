@@ -1,6 +1,6 @@
 # 诈骗师
 from utils.common_effects import EffPierce, EffTriggerCostMixin, EffUntil
-from utils.constants import EEffectDesc, ETimePoint, ECardType, ELocation
+from utils.constants import EEffectDesc, ETimePoint, ECardType, ELocation, EEmployeeType
 from core.game import TimePoint
 
 
@@ -11,7 +11,7 @@ class E4(EffTriggerCostMixin):
 
     def condition(self, tp):
         if tp.tp == ETimePoint.ATTACK_COMPLETE:
-            return ((tp.args[0] is self.host) & (tp.args[1].type == ECardType.EMPLOYEE)) | \
+            return ((tp.args[0] is self.host) & (tp.args[1].subtype != EEmployeeType.LEADER)) | \
                    (tp.args[1] is self.host)
         return False
 

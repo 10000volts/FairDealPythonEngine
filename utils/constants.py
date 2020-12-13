@@ -16,6 +16,7 @@ class EEmployeeType:
     INHERIT = 4
     PARTNER = 8
     SECRET = 16
+    LEADER = 256
 
 
 class EStrategyType:
