@@ -654,26 +654,35 @@ class GameCard:
             self.game.enter_time_point(tp)
             if tp.args[2] > 0:
                 self.game.deal_damage(self, self.game.get_player(target).leader, tp.args[2])
-            self.game.enter_time_point(TimePoint(ETimePoint.ATTACK_COMPLETE, None, [self, target]))
+            f = 0
             if target.posture:
                 if self.ATK.value > target.DEF.value:
-                    self.game.destroy(self, target)
+                    f = 1
                 elif self.ATK.value < target.DEF.value:
-                    self.game.destroy(target, self)
+                    f = 2
             elif block:
                 if self.ATK.value > target.DEF.value:
-                    self.game.destroy(self, target)
+                    f = 1
                 elif self.ATK.value < target.DEF.value:
-                    self.game.destroy(target, self)
+                    f = 2
                 self.game.temp_tp_stack.append(TimePoint(ETimePoint.BLOCKED, None, [self, target]))
             else:
                 if self.ATK.value > target.ATK.value:
-                    self.game.destroy(self, target)
+                    f = 1
                 elif self.ATK.value < target.ATK.value:
-                    self.game.destroy(target, self)
+                    f = 2
                 elif self.ATK.value == target.ATK.value:
-                    self.game.destroy(self, target)
-                    self.game.destroy(target, self)
+                    f = 3
+
+            self.game.enter_time_point(TimePoint(ETimePoint.ATTACK_COMPLETE, None, [self, target]))
+            
+            if f == 1:
+                self.game.destroy(self, target)
+            elif f == 2:
+                self.game.destroy(target, self)
+            elif f == 3:
+                self.game.destroy(self, target)
+                self.game.destroy(target, self)
         self.game.temp_tp_stack.append(TimePoint(ETimePoint.ATTACKED, None, [self, target]))
         self.game.enter_time_points()
 
