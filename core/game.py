@@ -675,7 +675,7 @@ class GameCard:
                     f = 3
 
             self.game.enter_time_point(TimePoint(ETimePoint.ATTACK_COMPLETE, None, [self, target]))
-            
+
             if f == 1:
                 self.game.destroy(self, target)
             elif f == 2:

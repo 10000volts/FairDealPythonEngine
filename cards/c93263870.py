@@ -1,6 +1,6 @@
 # 莱尔 玛斯
 from models.effect import Effect
-from utils.common_effects import EffLazyTriggerCostMixin
+from utils.common_effects import EffLazyTriggerCostMixin, EffTriggerCostMixin
 from utils.constants import EEffectDesc, EGamePhase, ETimePoint, ECardType, ELocation
 
 
@@ -39,7 +39,7 @@ class E2(EffLazyTriggerCostMixin):
         tp.args[0].ATK.plus(0.5, False, self)
 
 
-class E1(Effect):
+class E1(EffTriggerCostMixin):
     """
     场上限定：不会被摧毁。
     """
