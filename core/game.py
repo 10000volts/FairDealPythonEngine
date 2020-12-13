@@ -1635,10 +1635,6 @@ class Game:
                             attacker.attack(tgt)
                 # next phase 主动进行自己回合的下个阶段(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
                 elif cmd[0] == 4:
-                    self.skip_times += 1
-                    if self.skip_times >= self.max_skip:
-                        self.judge()
-                        break
                     self.enter_turn_phase(next(ntp))
                 # good game 单局认输
                 elif cmd[0] == 5:
@@ -1687,10 +1683,6 @@ class Game:
                 # end turn 主动结束自己回合(主要阶段1->战斗阶段1(->战斗阶段2)->主要阶段2->回合结束)
                 elif cmd[0] == 8:
                     while self.turn_phase != ETurnPhase.ENDING:
-                        self.skip_times += 1
-                        if self.skip_times >= self.max_skip:
-                            self.judge()
-                            break
                         self.enter_turn_phase(next(ntp))
 
     def next_turn_phase(self):
@@ -1725,6 +1717,9 @@ class Game:
 
     def __beginning(self):
         self.turns += 1
+        self.skip_times += 1
+        if self.skip_times >= self.max_skip:
+            self.winner = self.players[self.turn_player.sp]
         # 重置可召唤、适用策略次数。
         self.turn_player.summon_times = 1
         self.turn_player.strategy_times = 1
