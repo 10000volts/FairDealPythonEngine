@@ -2605,6 +2605,8 @@ class Game:
                 ind = pt.free_input(check_ind, 'req_chs_tgt', [cs, at_least, at_most])
                 if ind is None:
                     return None
+        else:
+            return None
         if type(ind) is list:
             tgts = list()
             for i in ind:

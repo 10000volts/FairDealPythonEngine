@@ -78,7 +78,7 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         def check(c):
-            return (c.location == ELocation.HAND + 2 - p.sp) & (c.type == ECardType.STRATEGY) & \
+            return (c.location == ELocation.GRAVE + 2 - p.sp) & (c.type == ECardType.STRATEGY) & \
                    ((c.subtype & EStrategyType.COUNTER) > 0)
         p = self.game.get_player(self.host)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
