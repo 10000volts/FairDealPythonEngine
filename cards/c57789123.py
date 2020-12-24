@@ -39,7 +39,7 @@ class E2(EffTriggerCostMixin):
     对方不能使用策略。
     """
     def __init__(self, host):
-        super().__init__(desc=EEffectDesc.FORBIDDEN, host=host, trigger=True, force=True, no_reset=True)
+        super().__init__(desc=EEffectDesc.FORBIDDEN, host=host, trigger=True, force=True, no_reset=True, passive=True)
 
     def condition(self, tp):
         """
@@ -48,7 +48,6 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         if tp.tp == ETimePoint.TRY_ACTIVATE_STRATEGY:
-            p = self.game.get_player(self.host)
             # 是对方的策略
             return (tp.args[0].location & (self.game.get_player(self.host).sp + 1)) > 0
         return False
@@ -60,7 +59,8 @@ class E2(EffTriggerCostMixin):
         :return:
         """
         # 无效
-        self.reacted.pop().args[-1] = 0
+        tp = self.reacted.pop()
+        self.game.invalid_tp(tp, tp.args[0], self)
 
 
 class E3(EffSummon):

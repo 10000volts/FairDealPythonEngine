@@ -33,7 +33,7 @@ class E1(EffTurnCostMixin):
         p = self.game.get_player(self.host)
         c = GameCard(self.game, ELocation.UNKNOWN + 2 - p.sp)
         c.create('应聘者', ECardType.EMPLOYEE, EEmployeeType.COMMON, ECardRank.GOOD,
-                 self.host.ATK.value, self.host.ATK.value)
+                 self.host.ATK.value, 1000)
         p.ef_limiter[self.ef_id] = 1
 
         for pos in range(0, 3):

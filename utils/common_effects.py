@@ -268,6 +268,7 @@ class EffCounterStgE1Mixin(EffLazyTriggerCostMixin):
         return tp is not None and tp.tp != ETimePoint.ASK4EFFECT
 
 
+
 class EffExile(Effect):
     """
     以从场下移除作为COST。
@@ -288,6 +289,14 @@ class EffCounterStgE2Mixin(EffTriggerCostMixin):
     """
     def execute(self):
         from core.game import TimePoint
+        # _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [self.host, 1])
+        # _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [self.host.effects[0], 1])
+        # self.game.temp_tp_stack.append(_tp1)
+        # self.game.temp_tp_stack.append(_tp2)
+        # self.game.enter_time_points()
+        # self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+        #                                 [_c, _tp1.args[-1]]))
+
         tp = TimePoint(ETimePoint.UNCOVERING_STRATEGY, None, [self.host, 1])
         self.game.enter_time_point(tp)
         if tp.args[-1]:
