@@ -27,7 +27,7 @@ class E1(Effect):
             tgtB = self.game.choose_target_from_func(
                 p, p, lambda c: ((c.location == ELocation.ON_FIELD + 2 - op.sp) &
                                  (c.type == ECardType.EMPLOYEE) & (c is not tgtA)), self, True)
-            tgtB.ATK.gain(-tgtA.ATK.value, False, self)
+            tgtA.ATK.gain(-tgtB.ATK.value, False, self)
 
 
 def give(c):

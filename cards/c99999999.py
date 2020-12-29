@@ -5,19 +5,6 @@ from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 from utils.common_effects import EffPierce, EffTriggerCostMixin, EffNextTurnMixin, EffUntil
 
 
-class E8(EffTriggerCostMixin):
-    def __init__(self, host):
-        super().__init__(desc=EEffectDesc.EXTRA_CHANCE, host=host, trigger=True, force=True)
-
-    def condition(self, tp):
-        if tp.tp == ETimePoint.RESET_TIMES:
-            return tp.args is self.host
-        return False
-
-    def execute(self):
-        self.host.attack_times += 1
-
-
 class E7(EffTriggerCostMixin):
     """
     不能改变姿态。
@@ -129,8 +116,6 @@ class E2(Effect):
 
         if tp.tp == ETimePoint.ASK4EFFECT:
             if self.host.location & (ELocation.HAND | ELocation.GRAVE):
-                if self.host.location & ELocation.GRAVE:
-                    print('in grave')
                 p = self.game.get_player(self.host)
                 for posture in range(0, 2):
                     for pos in range(0, 3):
@@ -197,4 +182,3 @@ def give(c):
     c.register_effect(EffPierce(c))
     c.register_effect(E4(c))
     c.register_effect(E6(c))
-    c.register_effect(E8(c))
