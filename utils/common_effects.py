@@ -268,7 +268,6 @@ class EffCounterStgE1Mixin(EffLazyTriggerCostMixin):
         return tp is not None and tp.tp != ETimePoint.ASK4EFFECT
 
 
-
 class EffExile(Effect):
     """
     以从场下移除作为COST。

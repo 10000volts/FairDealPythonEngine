@@ -179,6 +179,6 @@ def give(c):
     e2 = E2(c)
     c.register_effect(e2)
     c.register_effect(E1(c, e2))
-    c.register_effect(EffPierce(c))
+    c.register_effect(EffPierce(c, 1000))
     c.register_effect(E4(c))
     c.register_effect(E6(c))
