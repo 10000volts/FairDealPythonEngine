@@ -25,7 +25,8 @@ class E2(EffCounterStgE2Mixin):
         else:
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
-        return tp.tp == ETimePoint.SUCC_SUMMON
+        if tp.tp == ETimePoint.SUCC_SUMMON:
+            return super().condition(self, tp)
 
 
 def give(c):

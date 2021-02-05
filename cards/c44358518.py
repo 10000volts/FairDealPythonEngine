@@ -22,8 +22,8 @@ class E2(EffCounterStgE2Mixin):
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
         if tp.tp == ETimePoint.ACTIVATING_STRATEGY:
-            return (tp.args[0].ATK.value <= self.host.ATK.value) & \
-                    ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0)
+            if (tp.args[0].ATK.value <= self.host.ATK.value) & ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0):
+                return super().condition(self, tp)
         return False
 
 

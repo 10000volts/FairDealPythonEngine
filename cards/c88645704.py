@@ -27,7 +27,7 @@ class E2(EffCounterStgE2Mixin):
                     ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0) & \
                     (tp.args[0].type == ECardType.EMPLOYEE) & (not tp.sender.passive) & \
                     (not tp.sender.no_reset) & tp.sender.can_invalid:
-                return True
+                return super().condition(self, tp)
         return False
 
 

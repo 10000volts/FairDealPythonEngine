@@ -27,7 +27,7 @@ class E2(EffCounterStgE2Mixin):
             p = self.game.get_player(self.host)
             if (tp.args[1].location == ELocation.ON_FIELD + 2 - p.sp) & \
                     (tp.args[1].type == ECardType.EMPLOYEE):
-                return True
+                return super().condition(self, tp)
         return False
 
 

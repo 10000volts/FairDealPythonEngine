@@ -71,11 +71,11 @@ class E2(EffCounterStgE2Mixin):
                             if c.effects[1].condition(TimePoint(ETimePoint.REDIRECT_COUNTER, self,
                                                                 [tp])):
                                 c.ATK.value -= v
-                                return True
+                                return super().condition(self, tp)
                         else:
                             if c.effects[0].condition(None):
                                 c.ATK.value -= v
-                                return True
+                                return super().condition(self, tp)
                         c.ATK.value -= v
         return False
 

@@ -29,9 +29,9 @@ class E2(EffCounterStgE2Mixin):
             p = self.game.get_player(self.host)
             op = self.game.players[p.sp]
             if tp.args[1] is p.leader:
-                return True
+                return super().condition(self, tp)
             elif tp.args[0] is op.on_field[self.host.inf_pos - 3]:
-                return True
+                return super().condition(self, tp)
         return False
 
 

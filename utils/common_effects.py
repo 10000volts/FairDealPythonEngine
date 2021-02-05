@@ -262,7 +262,7 @@ class EffCommonStrategy(Effect):
 
 class EffCounterStgE1Mixin(EffLazyTriggerCostMixin):
     """
-    反制策略的E2效果，用来触发其真正效果。请将passive置为True。
+    反制策略的真正效果。请将passive置为True。
     """
     def condition(self, tp):
         return tp is not None and tp.tp != ETimePoint.ASK4EFFECT
@@ -286,16 +286,21 @@ class EffCounterStgE2Mixin(EffTriggerCostMixin):
     """
     反制策略的E2效果，用来触发其真正效果。
     """
+    def condition(self, tp):
+        from core.game import TimePoint
+        _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [self.host, 1])
+        _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [self.host.effects[0], 1])
+        self.game.temp_tp_stack.append(_tp1)
+        self.game.temp_tp_stack.append(_tp2)
+        self.game.enter_time_points()
+        self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+                                        [_c, _tp1.args[-1]]))
+        if _tp1.args[-1] & _tp2.args[-1]:
+            return True
+        return False
+
     def execute(self):
         from core.game import TimePoint
-        # _tp1 = TimePoint(ETimePoint.TRY_ACTIVATE_STRATEGY, None, [self.host, 1])
-        # _tp2 = TimePoint(ETimePoint.TRY_ACTIVATE_EFFECT, None, [self.host.effects[0], 1])
-        # self.game.temp_tp_stack.append(_tp1)
-        # self.game.temp_tp_stack.append(_tp2)
-        # self.game.enter_time_points()
-        # self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
-        #                                 [_c, _tp1.args[-1]]))
-
         tp = TimePoint(ETimePoint.UNCOVERING_STRATEGY, None, [self.host, 1])
         self.game.enter_time_point(tp)
         if tp.args[-1]:
