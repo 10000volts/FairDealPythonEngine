@@ -29,11 +29,12 @@ class E1(EffTriggerCostMixin):
         :return:
         """
         def check(c):
-            return (c in p.grave) & (c.ATK.value == self.host.ATK.value) & \
+            return (c in p.grave) & (c.ATK.value == v) & \
                 (c.type == ECardType.EMPLOYEE)
 
         # 选择的卡回到手牌
         p = self.game.get_player(self.host)
+        v = self.host.ATK.value
         self.game.send2exiled(p, p, self.host, self)
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:

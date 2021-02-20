@@ -27,6 +27,7 @@ class E2(EffCounterStgE2Mixin):
                 return False
         if tp.tp == ETimePoint.SUCC_SUMMON:
             return super().condition(self, tp)
+        return False
 
 
 def give(c):
