@@ -29,7 +29,7 @@ class E2(EffCounterStgE2Mixin):
         if tp.tp == ETimePoint.ATTACKING:
             p = self.game.get_player(self.host)
             if tp.args[1] is p.leader:
-                return super().condition(self, tp)
+                return super().condition(tp)
         return False
 
 

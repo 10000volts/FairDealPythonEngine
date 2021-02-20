@@ -293,8 +293,8 @@ class EffCounterStgE2Mixin(EffTriggerCostMixin):
         self.game.temp_tp_stack.append(_tp1)
         self.game.temp_tp_stack.append(_tp2)
         self.game.enter_time_points()
-        self.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
-                                        [_c, _tp1.args[-1]]))
+        self.game.enter_time_point(TimePoint(ETimePoint.TRIED_ACTIVATE_STRATEGY, None,
+                                             [self.host, _tp1.args[-1]]))
         if _tp1.args[-1] & _tp2.args[-1]:
             return True
         return False

@@ -48,7 +48,7 @@ class E2(EffLazyTriggerCostMixin):
                     pos.append(c)
         chs_len = len(chs)
         if chs_len:
-            ind = sd.free_input(check_ind, 'req_chs_tgt', [chs, 1])
+            ind = sd.free_input(check_ind, 'req_chs_tgt', [chs, 1, 1])
             if ind is not None:
                 g.investigate(sd, chs[ind], pos[ind])
         self.host.remove_effect(self)
