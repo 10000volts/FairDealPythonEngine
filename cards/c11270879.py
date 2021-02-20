@@ -62,7 +62,8 @@ class E2(EffCounterStgE2Mixin):
                 return False
         if tp.tp == ETimePoint.ACTIVATING_STRATEGY:
             p = self.game.get_player(self.host)
-            if (tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0:
+            # todo: 取消不能响应反制牌限制
+            if ((tp.args[0].location & (2 - self.game.players[p.sp].sp)) > 0) & ((tp.args[0].subtype & EStrategyType.COUNTER) == 0):
                 for c in p.hand:
                     if c.type == ECardType.STRATEGY:
                         v = min(self.host.ATK.value, 1000)
@@ -71,11 +72,11 @@ class E2(EffCounterStgE2Mixin):
                             if c.effects[1].condition(TimePoint(ETimePoint.REDIRECT_COUNTER, self,
                                                                 [tp])):
                                 c.ATK.value -= v
-                                return super().condition(self, tp)
+                                return super().condition(tp)
                         else:
                             if c.effects[0].condition(None):
                                 c.ATK.value -= v
-                                return super().condition(self, tp)
+                                return super().condition(tp)
                         c.ATK.value -= v
         return False
 

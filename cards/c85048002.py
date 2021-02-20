@@ -23,7 +23,7 @@ class E2(EffCounterStgE2Mixin, EffTriggerCostMixin):
                     if self.host.cover:
                         p = self.game.get_player(self.host)
                         if tp.args[1].location == ELocation.ON_FIELD + 2 - p.sp:
-                            return super().condition(self, tp)
+                            return super().condition(tp)
         return False
 
 

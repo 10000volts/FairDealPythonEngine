@@ -23,7 +23,7 @@ class E2(EffCounterStgE2Mixin):
                 return False
         if tp.tp == ETimePoint.ACTIVATING_STRATEGY:
             if (tp.args[0].ATK.value <= self.host.ATK.value) & ((tp.args[0].location & (1 + self.game.get_player(self.host).sp)) > 0):
-                return super().condition(self, tp)
+                return super().condition(tp)
         return False
 
 

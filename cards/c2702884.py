@@ -14,7 +14,7 @@ class E1(EffCounterStgE1Mixin):
 
 class E2(EffCounterStgE2Mixin):
     """
-    下降500攻击力
+    下降EFF攻击力
     """
     def __init__(self, host, ef):
         super().__init__(desc=EEffectDesc.ATK_LOSE, host=host, scr_arg=[ef], trigger=True)
@@ -26,7 +26,7 @@ class E2(EffCounterStgE2Mixin):
             if (self.host.turns == 0) | ((self.host.location & ELocation.ON_FIELD) == 0) | (self.host.cover == 0):
                 return False
         if tp.tp == ETimePoint.SUCC_SUMMON:
-            return super().condition(self, tp)
+            return super().condition(tp)
         return False
 
 
