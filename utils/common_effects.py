@@ -455,13 +455,16 @@ class EffTaunt(EffTriggerCostMixin):
                 for ef in tp.args[1].effects:
                     if ef.ef_id == EEffectDesc.TAUNT:
                         return False
+                return True
                 # 必须可被选择为攻击对象。
-                tp = TimePoint(ETimePoint.TRY_ATTACK, self, [tp.args[0], self.host, 1])
-                for ef in self.host.effects:
-                    if ef.ef_id != EEffectDesc.TAUNT:
-                        if ef.condition(tp):
-                            ef.execute()
-                return tp.args[-1]
+                # tp = TimePoint(ETimePoint.TRY_ATTACK, self, [tp.args[0], self.host, 1])
+                # for ef in self.host.effects:
+                #     if ef.ef_id != EEffectDesc.TAUNT:
+                #         if ef.condition(tp):
+                #             ef.reacted.append(tp)
+                #             ef.execute()
+                #             ef.reacted.pop()
+                # return tp.args[-1]
         return False
 
     def execute(self):
