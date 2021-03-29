@@ -66,5 +66,5 @@ def give(c):
     :param c:
     :return:
     """
-    c.register_effect(EffTaunt(c))
+    # c.register_effect(EffTaunt(c))
     c.register_effect(E1(c))

@@ -1,4 +1,4 @@
-# 违约金
+# 违约金*
 from utils.constants import EEffectDesc, ETimePoint, ELocation, ECardType
 from utils.common_effects import EffCommonStrategy, EffLazyTriggerCostMixin
 
@@ -24,7 +24,7 @@ class E2(EffLazyTriggerCostMixin):
     def condition(self, tp):
         if tp.tp == ETimePoint.OUT_FIELD:
             if ((self.host.location & ELocation.ON_FIELD) > 0) & (not self.host.cover) &\
-                    (tp.args[0].type == ECardType.EMPLOYEE):
+                    (tp.args[0].type == ECardType.EMPLOYEE) & ((tp.args[0].location & (self.game.get_player(self.host).sp + 1)) > 0):
                 return True
         return False
 

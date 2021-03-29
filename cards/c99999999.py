@@ -128,7 +128,6 @@ class E2(Effect):
                             for c in p.on_field:
                                 if c is not None and c.type == ECardType.EMPLOYEE:
                                     ems.append(c.ATK.value)
-                            # 问题规模不需要dp, 过于占用空间
                             return dp(0, 0)
         return False
 
@@ -143,7 +142,7 @@ class E2(Effect):
 
     def execute(self):
         """
-        执行效果。触发式效果获得当前时点信息时请使用reacted[-1]。
+        执行效果。触发式效果获得当前时点信息时请使用reacted.pop()。
         调用基类方法进行输出。
         :return:
         """

@@ -41,17 +41,16 @@ class E1(EffTriggerCostMixin):
 
         def check(c):
             if (c.location == 2 - p.sp + ELocation.GRAVE) & (c.type == ECardType.EMPLOYEE):
-                for posture in range(0, 2):
-                    for pos in range(0, 3):
-                        if p.on_field[pos] is None:
-                            tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, posture, 1])
-                            self.game.enter_time_point(tp)
-                            if tp.args[-1]:
-                                return True
+                for pos in range(0, 3):
+                    if p.on_field[pos] is None:
+                        tp = TimePoint(ETimePoint.TRY_SUMMON, self, [c, p, pos, 1, 1])
+                        self.game.enter_time_point(tp)
+                        if tp.args[-1]:
+                            return True
                 return False
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         if tgt is not None:
-            self.game.special_summon(p, p, tgt, self)
+            self.game.special_summon(p, p, tgt, self, 1)
 
 
 def give(c):

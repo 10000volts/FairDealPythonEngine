@@ -1,6 +1,19 @@
 # 超额执行
-from utils.common_effects import EffSingleStgE1Mixin, EffUntil, EffLazyTriggerCostMixin
+from utils.common_effects import EffSingleStgE1Mixin, EffUntil, EffLazyTriggerCostMixin, EffTurnEndMixin
 from utils.constants import EEffectDesc, ECardType, ELocation, ETimePoint
+
+
+class E3(EffTurnEndMixin):
+    """
+    回合结束时回复攻击力。
+    """
+    def __init__(self, host, c, op, v):
+        super().__init__(desc=EEffectDesc.EFFECT_END,
+                         host=host, trigger=True, force=True, scr_arg=[c, op, v], no_reset=True, passive=True)
+
+    def execute(self):
+        self.scr_arg[0].remove_buff(self.scr_arg[1], self.scr_arg[2])
+        self.host.remove_effect(self)
 
 
 class E2(EffLazyTriggerCostMixin):
@@ -40,6 +53,8 @@ class E1(EffSingleStgE1Mixin):
         tgt = self.game.choose_target_from_func(p, p, check, self)
         if tgt is not None:
             tgt.attack_times += 2
+            op, v = tgt.ATK.gain(500 if self.host.ATK.value > 500 else self.host.ATK.value, False, self)
+            self.host.register_effect(E3(self.host, tgt, op, v))
             e3 = E2(tgt)
             # 虽然这是超额执行的效果但无所谓
             tgt.register_effect(e3)

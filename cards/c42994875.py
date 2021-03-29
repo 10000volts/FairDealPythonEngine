@@ -40,6 +40,7 @@ class E1(Effect):
         tgt = self.game.choose_target_from_func(p, p, check, self, True, False)
         # TODO: DELETE
         if tgt is not None:
+            tgt.change_adv(0, self)
             self.game.send2hand(p, p, tgt, self)
 
 

@@ -1,4 +1,4 @@
-# 催眠
+# 催眠*
 from utils.constants import EEffectDesc, ETimePoint, ELocation
 from utils.common_effects import EffTriggerCostMixin, EffCommonStrategy
 from core.game import GameCard
@@ -24,10 +24,10 @@ class E2(EffTriggerCostMixin):
         return False
 
     def execute(self):
-        for p in self.game.players:
-            c = p.on_field[self.host.inf_pos - 3]
-            if c is not None:
-                c.ATK.gain(-self.host.ATK.value, False, self)
+        op = self.game.players[self.game.get_player(self.host).sp]
+        c = op.on_field[self.host.inf_pos - 3]
+        if c is not None:
+            c.ATK.gain(-self.host.ATK.value, False, self)
 
 
 class E3(EffTriggerCostMixin):
